@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AuctionBall
 
 Real-time player auction platform for cricket and football tournaments. Like the BPL or IPL auction, but for any tournament — small or large — with live bidding from phones, a cinematic big-screen display, and full multi-tenant SaaS controls.
@@ -104,3 +105,7 @@ This is a private codebase (currently). Internal contribution guidelines apply.
 ## License
 
 Proprietary — all rights reserved. Contact [hello@auctionball.com](mailto:hello@auctionball.com) for licensing inquiries.
+=======
+# auctionball
+SaaS Player auction system
+>>>>>>> 675eea733ae7eb0c544a30684ccb40d09ebfba68
