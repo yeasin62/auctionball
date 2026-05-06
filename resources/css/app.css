@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        scroll-behavior: smooth;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+    }
+    body {
+        background: #f5f5fb;
+        color: theme('colors.ink.900');
+    }
+    /* Anchor target offset so section heading isn't glued to viewport edge */
+    section[id] { scroll-margin-top: 32px; }
+}
+
+@layer components {
+    /* Page-wide ambient gradient backdrop */
+    .page-bg {
+        position: relative;
+        background:
+            radial-gradient(60% 50% at 0% 0%, rgba(186,219,255,.85), transparent 60%),
+            radial-gradient(50% 45% at 100% 10%, rgba(232,213,255,.85), transparent 60%),
+            radial-gradient(45% 50% at 100% 95%, rgba(255,213,235,.65), transparent 60%),
+            radial-gradient(40% 40% at 0% 100%, rgba(199,225,255,.7), transparent 60%),
+            #f5f5fb;
+        background-attachment: fixed;
+    }
+
+    /* Glassmorphism card surface */
+    .glass {
+        background: rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(20px) saturate(140%);
+        -webkit-backdrop-filter: blur(20px) saturate(140%);
+        border: 1px solid rgba(255, 255, 255, 0.75);
+        box-shadow: 0 6px 28px rgba(31, 38, 135, 0.05),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+    .glass-strong {
+        background: rgba(255, 255, 255, 0.86);
+        backdrop-filter: blur(24px) saturate(150%);
+        -webkit-backdrop-filter: blur(24px) saturate(150%);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.07);
+    }
+
+    /* "/ section" mono pill */
+    .mono-pill {
+        @apply inline-flex items-center gap-2 rounded-full px-4 py-1.5 font-mono text-[12px] tracking-wide text-ink-500;
+        background: rgba(255,255,255,.7);
+        border: 1px solid rgba(15,23,42,.06);
+        box-shadow: 0 2px 6px rgba(31,38,135,.04);
+    }
+    .mono-pill .dot {
+        width: 6px; height: 6px; border-radius: 9999px; background: #22c55e;
+        box-shadow: 0 0 0 3px rgba(34,197,94,.18);
+    }
+
+    /* Primary gradient button */
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-medium text-white;
+        background: linear-gradient(135deg,#06b6d4 0%,#3b82f6 40%,#6366f1 75%,#8b5cf6 100%);
+        box-shadow: 0 10px 28px -8px rgba(99,102,241,.55), inset 0 1px 0 rgba(255,255,255,.25);
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 14px 32px -8px rgba(99,102,241,.65); }
+
+    .btn-ghost {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-medium text-ink-900;
+        background: rgba(255,255,255,.85);
+        border: 1px solid rgba(15,23,42,.08);
+        box-shadow: 0 2px 8px rgba(31,38,135,.05);
+    }
+    .btn-ghost:hover { background: #fff; }
+
+    .btn-dark-ghost {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-medium text-white;
+        background: rgba(255,255,255,.05);
+        border: 1px solid rgba(255,255,255,.14);
+    }
+    .btn-dark-ghost:hover { background: rgba(255,255,255,.1); }
+
+    /* Gradient text helper */
+    .text-grad {
+        background: linear-gradient(90deg,#0ea5e9,#6366f1 55%,#8b5cf6);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    /* Code-line row used inside the REST API card */
+    .code-line {
+        @apply flex items-center justify-between rounded-lg px-3 py-2 font-mono text-[12.5px];
+        background: rgba(255,255,255,.65);
+        border: 1px solid rgba(15,23,42,.06);
+    }
+    .code-line.highlight {
+        background: linear-gradient(90deg, rgba(186,219,255,.55), rgba(232,213,255,.55));
+    }
+
+    /* Progress bar (multi-season card) */
+    .bar-track { @apply h-1.5 w-full rounded-full overflow-hidden; background: rgba(15,23,42,.06); }
+    .bar-fill  { @apply h-full rounded-full; background: linear-gradient(90deg,#06b6d4,#6366f1,#8b5cf6); }
+
+    /* "Soft" icon tile used in each step / feature card */
+    .icon-tile {
+        @apply inline-flex h-10 w-10 items-center justify-center rounded-xl;
+        background: rgba(186,219,255,.45);
+        color: #3b82f6;
+        border: 1px solid rgba(59,130,246,.18);
+    }
+
+    /* Avatar stub used by testimonials / player rows */
+    .avatar {
+        @apply inline-flex h-9 w-9 items-center justify-center rounded-full font-mono text-[11px] font-semibold;
+        background: rgba(186,219,255,.55);
+        color: #3b82f6;
+        border: 1px solid rgba(59,130,246,.18);
+    }
+    .avatar.lg { @apply h-12 w-12 text-[13px]; }
+    .avatar.xl { @apply h-20 w-20 text-[18px]; }
+}
+
+@layer utilities {
+    .grid-dark-bg {
+        background-image:
+            linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+        background-size: 28px 28px;
+    }
+}

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api.anthropic.com)",
+      "PowerShell(php --version)",
+      "PowerShell(composer --version)",
+      "PowerShell(node --version)",
+      "PowerShell(npm --version)",
+      "PowerShell(cmd /c \"dir C:\\\\laragon\\\\bin /B\")",
+      "PowerShell(cmd /c \"dir C:\\\\laragon\\\\bin\\\\git\\\\bin /B\" 2>&1)",
+      "PowerShell(cmd /c \"dir C:\\\\laragon\\\\bin\\\\git /B\" 2>&1)",
+      "PowerShell($env:PATH = \"C:\\\\laragon\\\\bin\\\\nodejs\\\\node-v22;\" + $env:PATH; & \"C:\\\\laragon\\\\bin\\\\nodejs\\\\node-v22\\\\npm.cmd\" run build 2>&1 | Select-Object -Last 3)"
+    ]
+  }
+}

@@ -1,0 +1,237 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Organization;
+use App\Models\Season;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class SeasonController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        /** @var Organization $org */
+        $org = $request->attributes->get('current_organization');
+
+        $seasons = $org->seasons()
+            ->withCount(['players', 'teams', 'bids'])
+            ->orderByDesc('is_active')
+            ->orderByDesc('year')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn ($s) => [
+                'id'                        => $s->id,
+                'name'                      => $s->name,
+                'year'                      => $s->year,
+                'sport'                     => $s->sport ?? 'cricket',
+                'registration_form_schema'  => $s->registration_form_schema ?? [],
+                'status'                    => $s->status,
+                'is_active'                 => $s->is_active,
+                'budget_per_team'           => $s->budget_per_team,
+                'bid_increment'             => (int) ($s->bid_increment ?: 1000),
+                'bid_increment_usd'         => (int) ($s->bid_increment_usd ?: 10),
+                'players_count'             => $s->players_count,
+                'teams_count'               => $s->teams_count,
+                'bids_count'                => $s->bids_count,
+                'start_date'                => $s->start_date?->format('Y-m-d'),
+                'end_date'                  => $s->end_date?->format('Y-m-d'),
+                'registration_open'         => (bool) $s->registration_open,
+                'registration_token'        => $s->registration_token,
+                'registration_fee'          => (int) $s->registration_fee,
+                'registration_instructions' => $s->registration_instructions,
+            ]);
+
+        return Inertia::render('Dashboard/Seasons/Index', [
+            'seasons' => $seasons,
+            'limits'  => $org->limits(),
+            'used'    => $org->seasons()->count(),
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        /** @var Organization $org */
+        $org = $request->attributes->get('current_organization');
+
+        $limits = $org->limits();
+        if ($org->seasons()->count() >= $limits['seasons']) {
+            return back()->with('error', "Your {$org->plan} plan allows {$limits['seasons']} season(s). Upgrade to add more.");
+        }
+
+        $data = $request->validate([
+            'name'            => 'required|string|max:255',
+            'year'            => 'required|integer|min:2020|max:2100',
+            'sport'           => ['required', Rule::in(Season::SPORTS)],
+            'budget_per_team' => 'required|integer|min:0',
+            'bid_increment'   => 'nullable|integer|min:1|max:1000000',
+            'bid_increment_usd' => 'nullable|integer|min:1|max:1000000',
+            'start_date'      => 'nullable|date',
+            'end_date'        => 'nullable|date|after_or_equal:start_date',
+            'status'          => ['nullable', Rule::in(['upcoming','active','completed'])],
+        ]);
+
+        $data['bid_increment']     = $data['bid_increment']     ?? 1000;
+        $data['bid_increment_usd'] = $data['bid_increment_usd'] ?? 10;
+
+        $season = $org->seasons()->create([
+            ...$data,
+            'status' => $data['status'] ?? 'upcoming',
+        ]);
+
+        return redirect()->route('seasons.index')->with('success', "Season “{$season->name}” created.");
+    }
+
+    public function activate(Request $request, Season $season): RedirectResponse
+    {
+        /** @var Organization $org */
+        $org = $request->attributes->get('current_organization');
+        abort_if($season->organization_id !== $org->id, 404);
+
+        DB::transaction(function () use ($org, $season) {
+            $org->seasons()->update(['is_active' => false]);
+            $season->update(['is_active' => true, 'status' => 'active']);
+        });
+
+        return back()->with('success', "“{$season->name}” is now your active season.");
+    }
+
+    public function update(Request $request, Season $season): RedirectResponse
+    {
+        /** @var Organization $org */
+        $org = $request->attributes->get('current_organization');
+        abort_if($season->organization_id !== $org->id, 404);
+
+        $data = $request->validate([
+            'name'              => 'sometimes|required|string|max:255',
+            'bid_increment'     => 'sometimes|integer|min:1|max:1000000',
+            'bid_increment_usd' => 'sometimes|integer|min:1|max:1000000',
+        ]);
+        $season->update($data);
+
+        return back()->with('success', 'Season updated.');
+    }
+
+    /** Toggle public registration on/off; mints a token the first time. */
+    public function toggleRegistration(Request $request, Season $season): RedirectResponse
+    {
+        /** @var Organization $org */
+        $org = $request->attributes->get('current_organization');
+        abort_if($season->organization_id !== $org->id, 404);
+
+        $data = $request->validate([
+            'open'                      => 'required|boolean',
+            'registration_fee'          => 'nullable|integer|min:0',
+            'registration_instructions' => 'nullable|string|max:2000',
+        ]);
+
+        $update = [
+            'registration_open'         => (bool) $data['open'],
+            'registration_fee'          => $data['registration_fee'] ?? $season->registration_fee,
+            'registration_instructions' => $data['registration_instructions'] ?? $season->registration_instructions,
+        ];
+
+        if ($data['open'] && ! $season->registration_token) {
+            $update['registration_token'] = \Illuminate\Support\Str::random(20);
+        }
+
+        $season->update($update);
+
+        return back()->with('success', $data['open'] ? 'Public registration is open.' : 'Public registration closed.');
+    }
+
+    /**
+     * Save the org-defined custom registration field schema. Each field is
+     * `{id, type, label, placeholder?, required?, options?}`. Built-in fields
+     * (name, category, position, jersey, batting/bowling, profession, photo,
+     * txn id) are always shown; this schema is appended below them.
+     */
+    public function updateRegistrationForm(Request $request, Season $season): RedirectResponse
+    {
+        /** @var Organization $org */
+        $org = $request->attributes->get('current_organization');
+        abort_if($season->organization_id !== $org->id, 404);
+
+        $validated = $request->validate([
+            'fields'                          => 'array|max:30',          // a sane upper bound
+            'fields.*.id'                     => 'required|string|max:32',
+            'fields.*.type'                   => ['required', Rule::in(['heading','text','textarea','number','email','phone','url','date','time','select','radio','multi','checkbox','image','payment'])],
+            'fields.*.label'                  => 'required|string|max:120',
+            'fields.*.placeholder'            => 'nullable|string|max:160',
+            'fields.*.required'               => 'sometimes|boolean',
+            'fields.*.options'                => 'nullable|array|max:20',
+            'fields.*.options.*'              => 'string|max:80',
+            'fields.*.size'                   => 'nullable|integer|min:50|max:2000',
+            // Payment field — array of methods with per-kind shape.
+            'fields.*.methods'                => 'nullable|array|max:10',
+            'fields.*.methods.*.kind'         => ['required_with:fields.*.methods', Rule::in(['bkash','nagad','rocket','bank','other'])],
+            'fields.*.methods.*.label'        => 'nullable|string|max:80',
+            'fields.*.methods.*.number'       => 'nullable|string|max:32',
+            'fields.*.methods.*.instructions' => 'nullable|string|max:120',
+            'fields.*.methods.*.bank'         => 'nullable|string|max:80',
+            'fields.*.methods.*.account'      => 'nullable|string|max:64',
+            'fields.*.methods.*.holder'       => 'nullable|string|max:80',
+            'fields.*.methods.*.branch'       => 'nullable|string|max:80',
+            // Optional show-when conditional. `field` = id of another field on
+            // the same form. `operator` = how to compare. `value` = comparison
+            // operand (string for equals/not_equals; ignored for is_set/is_empty).
+            'fields.*.conditional'            => 'nullable|array',
+            'fields.*.conditional.field'      => 'required_with:fields.*.conditional|string|max:32',
+            'fields.*.conditional.operator'   => ['required_with:fields.*.conditional', Rule::in(['equals','not_equals','is_set','is_empty'])],
+            'fields.*.conditional.value'      => 'nullable|string|max:160',
+        ]);
+
+        // Normalise — drop irrelevant keys per type, ensure id is unique.
+        $seen = [];
+        $clean = collect($validated['fields'] ?? [])->map(function ($f) use (&$seen) {
+            $id = $f['id'];
+            // Defensive: if duplicate id slipped in, regenerate.
+            if (isset($seen[$id])) $id = \Illuminate\Support\Str::random(10);
+            $seen[$id] = true;
+
+            $row = [
+                'id'       => $id,
+                'type'     => $f['type'],
+                'label'    => trim($f['label']),
+                'required' => (bool) ($f['required'] ?? false),
+            ];
+            if (! empty($f['placeholder'])) $row['placeholder'] = $f['placeholder'];
+            if (in_array($f['type'], ['select','radio','multi'], true)) {
+                $row['options'] = array_values($f['options'] ?? []);
+            }
+            if ($f['type'] === 'image') $row['size'] = (int) ($f['size'] ?? 600);
+            if ($f['type'] === 'payment') {
+                $row['methods'] = array_values(array_map(function ($m) {
+                    $m = ['kind' => $m['kind']] + array_filter($m, fn ($v, $k) => $v !== null && $v !== '' && $k !== 'kind', ARRAY_FILTER_USE_BOTH);
+                    return $m;
+                }, $f['methods'] ?? []));
+            }
+            if (! empty($f['conditional']) && ! empty($f['conditional']['field']) && ! empty($f['conditional']['operator'])) {
+                $row['conditional'] = [
+                    'field'    => $f['conditional']['field'],
+                    'operator' => $f['conditional']['operator'],
+                    'value'    => $f['conditional']['value'] ?? null,
+                ];
+            }
+            return $row;
+        })->values()->all();
+
+        $season->update(['registration_form_schema' => $clean]);
+
+        return back()->with('success', 'Registration form updated.');
+    }
+
+    public function regenerateRegistrationToken(Request $request, Season $season): RedirectResponse
+    {
+        /** @var Organization $org */
+        $org = $request->attributes->get('current_organization');
+        abort_if($season->organization_id !== $org->id, 404);
+
+        $season->update(['registration_token' => \Illuminate\Support\Str::random(20)]);
+        return back()->with('success', 'New registration link generated. Old link is now dead.');
+    }
+}

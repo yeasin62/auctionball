@@ -1,0 +1,45 @@
+{
+    "name": "AuctionBall",
+    "short_name": "AuctionBall",
+    "description": "Run live cricket player auctions — control panel, big-screen, team-device bidding.",
+    "start_url": "/dashboard",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "theme_color": "#6366f1",
+    "background_color": "#f5f5fb",
+    "lang": "en",
+    "categories": ["sports", "productivity", "utilities"],
+    "icons": [
+        {
+            "src": "/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-maskable.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Live auction",
+            "url": "/dashboard/auction",
+            "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Big screen",
+            "url": "/dashboard/bigscreen",
+            "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+        }
+    ]
+}
