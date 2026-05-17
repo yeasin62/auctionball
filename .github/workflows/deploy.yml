@@ -1,0 +1,31 @@
+name: Deploy AuctionBall
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Vultr
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd /var/www/auctionball
+            git pull origin main
+            composer install --no-dev --optimize-autoloader
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan event:cache
+            chown -R www-data:www-data storage bootstrap/cache public/build
+            supervisorctl restart auctionball-queue:*
+            supervisorctl restart auctionball-reverb
+            echo "✅ Deploy complete!"
