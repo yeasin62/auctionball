@@ -51,6 +51,16 @@ const activate = async (season) => {
     useForm({}).post(route('dashboard.seasons.activate', season.id));
 };
 
+const deactivate = async (season) => {
+    if (! await confirm({
+        title: `Deactivate "${season.name}"?`,
+        description: 'The season is kept (with all its players, teams, and bid history) but the dashboard will show no active season — live auction, big screen, and bidding pages will show "No active season" until you activate one.',
+        variant: 'warning',
+        confirmText: 'Set inactive',
+    })) return;
+    useForm({}).post(route('dashboard.seasons.deactivate', season.id), { preserveScroll: true });
+};
+
 const toggleReg = (season, payload) => {
     useForm(payload).post(route('dashboard.seasons.registration', season.id), { preserveScroll: true });
 };
@@ -353,6 +363,10 @@ const atLimit = props.used >= props.limits.seasons;
                         </div>
                     </div>
                     <button v-if="!s.is_active" @click="activate(s)" class="btn-ghost py-2 px-4 text-[13px] whitespace-nowrap">Set active</button>
+                    <button v-else @click="deactivate(s)"
+                            class="py-2 px-4 text-[13px] font-medium rounded-xl border whitespace-nowrap bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200 transition-colors">
+                        Set inactive
+                    </button>
                     <a :href="`/dashboard/seasons/${s.id}/export.pdf`" target="_blank" class="btn-ghost py-2 px-4 text-[13px] whitespace-nowrap">
                         Summary PDF
                     </a>

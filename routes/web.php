@@ -101,7 +101,8 @@ Route::middleware(['auth', 'org'])->prefix('dashboard')->name('dashboard.')->gro
     Route::post  ('/seasons',                  [SeasonController::class, 'store'])   ->name('seasons.store');
     Route::patch ('/seasons/{season}',         [SeasonController::class, 'update'])  ->name('seasons.update');
     Route::delete('/seasons/{season}',         [SeasonController::class, 'destroy']) ->name('seasons.destroy');
-    Route::post  ('/seasons/{season}/activate',[SeasonController::class, 'activate'])->name('seasons.activate');
+    Route::post  ('/seasons/{season}/activate',  [SeasonController::class, 'activate'])  ->name('seasons.activate');
+    Route::post  ('/seasons/{season}/deactivate',[SeasonController::class, 'deactivate'])->name('seasons.deactivate');
     Route::post  ('/seasons/{season}/registration', [SeasonController::class, 'toggleRegistration'])->name('seasons.registration');
     Route::post  ('/seasons/{season}/registration/regenerate', [SeasonController::class, 'regenerateRegistrationToken'])->name('seasons.registration.regenerate');
     Route::post  ('/seasons/{season}/registration/form',       [SeasonController::class, 'updateRegistrationForm'])    ->name('seasons.registration.form');

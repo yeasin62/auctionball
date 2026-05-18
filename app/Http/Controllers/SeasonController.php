@@ -114,6 +114,25 @@ class SeasonController extends Controller
         return back()->with('success', "“{$season->name}” is now your active season.");
     }
 
+    /**
+     * Mark a season as inactive without deleting it. Useful after a tournament
+     * ends — the season + data stays around for audit / PDF export, but the
+     * dashboard pages stop targeting it as the auction context.
+     *
+     * Leaves the org with NO active season; user must explicitly activate
+     * another (or this one again) before live-auction features work.
+     */
+    public function deactivate(Request $request, Season $season): RedirectResponse
+    {
+        /** @var Organization $org */
+        $org = $request->attributes->get('current_organization');
+        abort_if($season->organization_id !== $org->id, 404);
+
+        $season->update(['is_active' => false, 'status' => 'completed']);
+
+        return back()->with('success', "“{$season->name}” is now inactive. Dashboard pages will show no active season until you activate one.");
+    }
+
     public function update(Request $request, Season $season): RedirectResponse
     {
         /** @var Organization $org */
