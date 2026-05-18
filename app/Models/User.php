@@ -54,13 +54,35 @@ class User extends Authenticatable implements HasLocalePreference
             ->withTimestamps();
     }
 
+    /**
+     * The user's active organization for this request.
+     *
+     * Falls back to alphabetical-first org when no session id is set — MUST
+     * match HandleInertiaRequests::share() so the sidebar (rendered from
+     * shared props) and the page controller (rendered from request
+     * attributes) agree on which org is "current". Without matching orders,
+     * a user with multiple orgs sees one org in the sidebar but data from
+     * a different org in the page — most visibly: seasons list showing
+     * empty when the chosen org has none, while the user is actually
+     * looking at the wrong org.
+     *
+     * Also writes the resolved id back to the session so subsequent requests
+     * are immediately consistent — no flicker on first load after login.
+     */
     public function currentOrganization(): ?Organization
     {
         $id = session('current_organization_id');
-        if (! $id) {
-            return $this->organizations()->first();
+        if ($id) {
+            $org = $this->organizations()->where('organizations.id', $id)->first();
+            if ($org) return $org;
+            // Stale session id (user was removed from that org, or it was
+            // deleted). Fall through to the default pick below.
         }
-        return $this->organizations()->where('organizations.id', $id)->first();
+        $org = $this->organizations()->orderBy('name')->first();
+        if ($org) {
+            session(['current_organization_id' => $org->id]);
+        }
+        return $org;
     }
 
     public function roleIn(Organization $org): ?string
