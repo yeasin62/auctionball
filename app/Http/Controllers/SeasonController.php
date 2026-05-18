@@ -83,7 +83,7 @@ class SeasonController extends Controller
             'status' => $data['status'] ?? 'upcoming',
         ]);
 
-        return redirect()->route('seasons.index')->with('success', "Season “{$season->name}” created.");
+        return redirect()->route('dashboard.seasons.index')->with('success', "Season “{$season->name}” created.");
     }
 
     public function activate(Request $request, Season $season): RedirectResponse
@@ -114,6 +114,37 @@ class SeasonController extends Controller
         $season->update($data);
 
         return back()->with('success', 'Season updated.');
+    }
+
+    /**
+     * Permanently delete a season — cascades to players, teams, bids,
+     * auction_state, and any registrations (via FK cascade in migrations).
+     * Org-scoped: a super admin in a different org can't reach another org's
+     * season through this endpoint (abort 404 first).
+     */
+    public function destroy(Request $request, Season $season): RedirectResponse
+    {
+        /** @var Organization $org */
+        $org = $request->attributes->get('current_organization');
+        abort_if($season->organization_id !== $org->id, 404);
+
+        $name           = $season->name;
+        $playersCount   = $season->players()->count();
+        $teamsCount     = $season->teams()->count();
+        $bidsCount      = $season->bids()->count();
+
+        \App\Support\Audit::log(
+            'season.deleted',
+            "Deleted season “{$name}” — cascaded {$playersCount} players, {$teamsCount} teams, {$bidsCount} bids",
+            ['season_id' => $season->id, 'players' => $playersCount, 'teams' => $teamsCount, 'bids' => $bidsCount],
+            null,
+            $org->id,
+        );
+
+        $season->delete();
+
+        return redirect()->route('dashboard.seasons.index')
+            ->with('success', "Season “{$name}” deleted.");
     }
 
     /** Toggle public registration on/off; mints a token the first time. */

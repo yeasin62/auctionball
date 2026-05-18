@@ -331,7 +331,7 @@ const footerCols = computed(() => [
     <!-- ============== SEO + AEO META ============== -->
     <Head :title="seoTitle">
         <meta name="description" :content="seoDescription" head-key="description" />
-        <meta name="keywords" content="cricket auction software, football auction software, player auction Bangladesh, BPL auction, IPL-style auction, tournament bidding system, bKash auction software, real-time auction, big screen auction, AuctionBall" />
+        <meta name="keywords" content="player auction software, cricket auction platform, tournament auction system Bangladesh, live player auction app, cricket auction software, football auction software, player auction Bangladesh, BPL auction, IPL-style auction, tournament bidding system, bKash auction software, real-time auction, big screen auction, AuctionBall" />
         <meta name="author" content="AuctionBall" />
 
         <!-- Canonical + alternates -->

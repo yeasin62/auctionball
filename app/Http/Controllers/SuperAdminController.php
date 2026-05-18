@@ -681,9 +681,11 @@ class SuperAdminController extends Controller
 
         $users = $q->orderByDesc('id')->paginate(40)->withQueryString();
 
-        // Append role hints (latest org's pivot role) — purely informational
+        // Append role hints + full org list so the "Grant subscription" modal
+        // can target a specific org without an extra round trip.
         $users->getCollection()->transform(function ($u) {
-            $org = $u->organizations()->orderBy('name')->first();
+            $orgs = $u->organizations()->orderBy('name')->get();
+            $first = $orgs->first();
             return [
                 'id'              => $u->id,
                 'name'            => $u->name,
@@ -691,7 +693,21 @@ class SuperAdminController extends Controller
                 'is_super_admin'  => (bool) $u->is_super_admin,
                 'created_at'      => $u->created_at?->format('Y-m-d'),
                 'organizations_count' => $u->organizations_count,
-                'sample_org'      => $org ? ['name' => $org->name, 'slug' => $org->slug, 'role' => $org->pivot->role] : null,
+                'sample_org'      => $first ? ['name' => $first->name, 'slug' => $first->slug, 'role' => $first->pivot->role] : null,
+                // Compact org list — what the grant-subscription modal needs.
+                // Includes current active/past_due sub end date so the admin can
+                // see at a glance "this org is already active until X".
+                'orgs_for_grant'  => $orgs->map(function ($o) {
+                    $sub = $o->subscriptions()->whereIn('status', ['active', 'past_due'])->latest()->first();
+                    return [
+                        'id'        => $o->id,
+                        'name'      => $o->name,
+                        'slug'      => $o->slug,
+                        'plan'      => $o->plan,
+                        'sub_until' => $sub?->current_period_end?->format('Y-m-d'),
+                        'sub_status'=> $sub?->status,
+                    ];
+                })->values(),
             ];
         });
 

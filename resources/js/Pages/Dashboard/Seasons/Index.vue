@@ -55,6 +55,27 @@ const toggleReg = (season, payload) => {
     useForm(payload).post(route('dashboard.seasons.registration', season.id), { preserveScroll: true });
 };
 
+const deleteSeason = async (season) => {
+    // Build a description that names what's about to be wiped so the admin
+    // sees the cascade impact before they confirm.
+    const parts = [];
+    if (season.players_count > 0) parts.push(`${season.players_count} players`);
+    if (season.teams_count   > 0) parts.push(`${season.teams_count} teams`);
+    if (season.bids_count    > 0) parts.push(`${season.bids_count} bids`);
+    const cascade = parts.length
+        ? `Will permanently delete ${parts.join(', ')} and all auction state for this season. This cannot be undone.`
+        : 'Will permanently delete this season. This cannot be undone.';
+
+    if (! await confirm({
+        title: `Delete season "${season.name}"?`,
+        description: cascade,
+        variant: 'danger',
+        confirmText: 'Delete season',
+    })) return;
+
+    router.delete(route('dashboard.seasons.destroy', season.id), { preserveScroll: true });
+};
+
 const regenerate = async (season) => {
     if (! await confirm({
         title: 'Generate a new registration link?',
@@ -348,6 +369,11 @@ const atLimit = props.used >= props.limits.seasons;
                               class="ml-1 px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 font-mono text-[10px]">
                             {{ s.registration_form_schema.length }}
                         </span>
+                    </button>
+                    <button @click="deleteSeason(s)"
+                            class="py-2 px-4 text-[13px] font-medium rounded-xl border whitespace-nowrap bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 transition-colors">
+                        <svg class="inline h-3.5 w-3.5 -mt-0.5 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/></svg>
+                        Delete
                     </button>
                 </div>
 

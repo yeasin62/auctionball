@@ -1,7 +1,7 @@
 <script setup>
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 import { Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useConfirm, useAlert } from '@/composables/useConfirm';
 
 const confirm = useConfirm();
@@ -77,6 +77,56 @@ const resetPassword = async (u) => {
         confirmText: 'Reset password',
     })) return;
     router.post(route('admin.users.reset-password', u.id), {}, { preserveScroll: true });
+};
+
+// ============== Manual subscription grant — user-centric flow ==============
+// Reuses the org-side `admin.orgs.extend-sub` endpoint (single source of truth)
+// but exposes it from the user view: pick a user → pick which of their orgs →
+// set plan + end date → save.
+const grantUser    = ref(null);
+const grantForm    = useForm({ organization_id: '', plan: '', until: '', note: '' });
+
+const todayPlus = (days) => {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+};
+const todayIso = computed(() => new Date().toISOString().slice(0, 10));
+
+const openGrant = (u) => {
+    if (! u.orgs_for_grant?.length) {
+        alertDialog({
+            title: 'This user has no organization',
+            description: `${u.name} isn't a member of any organization yet — there's nothing to grant a subscription to. Attach them to an org first (via "Create user" with an existing-org attach, or from the org's Users page).`,
+            variant: 'warning',
+        });
+        return;
+    }
+    grantUser.value          = u;
+    grantForm.organization_id = u.orgs_for_grant[0].id;
+    grantForm.plan            = u.orgs_for_grant[0].plan;
+    grantForm.until           = u.orgs_for_grant[0].sub_until || todayPlus(30);
+    grantForm.note            = '';
+    grantForm.clearErrors();
+};
+
+// When the admin picks a different org from the dropdown, snap plan + date
+// defaults to that org's current state.
+watch(() => grantForm.organization_id, (newId) => {
+    if (! grantUser.value) return;
+    const org = grantUser.value.orgs_for_grant.find(o => o.id === newId);
+    if (! org) return;
+    grantForm.plan  = org.plan;
+    grantForm.until = org.sub_until || todayPlus(30);
+});
+
+const closeGrant = () => { grantUser.value = null; grantForm.reset(); };
+
+const submitGrant = () => {
+    grantForm.post(route('admin.orgs.extend-sub', grantForm.organization_id), {
+        preserveScroll: true,
+        onSuccess: () => closeGrant(),
+    });
 };
 
 const deleteUser = async (u) => {
@@ -167,6 +217,11 @@ const deleteUser = async (u) => {
                             </button>
                         </td>
                         <td class="px-4 py-2.5 text-right whitespace-nowrap">
+                            <button @click="openGrant(u)"
+                                    class="text-[11.5px] text-emerald-600 hover:text-emerald-800 hover:underline mr-3"
+                                    :class="{ 'opacity-40 pointer-events-none': ! u.orgs_for_grant?.length }">
+                                Grant sub
+                            </button>
                             <button @click="resetPassword(u)" class="text-[11.5px] text-brand-indigo hover:underline mr-3"
                                     :class="u.id === me ? 'opacity-40 pointer-events-none' : ''">
                                 Reset password
@@ -320,5 +375,97 @@ const deleteUser = async (u) => {
                 </form>
             </div>
         </div>
+
+        <!-- ============== Manual subscription grant modal ============== -->
+        <Teleport to="body">
+            <Transition name="grant-fade">
+                <div v-if="grantUser" class="fixed inset-0 z-[60] grid place-items-center bg-ink-900/55 backdrop-blur-sm p-4"
+                     @click.self="closeGrant">
+                    <div class="glass-strong rounded-2xl max-w-md w-full p-6 shadow-glass-lg">
+                        <div class="flex items-start gap-4 mb-5">
+                            <span class="grid place-items-center h-11 w-11 rounded-xl shrink-0 bg-emerald-100">
+                                <svg class="h-5 w-5 text-emerald-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </span>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-[16px] font-bold tracking-tight">Grant subscription</h3>
+                                <p class="mt-1 text-[13px] text-ink-600 leading-relaxed">
+                                    Manually mark <strong>{{ grantUser.name }}</strong>'s organization as active until the chosen date.
+                                    Auto-renew stays off — useful for free trial / test / comp access.
+                                </p>
+                            </div>
+                        </div>
+
+                        <form @submit.prevent="submitGrant" class="space-y-3.5">
+                            <!-- Org picker — only shown when user has 2+ orgs -->
+                            <div v-if="grantUser.orgs_for_grant.length > 1">
+                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">ORGANIZATION</label>
+                                <select v-model.number="grantForm.organization_id"
+                                        class="w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
+                                    <option v-for="o in grantUser.orgs_for_grant" :key="o.id" :value="o.id">
+                                        {{ o.name }} ({{ o.plan }}{{ o.sub_until ? ` · until ${o.sub_until}` : '' }})
+                                    </option>
+                                </select>
+                            </div>
+                            <!-- Single org — show as a read-only card -->
+                            <div v-else class="rounded-xl bg-white/60 border border-ink-200/60 px-3 py-2.5">
+                                <div class="font-mono text-[10.5px] tracking-widest text-ink-500">ORGANIZATION</div>
+                                <div class="text-[14px] font-semibold mt-0.5">{{ grantUser.orgs_for_grant[0].name }}</div>
+                                <div class="font-mono text-[11px] text-ink-500">
+                                    current: {{ grantUser.orgs_for_grant[0].plan }}
+                                    <span v-if="grantUser.orgs_for_grant[0].sub_until">· active until {{ grantUser.orgs_for_grant[0].sub_until }}</span>
+                                    <span v-else>· no active subscription</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">PLAN</label>
+                                <select v-model="grantForm.plan"
+                                        class="w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-[14px] capitalize focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
+                                    <option v-for="p in plans" :key="p" :value="p">{{ p }}</option>
+                                </select>
+                                <p v-if="grantForm.errors.plan" class="mt-1 text-[12px] text-rose-500">{{ grantForm.errors.plan }}</p>
+                            </div>
+
+                            <div>
+                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">ACTIVE UNTIL</label>
+                                <input v-model="grantForm.until" type="date" :min="todayIso"
+                                       class="w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
+                                <p v-if="grantForm.errors.until" class="mt-1 text-[12px] text-rose-500">{{ grantForm.errors.until }}</p>
+                                <div class="mt-2 flex gap-1.5 flex-wrap">
+                                    <button v-for="(d, label) in { '+7 days': 7, '+30 days': 30, '+90 days': 90, '+1 year': 365 }"
+                                            :key="label" type="button" @click="grantForm.until = todayPlus(d)"
+                                            class="text-[11px] font-mono px-2 py-1 rounded-md border border-ink-200 hover:bg-white text-ink-600">
+                                        {{ label }}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">NOTE <span class="text-ink-400">(optional, audit log)</span></label>
+                                <textarea v-model="grantForm.note" rows="2"
+                                          placeholder="e.g. Free trial granted by support"
+                                          class="w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-[13.5px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"></textarea>
+                            </div>
+
+                            <div class="flex gap-2 justify-end pt-2">
+                                <button type="button" @click="closeGrant" class="btn-ghost py-2 px-4 text-[13px]">Cancel</button>
+                                <button type="submit" :disabled="grantForm.processing"
+                                        class="btn-primary py-2 px-4 text-[13px]"
+                                        :class="{ 'opacity-60 pointer-events-none': grantForm.processing }">
+                                    {{ grantForm.processing ? 'Saving…' : 'Grant subscription' }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
     </SuperAdminLayout>
 </template>
+
+<style scoped>
+.grant-fade-enter-active,
+.grant-fade-leave-active { transition: opacity .2s ease; }
+.grant-fade-enter-from,
+.grant-fade-leave-to     { opacity: 0; }
+</style>
