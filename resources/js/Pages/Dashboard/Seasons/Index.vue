@@ -398,8 +398,8 @@ const atLimit = props.used >= props.limits.seasons;
         <!-- List -->
         <div v-if="seasons.length" class="space-y-3">
             <div v-for="s in seasons" :key="s.id" class="glass rounded-2xl p-5">
-                <div class="flex items-center gap-5">
-                    <div class="flex-1 min-w-0">
+                <div class="flex flex-col gap-4">
+                    <div class="min-w-0">
                         <div class="flex items-center gap-2.5 flex-wrap">
                             <span class="text-[16px] font-bold tracking-tight">{{ s.name }}</span>
                             <span class="font-mono text-[11px] text-ink-500">· {{ s.year }}</span>
@@ -425,6 +425,7 @@ const atLimit = props.used >= props.limits.seasons;
                             </span>
                         </div>
                     </div>
+                    <div class="flex flex-wrap items-center gap-2">
                     <button v-if="!s.is_active" @click="activate(s)" class="btn-ghost py-2 px-4 text-[13px] whitespace-nowrap">Set active</button>
                     <button v-else @click="deactivate(s)"
                             class="py-2 px-4 text-[13px] font-medium rounded-xl border whitespace-nowrap bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200 transition-colors">
@@ -468,6 +469,7 @@ const atLimit = props.used >= props.limits.seasons;
                         <svg class="inline h-3.5 w-3.5 -mt-0.5 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/></svg>
                         Delete
                     </button>
+                    </div>
                 </div>
 
                 <!-- ============== Edit season basics ============== -->
