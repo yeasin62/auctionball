@@ -18,8 +18,12 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd /var/www/auctionball
+            git stash
             git pull origin main
+            git stash drop || true
             composer install --no-dev --optimize-autoloader
+            npm install
+            npm run build
             php artisan migrate --force
             php artisan config:cache
             php artisan route:cache
