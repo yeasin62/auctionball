@@ -16,7 +16,12 @@
       "PowerShell(& \"C:\\\\laragon\\\\bin\\\\php\\\\php-8.3.30-Win32-vs16-x64\\\\php.exe\" artisan serve)",
       "PowerShell(npm run dev)",
       "PowerShell(if \\(Test-Path \"C:\\\\laragon\\\\bin\\\\nodejs\"\\) { Get-ChildItem \"C:\\\\laragon\\\\bin\\\\nodejs\" -Directory | Select-Object -First 5 -ExpandProperty FullName } ; if \\(Test-Path \"C:\\\\Program Files\\\\nodejs\\\\npm.cmd\"\\) { Write-Output \"Program Files nodejs found\" } ; if \\(Test-Path \"$env:APPDATA\\\\npm\"\\) { Write-Output \"APPDATA npm exists\" })",
-      "PowerShell($env:Path = \"C:\\\\laragon\\\\bin\\\\nodejs\\\\node-v22;\" + $env:Path; & \"C:\\\\laragon\\\\bin\\\\nodejs\\\\node-v22\\\\npm.cmd\" run dev)"
+      "PowerShell($env:Path = \"C:\\\\laragon\\\\bin\\\\nodejs\\\\node-v22;\" + $env:Path; & \"C:\\\\laragon\\\\bin\\\\nodejs\\\\node-v22\\\\npm.cmd\" run dev)",
+      "Bash(node -e ' *)",
+      "Bash(rm e:/auction-laravel-application/_used_keys.txt)"
+    ],
+    "additionalDirectories": [
+      "e:\\auction-laravel-application"
     ]
   }
 }
