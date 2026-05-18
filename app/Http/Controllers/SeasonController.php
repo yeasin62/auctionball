@@ -78,12 +78,26 @@ class SeasonController extends Controller
         $data['bid_increment']     = $data['bid_increment']     ?? 1000;
         $data['bid_increment_usd'] = $data['bid_increment_usd'] ?? 10;
 
+        // Auto-activate when there's no active season already — otherwise the
+        // user creates their first season and every dashboard page still says
+        // "No active season. Create one first." because they didn't realize a
+        // separate "Set active" click was needed. If another season is already
+        // active, leave the new one as upcoming so the in-flight auction isn't
+        // disrupted.
+        $hasActive = $org->seasons()->where('is_active', true)->exists();
+        $shouldActivate = ! $hasActive;
+
         $season = $org->seasons()->create([
             ...$data,
-            'status' => $data['status'] ?? 'upcoming',
+            'status'    => $data['status'] ?? ($shouldActivate ? 'active' : 'upcoming'),
+            'is_active' => $shouldActivate,
         ]);
 
-        return redirect()->route('dashboard.seasons.index')->with('success', "Season “{$season->name}” created.");
+        $msg = $shouldActivate
+            ? "Season “{$season->name}” created and set as active."
+            : "Season “{$season->name}” created. Click “Set active” to switch to it.";
+
+        return redirect()->route('dashboard.seasons.index')->with('success', $msg);
     }
 
     public function activate(Request $request, Season $season): RedirectResponse
