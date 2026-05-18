@@ -10,7 +10,13 @@
       "PowerShell(cmd /c \"dir C:\\\\laragon\\\\bin\\\\git\\\\bin /B\" 2>&1)",
       "PowerShell(cmd /c \"dir C:\\\\laragon\\\\bin\\\\git /B\" 2>&1)",
       "PowerShell($env:PATH = \"C:\\\\laragon\\\\bin\\\\nodejs\\\\node-v22;\" + $env:PATH; & \"C:\\\\laragon\\\\bin\\\\nodejs\\\\node-v22\\\\npm.cmd\" run build 2>&1 | Select-Object -Last 3)",
-      "PowerShell(Get-Content \"e:\\\\auction-laravel-application\\\\public\\\\build\\\\manifest.json\" -Raw | ConvertFrom-Json | ForEach-Object { $_.PSObject.Properties } | Where-Object { $_.Name -match \"Seasons\" } | Select-Object Name, @{n='File';e={$_.Value.file}}, @{n='LastModified';e={\\(Get-Item \"e:\\\\auction-laravel-application\\\\public\\\\build\\\\$\\($_.Value.file\\)\" -ErrorAction SilentlyContinue\\).LastWriteTime}})"
+      "PowerShell(Get-Content \"e:\\\\auction-laravel-application\\\\public\\\\build\\\\manifest.json\" -Raw | ConvertFrom-Json | ForEach-Object { $_.PSObject.Properties } | Where-Object { $_.Name -match \"Seasons\" } | Select-Object Name, @{n='File';e={$_.Value.file}}, @{n='LastModified';e={\\(Get-Item \"e:\\\\auction-laravel-application\\\\public\\\\build\\\\$\\($_.Value.file\\)\" -ErrorAction SilentlyContinue\\).LastWriteTime}})",
+      "PowerShell(php artisan migrate --no-interaction)",
+      "PowerShell(& \"C:\\\\laragon\\\\bin\\\\php\\\\php-8.3.30-Win32-vs16-x64\\\\php.exe\" artisan migrate --no-interaction)",
+      "PowerShell(& \"C:\\\\laragon\\\\bin\\\\php\\\\php-8.3.30-Win32-vs16-x64\\\\php.exe\" artisan serve)",
+      "PowerShell(npm run dev)",
+      "PowerShell(if \\(Test-Path \"C:\\\\laragon\\\\bin\\\\nodejs\"\\) { Get-ChildItem \"C:\\\\laragon\\\\bin\\\\nodejs\" -Directory | Select-Object -First 5 -ExpandProperty FullName } ; if \\(Test-Path \"C:\\\\Program Files\\\\nodejs\\\\npm.cmd\"\\) { Write-Output \"Program Files nodejs found\" } ; if \\(Test-Path \"$env:APPDATA\\\\npm\"\\) { Write-Output \"APPDATA npm exists\" })",
+      "PowerShell($env:Path = \"C:\\\\laragon\\\\bin\\\\nodejs\\\\node-v22;\" + $env:Path; & \"C:\\\\laragon\\\\bin\\\\nodejs\\\\node-v22\\\\npm.cmd\" run dev)"
     ]
   }
 }

@@ -36,7 +36,12 @@ class PlayerController extends Controller
         $sport        = $season?->sport ?? 'cricket';
 
         return Inertia::render('Dashboard/Players/Index', [
-            'season'        => $season ? ['id' => $season->id, 'name' => $season->name, 'sport' => $sport] : null,
+            'season'        => $season ? [
+                'id'                => $season->id,
+                'name'              => $season->name,
+                'sport'             => $sport,
+                'player_categories' => $season->categoryList(),
+            ] : null,
             'players'       => $players,
             'filters'       => $filters,
             'limits'        => $org->limits(),
@@ -68,7 +73,7 @@ class PlayerController extends Controller
 
         $rules = [
             'name'          => 'required|string|max:255',
-            'category'      => ['required', Rule::in(Player::CATEGORIES)],
+            'category'      => ['required', Rule::in($season->categoryNames())],
             'player_type'   => ['required', Rule::in(Player::TYPES)],
             'position'      => ['nullable', Rule::in(Player::positionsFor($season->sport ?? 'cricket'))],
             'base_price'    => 'required|integer|min:0',
@@ -113,7 +118,7 @@ class PlayerController extends Controller
 
         $rules = [
             'name'          => 'required|string|max:255',
-            'category'      => ['required', Rule::in(Player::CATEGORIES)],
+            'category'      => ['required', Rule::in($season ? $season->categoryNames() : array_column(\App\Models\Season::DEFAULT_PLAYER_CATEGORIES, 'name'))],
             'player_type'   => ['required', Rule::in(Player::TYPES)],
             'position'      => ['nullable', Rule::in(Player::positionsFor($sport))],
             'base_price'    => 'required|integer|min:0',

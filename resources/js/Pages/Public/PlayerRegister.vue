@@ -10,6 +10,11 @@ const page = usePage();
 
 const isCricket = props.season?.sport !== 'football';
 const customFields = props.season?.custom_fields ?? [];
+const seasonCategoryNames = computed(() => {
+    const list = props.season?.player_categories || [];
+    const names = list.map(c => c?.name).filter(Boolean);
+    return names.length ? names : ['Elite', 'Regular', 'New'];
+});
 
 // Pre-seed the `custom` map with one slot per dynamic field so v-model bindings
 // stay reactive (Vue won't re-track new keys added after form creation).
@@ -52,7 +57,7 @@ const methodCopy = (txt) => { if (txt) navigator.clipboard?.writeText(txt); };
 
 const form = useForm({
     name: '',
-    category: 'Regular',
+    category: seasonCategoryNames.value[0] || 'Regular',
     position: '',
     jersey_no: '',
     batting_style: '',
@@ -151,7 +156,7 @@ const submit = () => form.post(route('public-register.store', props.season.token
                 <div class="grid md:grid-cols-2 gap-4">
                     <Field label="Category" :error="form.errors.category" required>
                         <select v-model="form.category" class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
-                            <option>Elite</option><option>Regular</option><option>New</option>
+                            <option v-for="c in seasonCategoryNames" :key="c" :value="c">{{ c }}</option>
                         </select>
                     </Field>
                     <Field :label="isCricket ? 'Player position' : 'Position'" :error="form.errors.position">

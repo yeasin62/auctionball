@@ -77,6 +77,14 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
+        // If they picked a paid plan, drop them on the billing page so they can
+        // finish payment. The org is still on `free` until payment clears (see
+        // comment above) — this is just routing, not authorization.
+        if (! empty($data['plan']) && $data['plan'] !== 'free') {
+            return redirect(route('dashboard.billing.index', ['plan' => $data['plan']]))
+                ->with('success', "Account created. Complete payment to activate your {$data['plan']} plan.");
+        }
+
         return redirect(route('dashboard', absolute: false));
     }
 }

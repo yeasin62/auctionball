@@ -1074,10 +1074,16 @@ class SuperAdminController extends Controller
                 'completed_at'    => $t->completed_at?->format('Y-m-d H:i'),
             ]);
 
+        $settings = \App\Models\PlatformSettings::current();
+
         return Inertia::render('SuperAdmin/Payments', [
             'pending'  => $pending,
             'recent'   => $recent,
-            'settings' => \App\Models\PlatformSettings::current()->only(['app_domain','bkash_merchant_number','bkash_account_type','bkash_instructions','manual_review_hours']),
+            'settings' => array_merge(
+                $settings->only(['app_domain','bkash_merchant_number','bkash_account_type','bkash_instructions','manual_review_hours']),
+                ['landing_payment_methods' => $settings->enabledLandingPaymentMethods()],
+            ),
+            'allLandingPaymentMethods' => \App\Models\PlatformSettings::LANDING_PAYMENT_METHODS,
         ]);
     }
 
@@ -1255,14 +1261,23 @@ class SuperAdminController extends Controller
     public function updatePlatformSettings(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'app_domain'            => ['required', 'string', 'max:100', 'regex:/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/i'],
-            'bkash_merchant_number' => 'required|string|max:32',
-            'bkash_account_type'    => ['required', Rule::in(['Personal', 'Merchant', 'Send Money', 'Agent'])],
-            'bkash_instructions'    => 'nullable|string|max:2000',
-            'manual_review_hours'   => 'required|integer|min:1|max:72',
+            'app_domain'              => ['required', 'string', 'max:100', 'regex:/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/i'],
+            'bkash_merchant_number'   => 'required|string|max:32',
+            'bkash_account_type'      => ['required', Rule::in(['Personal', 'Merchant', 'Send Money', 'Agent'])],
+            'bkash_instructions'      => 'nullable|string|max:2000',
+            'manual_review_hours'     => 'required|integer|min:1|max:72',
+            'landing_payment_methods' => 'nullable|array',
+            'landing_payment_methods.*' => [Rule::in(\App\Models\PlatformSettings::LANDING_PAYMENT_METHODS)],
         ], [
             'app_domain.regex' => 'Domain must be a valid hostname like auctionball.com or auction.example.bd (no protocol, no path).',
         ]);
+
+        // Normalize to canonical order; empty array (admin disabled everything)
+        // is allowed — the landing-page section hides itself when empty.
+        $data['landing_payment_methods'] = array_values(array_intersect(
+            \App\Models\PlatformSettings::LANDING_PAYMENT_METHODS,
+            $data['landing_payment_methods'] ?? [],
+        ));
 
         \App\Models\PlatformSettings::current()->update($data);
 

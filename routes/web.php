@@ -106,6 +106,7 @@ Route::middleware(['auth', 'org'])->prefix('dashboard')->name('dashboard.')->gro
     Route::post  ('/seasons/{season}/registration', [SeasonController::class, 'toggleRegistration'])->name('seasons.registration');
     Route::post  ('/seasons/{season}/registration/regenerate', [SeasonController::class, 'regenerateRegistrationToken'])->name('seasons.registration.regenerate');
     Route::post  ('/seasons/{season}/registration/form',       [SeasonController::class, 'updateRegistrationForm'])    ->name('seasons.registration.form');
+    Route::post  ('/seasons/{season}/categories',              [SeasonController::class, 'updatePlayerCategories'])    ->name('seasons.categories');
     Route::get   ('/seasons/{season}/export.pdf', [ExportController::class, 'seasonSummaryPdf'])->name('seasons.export.pdf');
 
     // Players

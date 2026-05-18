@@ -74,8 +74,11 @@ class AnalyticsController extends Controller
                 'players'    => (int) $season->players()->where('team_id', $t->id)->where('auction_status','sold')->count(),
             ])->values();
 
-        // Spend by category
-        $spendByCategory = collect(['Elite', 'Regular', 'New'])->map(function ($c) use ($season) {
+        // Spend by category — iterate the season's configured categories so a
+        // renamed/added category shows up immediately. Players whose category
+        // was nulled out by a category removal won't appear here (intentional;
+        // re-assign them on the Players page).
+        $spendByCategory = collect($season->categoryNames())->map(function ($c) use ($season) {
             $rows = $season->players()->where('category', $c)->where('auction_status', 'sold');
             return [
                 'category' => $c,

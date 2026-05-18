@@ -56,7 +56,7 @@ return [
             'body_intro'    => 'Hi :org,',
             'body_main'     => 'After :max failed renewal attempts, your AuctionBall plan has been moved to **Free**.',
             'last_failure'  => 'Last failure reason',
-            'data_safe'     => 'Your data is safe — players, teams, seasons, bid history all stay intact. Free-tier limits now apply (1 active season, up to 20 players, up to 4 teams). Upgrade any time to restore full access.',
+            'data_safe'     => 'Your data is safe — players, teams, seasons, bid history all stay intact. Free-tier limits now apply (1 active season, up to 44 players, up to 4 teams). Upgrade any time to restore full access.',
             'cta'           => 'Upgrade again',
         ],
 

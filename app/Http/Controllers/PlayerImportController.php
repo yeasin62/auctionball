@@ -69,12 +69,15 @@ class PlayerImportController extends Controller
         $valid   = [];
         $invalid = [];
 
-        $allowedPositions = implode(',', Player::positionsFor($season->sport ?? 'cricket'));
+        $allowedPositions  = implode(',', Player::positionsFor($season->sport ?? 'cricket'));
+        $allowedCategories = $season->categoryNames();
+        $defaultCategory   = $allowedCategories[0] ?? 'Regular';
+        $allowedCategoriesCsv = implode(',', $allowedCategories);
 
         foreach ($body as $i => $r) {
             $row = [
                 'name'          => trim($r[$col['name']]          ?? ''),
-                'category'      => trim($r[$col['category']]      ?? 'Regular'),
+                'category'      => trim($r[$col['category']]      ?? $defaultCategory),
                 'player_type'   => trim($r[$col['player_type']]   ?? 'New'),
                 'position'      => trim($r[$col['position']]      ?? ''),
                 'base_price'    => (int) trim($r[$col['base_price']]    ?? 0),
@@ -86,7 +89,7 @@ class PlayerImportController extends Controller
 
             $v = Validator::make($row, [
                 'name'          => 'required|string|max:255',
-                'category'      => 'required|in:Elite,Regular,New',
+                'category'      => "required|in:{$allowedCategoriesCsv}",
                 'player_type'   => 'required|in:Old,New',
                 'position'      => "nullable|in:{$allowedPositions}",
                 'base_price'    => 'required|integer|min:0',

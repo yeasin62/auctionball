@@ -313,11 +313,26 @@ onBeforeUnmount(() => {
         .forEach(id => document.getElementById(id)?.remove());
 });
 
-// Payment names stay as literals (brand names); only "Bank transfer" gets translated.
-const payments = computed(() => [
-    'bKash', 'Nagad', 'Rocket', 'SSLCommerz', 'PayPal', 'Visa / Mastercard',
-    t('landing.payments.bank_transfer'),
-]);
+// Payment method catalog — labels stay as literals (brand names); only
+// "Bank transfer" gets translated. The dot color is keyed to the method so
+// each tile keeps its identity regardless of which others are enabled. The
+// admin picks which keys appear via Super admin → Payments.
+const paymentCatalog = computed(() => ({
+    bkash:           { label: 'bKash',             dot: 'bg-pink-500'    },
+    nagad:           { label: 'Nagad',             dot: 'bg-amber-500'   },
+    rocket:          { label: 'Rocket',            dot: 'bg-emerald-500' },
+    sslcommerz:      { label: 'SSLCommerz',        dot: 'bg-blue-500'    },
+    paypal:          { label: 'PayPal',            dot: 'bg-indigo-500'  },
+    visa_mastercard: { label: 'Visa / Mastercard', dot: 'bg-violet-500'  },
+    bank_transfer:   { label: t('landing.payments.bank_transfer'), dot: 'bg-ink-400' },
+}));
+
+const landingPaymentMethods = computed(() => usePage().props.landingPaymentMethods || []);
+const payments = computed(() =>
+    landingPaymentMethods.value
+        .map(key => paymentCatalog.value[key])
+        .filter(Boolean),
+);
 
 const footerCols = computed(() => [
     { title: t('landing.footer.product'), links: [t('landing.footer.product_l1'), t('landing.footer.product_l2'), t('landing.footer.product_l3'), t('landing.footer.product_l4'), t('landing.footer.product_l5')] },
@@ -897,24 +912,15 @@ const footerCols = computed(() => [
         </section>
 
         <!-- ============== PAYMENTS ============== -->
-        <section class="relative">
+        <section v-if="payments.length" class="relative">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 pb-16 sm:pb-24 text-center">
                 <div class="mono-pill mx-auto mb-5">{{ t('landing.payments.pill') }}</div>
                 <h2 class="text-[24px] sm:text-[32px] leading-[1.1] font-extrabold tracking-tight">{{ t('landing.payments.heading') }}</h2>
 
                 <div class="mt-10 flex flex-wrap justify-center gap-3">
-                    <span v-for="(p, i) in payments" :key="i" class="glass rounded-full px-5 py-2.5 text-[13.5px] flex items-center gap-2">
-                        <span class="h-2 w-2 rounded-full"
-                              :class="{
-                                'bg-pink-500':    i===0,
-                                'bg-amber-500':   i===1,
-                                'bg-emerald-500': i===2,
-                                'bg-blue-500':    i===3,
-                                'bg-indigo-500':  i===4,
-                                'bg-violet-500':  i===5,
-                                'bg-ink-400':     i===6,
-                              }"></span>
-                        {{ p }}
+                    <span v-for="p in payments" :key="p.label" class="glass rounded-full px-5 py-2.5 text-[13.5px] flex items-center gap-2">
+                        <span class="h-2 w-2 rounded-full" :class="p.dot"></span>
+                        {{ p.label }}
                     </span>
                 </div>
 

@@ -41,7 +41,7 @@ A "season" is one tournament — for example "BPL 2026 Spring Cup". You'll creat
 When you signed up, AuctionBall automatically:
 
 - Created an empty season for the current year (you can rename it or replace it)
-- Set your plan limits (Free plan: 1 season, 20 players, 4 teams)
+- Set your plan limits (Free plan: 1 season, 44 players, 4 teams)
 - Picked your language based on your browser
 
 ## Common questions before you start

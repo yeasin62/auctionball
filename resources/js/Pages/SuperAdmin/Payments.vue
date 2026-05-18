@@ -35,7 +35,20 @@ const props = defineProps({
     pending:  { type: Array,  default: () => [] },
     recent:   { type: Array,  default: () => [] },
     settings: { type: Object, required: true },
+    allLandingPaymentMethods: { type: Array, default: () => [] },
 });
+
+// Display labels for the landing-page payment toggles. Keys must match
+// PlatformSettings::LANDING_PAYMENT_METHODS.
+const paymentMethodLabels = {
+    bkash:           'bKash',
+    nagad:           'Nagad',
+    rocket:          'Rocket',
+    sslcommerz:      'SSLCommerz',
+    paypal:          'PayPal',
+    visa_mastercard: 'Visa / Mastercard',
+    bank_transfer:   'Bank transfer',
+};
 
 const approve = async (txn) => {
     if (! await confirm({
@@ -62,13 +75,21 @@ const reject = async (txn) => {
 };
 
 const settingsForm = useForm({
-    app_domain:            props.settings.app_domain            ?? 'auctionball.com',
-    bkash_merchant_number: props.settings.bkash_merchant_number ?? '',
-    bkash_account_type:    props.settings.bkash_account_type    ?? 'Personal',
-    bkash_instructions:    props.settings.bkash_instructions    ?? '',
-    manual_review_hours:   props.settings.manual_review_hours   ?? 6,
+    app_domain:              props.settings.app_domain            ?? 'auctionball.com',
+    bkash_merchant_number:   props.settings.bkash_merchant_number ?? '',
+    bkash_account_type:      props.settings.bkash_account_type    ?? 'Personal',
+    bkash_instructions:      props.settings.bkash_instructions    ?? '',
+    manual_review_hours:     props.settings.manual_review_hours   ?? 6,
+    landing_payment_methods: [...(props.settings.landing_payment_methods ?? [])],
 });
 const saveSettings = () => settingsForm.patch(route('admin.platform-settings.update'), { preserveScroll: true });
+
+const togglePaymentMethod = (key) => {
+    const list = settingsForm.landing_payment_methods;
+    const i = list.indexOf(key);
+    if (i === -1) list.push(key);
+    else          list.splice(i, 1);
+};
 
 const showSettings = ref(false);
 </script>
@@ -107,7 +128,7 @@ const showSettings = ref(false);
                 <div>
                     <div class="font-mono text-[10.5px] tracking-widest text-ink-500">PLATFORM DOMAIN</div>
                     <div class="mt-1 text-[20px] font-extrabold tracking-tight font-mono">{{ settings.app_domain }}</div>
-                    <div class="mt-3 font-mono text-[10.5px] tracking-widest text-ink-500">bKash MERCHANT</div>
+                    <div class="mt-3 font-mono text-[10.5px] tracking-widest text-ink-500">bKash ACCOUNT</div>
                     <div class="mt-0.5 text-[15px] font-bold tracking-tight font-mono">{{ settings.bkash_merchant_number }}</div>
                     <div class="mt-0.5 text-[12px] text-ink-500">{{ settings.bkash_account_type }} · review within {{ settings.manual_review_hours }} hours</div>
                 </div>
@@ -150,6 +171,26 @@ const showSettings = ref(false);
                     <textarea v-model="settingsForm.bkash_instructions" rows="3"
                               class="mt-1 w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[13.5px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"></textarea>
                 </div>
+
+                <div class="md:col-span-2 pt-2 border-t border-ink-100">
+                    <label class="font-mono text-[10.5px] tracking-widest text-ink-500">LANDING PAGE · ACCEPTED PAYMENTS</label>
+                    <p class="mt-1 text-[11.5px] text-ink-500">Tick the methods you're actually ready to accept. Unchecked methods stay hidden from the public landing page. If you uncheck everything, the entire section disappears.</p>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <label v-for="key in allLandingPaymentMethods" :key="key"
+                               class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12.5px] cursor-pointer transition-colors"
+                               :class="settingsForm.landing_payment_methods.includes(key)
+                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                    : 'bg-white/70 border-ink-200/70 text-ink-500 hover:bg-white'">
+                            <input type="checkbox"
+                                   :checked="settingsForm.landing_payment_methods.includes(key)"
+                                   @change="togglePaymentMethod(key)"
+                                   class="h-3.5 w-3.5 rounded border-ink-300 text-emerald-600 focus:ring-emerald-500" />
+                            {{ paymentMethodLabels[key] || key }}
+                        </label>
+                    </div>
+                    <p v-if="settingsForm.errors.landing_payment_methods" class="mt-1 text-[12px] text-rose-500">{{ settingsForm.errors.landing_payment_methods }}</p>
+                </div>
+
                 <div class="md:col-span-2 flex justify-end">
                     <button type="submit" class="btn-primary py-2 px-4 text-[13px]" :disabled="settingsForm.processing">
                         {{ settingsForm.processing ? 'Saving…' : 'Save settings' }}

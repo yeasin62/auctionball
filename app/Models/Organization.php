@@ -53,7 +53,7 @@ class Organization extends Model
      * super-admin tweaks via /admin/plans take effect immediately.
      */
     public const PLAN_LIMITS = [
-        'free'       => ['seasons' => 1,         'players' => 20,        'teams' => 4,        'watermark' => true,  'export_csv' => false, 'export_pdf' => false],
+        'free'       => ['seasons' => 1,         'players' => 44,        'teams' => 4,        'watermark' => true,  'export_csv' => false, 'export_pdf' => false],
         'starter'    => ['seasons' => 3,         'players' => 100,       'teams' => 6,        'watermark' => false, 'export_csv' => true,  'export_pdf' => false],
         'pro'        => ['seasons' => PHP_INT_MAX, 'players' => PHP_INT_MAX, 'teams' => 10,           'watermark' => false, 'export_csv' => true, 'export_pdf' => true],
         'enterprise' => ['seasons' => PHP_INT_MAX, 'players' => PHP_INT_MAX, 'teams' => PHP_INT_MAX, 'watermark' => false, 'export_csv' => true, 'export_pdf' => true],

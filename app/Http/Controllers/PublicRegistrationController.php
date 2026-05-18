@@ -38,6 +38,7 @@ class PublicRegistrationController extends Controller
                 'registration_instructions' => $season->registration_instructions,
                 'token'                     => $season->registration_token,
                 'custom_fields'             => $season->registration_form_schema ?? [],
+                'player_categories'         => $season->categoryList(),
             ],
             'positions' => Player::positionsFor($season->sport ?? 'cricket'),
         ]);
@@ -59,7 +60,7 @@ class PublicRegistrationController extends Controller
         // Built-in field rules.
         $rules = [
             'name'                => 'required|string|max:255',
-            'category'            => ['required', Rule::in(Player::CATEGORIES)],
+            'category'            => ['required', Rule::in($season->categoryNames())],
             'position'            => ['nullable', Rule::in(Player::positionsFor($season->sport ?? 'cricket'))],
             'jersey_no'           => 'nullable|string|max:10',
             'batting_style'       => 'nullable|string|max:50',
@@ -179,7 +180,7 @@ class PublicRegistrationController extends Controller
             'category'            => $data['category'],
             'player_type'         => 'New',
             'position'            => $data['position'] ?? null,
-            'base_price'          => $this->basePriceFor($data['category']),
+            'base_price'          => $season->basePriceForCategory($data['category']) ?? 10000,
             'is_old_player'       => false,
             'auction_status'      => 'pending',
             'jersey_no'           => $data['jersey_no']     ?? null,
@@ -194,15 +195,6 @@ class PublicRegistrationController extends Controller
         return redirect()
             ->route('public-register.show', $token)
             ->with('success', 'Registration submitted! The organizer will review and approve your entry.');
-    }
-
-    private function basePriceFor(string $category): int
-    {
-        return match ($category) {
-            'Elite'   => 50000,
-            'Regular' => 25000,
-            default   => 10000,
-        };
     }
 
     /**

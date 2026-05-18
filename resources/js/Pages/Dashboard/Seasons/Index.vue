@@ -25,6 +25,69 @@ const props = defineProps({
 const showCreate = ref(false);
 const expandedRegistration = ref(null);
 const expandedForm = ref(null);   // form-builder accordion: separate from registration block
+const expandedCategories = ref(null);
+const expandedEdit = ref(null);
+const categoriesState = ref({});  // seasonId → draft array of {name, base_price}
+const editState = ref({});        // seasonId → draft of editable season fields
+
+const ensureEdit = (season) => {
+    if (! editState.value[season.id]) {
+        editState.value[season.id] = {
+            name:            season.name,
+            year:            season.year,
+            sport:           season.sport || 'cricket',
+            budget_per_team: season.budget_per_team,
+            start_date:      season.start_date || '',
+            end_date:        season.end_date || '',
+        };
+    }
+    return editState.value[season.id];
+};
+const resetEditDraft = (season) => {
+    editState.value[season.id] = null;
+    ensureEdit(season);
+};
+const saveEdit = (season) => {
+    const d = ensureEdit(season);
+    const payload = {
+        name:            (d.name || '').trim(),
+        year:            parseInt(d.year, 10),
+        sport:           d.sport,
+        budget_per_team: parseInt(d.budget_per_team, 10) || 0,
+        start_date:      d.start_date || null,
+        end_date:        d.end_date || null,
+    };
+    router.patch(route('dashboard.seasons.update', season.id), payload, {
+        preserveScroll: true,
+        onSuccess: () => { expandedEdit.value = null; editState.value[season.id] = null; },
+    });
+};
+
+const ensureCategories = (season) => {
+    if (! categoriesState.value[season.id]) {
+        categoriesState.value[season.id] = JSON.parse(JSON.stringify(season.player_categories || []));
+    }
+    return categoriesState.value[season.id];
+};
+const addCategory = (season) => {
+    ensureCategories(season).push({ name: '', base_price: 10000 });
+};
+const removeCategory = (season, idx) => {
+    ensureCategories(season).splice(idx, 1);
+};
+const resetCategoriesDraft = (season) => {
+    categoriesState.value[season.id] = JSON.parse(JSON.stringify(season.player_categories || []));
+};
+const saveCategories = (season) => {
+    const cats = ensureCategories(season)
+        .map(c => ({ name: (c.name || '').trim(), base_price: parseInt(c.base_price, 10) || 0 }))
+        .filter(c => c.name);
+    if (! cats.length) {
+        alertDialog({ title: 'At least one category is required.', variant: 'warning' });
+        return;
+    }
+    useForm({ categories: cats }).post(route('dashboard.seasons.categories', season.id), { preserveScroll: true });
+};
 
 const form = useForm({
     name: '',
@@ -367,6 +430,12 @@ const atLimit = props.used >= props.limits.seasons;
                             class="py-2 px-4 text-[13px] font-medium rounded-xl border whitespace-nowrap bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200 transition-colors">
                         Set inactive
                     </button>
+                    <button @click="expandedEdit = expandedEdit === s.id ? null : s.id"
+                            class="btn-ghost py-2 px-4 text-[13px] whitespace-nowrap"
+                            :class="{ 'bg-brand-indigo/10 border-brand-indigo/30 text-brand-indigo': expandedEdit === s.id }">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        {{ expandedEdit === s.id ? 'Hide edit' : 'Edit' }}
+                    </button>
                     <a :href="`/dashboard/seasons/${s.id}/export.pdf`" target="_blank" class="btn-ghost py-2 px-4 text-[13px] whitespace-nowrap">
                         Summary PDF
                     </a>
@@ -384,11 +453,64 @@ const atLimit = props.used >= props.limits.seasons;
                             {{ s.registration_form_schema.length }}
                         </span>
                     </button>
+                    <button @click="expandedCategories = expandedCategories === s.id ? null : s.id"
+                            class="btn-ghost py-2 px-4 text-[13px] whitespace-nowrap"
+                            :class="{ 'bg-emerald-50 border-emerald-200 text-emerald-700': expandedCategories === s.id }">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                        {{ expandedCategories === s.id ? 'Hide categories' : 'Player categories' }}
+                        <span v-if="(s.player_categories?.length || 0) > 0"
+                              class="ml-1 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-mono text-[10px]">
+                            {{ s.player_categories.length }}
+                        </span>
+                    </button>
                     <button @click="deleteSeason(s)"
                             class="py-2 px-4 text-[13px] font-medium rounded-xl border whitespace-nowrap bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 transition-colors">
                         <svg class="inline h-3.5 w-3.5 -mt-0.5 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/></svg>
                         Delete
                     </button>
+                </div>
+
+                <!-- ============== Edit season basics ============== -->
+                <div v-if="expandedEdit === s.id" class="mt-5 pt-5 border-t border-ink-200/60 space-y-3">
+                    <div class="flex items-start justify-between gap-3 flex-wrap">
+                        <div>
+                            <div class="font-mono text-[10.5px] tracking-widest text-brand-indigo">/ EDIT SEASON</div>
+                            <p class="text-[13px] text-ink-700 mt-1">Update the season's name, year, sport, budget and dates.</p>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <button type="button" @click="resetEditDraft(s)" class="text-[11.5px] text-ink-500 hover:text-ink-900 px-2">Reset</button>
+                            <button type="button" @click="saveEdit(s)" class="btn-primary py-2 px-4 text-[12.5px]">Save changes</button>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <Field label="Season name">
+                            <TextField v-model="ensureEdit(s).name" placeholder="BPL 2026 Spring Cup" />
+                        </Field>
+                        <Field label="Year">
+                            <TextField :modelValue="ensureEdit(s).year"
+                                       @update:modelValue="(v) => ensureEdit(s).year = v"
+                                       type="number" placeholder="2026" />
+                        </Field>
+                        <Field label="Sport">
+                            <select v-model="ensureEdit(s).sport" class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
+                                <option value="cricket">Cricket</option>
+                                <option value="football">Football</option>
+                            </select>
+                        </Field>
+                        <Field label="Budget per team (৳)">
+                            <CurrencyField :modelValue="ensureEdit(s).budget_per_team"
+                                           @update:modelValue="(v) => ensureEdit(s).budget_per_team = v" />
+                        </Field>
+                        <Field label="Start date">
+                            <input type="date" v-model="ensureEdit(s).start_date"
+                                   class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
+                        </Field>
+                        <Field label="End date">
+                            <input type="date" v-model="ensureEdit(s).end_date"
+                                   class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
+                        </Field>
+                    </div>
                 </div>
 
                 <!-- Public registration block -->
@@ -621,6 +743,53 @@ const atLimit = props.used >= props.limits.seasons;
                                 @click="addField(s, t.value)"
                                 class="rounded-md bg-ink-100 hover:bg-violet-100 hover:text-violet-700 text-ink-700 px-2.5 py-1 text-[11.5px] transition-colors">
                             + {{ t.label }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ============== Player categories editor ============== -->
+                <div v-if="expandedCategories === s.id" class="mt-5 pt-5 border-t border-ink-200/60 space-y-3">
+                    <div class="flex items-start justify-between gap-3 flex-wrap">
+                        <div>
+                            <div class="font-mono text-[10.5px] tracking-widest text-emerald-700">/ PLAYER CATEGORIES</div>
+                            <p class="text-[13px] text-ink-700 mt-1 max-w-2xl">
+                                Define the categories players are sorted into for this season, and the default base price each one gets on public registration. Renaming or removing a category will leave existing players with that category uncategorised — you'll need to re-assign them.
+                            </p>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <button type="button" @click="resetCategoriesDraft(s)" class="text-[11.5px] text-ink-500 hover:text-ink-900 px-2">Reset</button>
+                            <button type="button" @click="saveCategories(s)" class="btn-primary py-2 px-4 text-[12.5px]">Save categories</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div v-for="(c, idx) in ensureCategories(s)" :key="idx"
+                             class="grid grid-cols-12 gap-2 items-center rounded-xl border border-ink-200/70 bg-white/70 px-3 py-2">
+                            <div class="col-span-12 sm:col-span-5">
+                                <label class="font-mono text-[10px] tracking-widest text-ink-500">NAME</label>
+                                <input v-model="c.name" type="text" placeholder="Elite"
+                                       class="mt-1 w-full rounded-lg border border-ink-200/70 bg-white px-3 py-2 text-[13.5px] focus:outline-none focus:ring-2 focus:ring-emerald-300" />
+                            </div>
+                            <div class="col-span-9 sm:col-span-5">
+                                <label class="font-mono text-[10px] tracking-widest text-ink-500">DEFAULT BASE PRICE (৳)</label>
+                                <input v-model.number="c.base_price" type="number" min="0" placeholder="50000"
+                                       class="mt-1 w-full rounded-lg border border-ink-200/70 bg-white px-3 py-2 text-[13.5px] font-mono focus:outline-none focus:ring-2 focus:ring-emerald-300" />
+                            </div>
+                            <div class="col-span-3 sm:col-span-2 flex justify-end pt-5">
+                                <button type="button" @click="removeCategory(s, idx)"
+                                        class="text-[11.5px] text-rose-500 hover:text-rose-700 px-2">Remove</button>
+                            </div>
+                        </div>
+                        <div v-if="ensureCategories(s).length === 0" class="text-center py-6 rounded-xl border-2 border-dashed border-ink-200 text-ink-500">
+                            <div class="text-[13px] font-medium mb-1">No categories</div>
+                            <div class="text-[12px]">Add at least one — the player form needs something to pick from.</div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-ink-200/60">
+                        <button type="button" @click="addCategory(s)"
+                                class="rounded-md bg-ink-100 hover:bg-emerald-100 hover:text-emerald-700 text-ink-700 px-3 py-1.5 text-[12px] transition-colors">
+                            + Add category
                         </button>
                     </div>
                 </div>

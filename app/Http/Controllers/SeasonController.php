@@ -44,6 +44,7 @@ class SeasonController extends Controller
                 'registration_token'        => $s->registration_token,
                 'registration_fee'          => (int) $s->registration_fee,
                 'registration_instructions' => $s->registration_instructions,
+                'player_categories'         => $s->categoryList(),
             ]);
 
         return Inertia::render('Dashboard/Seasons/Index', [
@@ -141,8 +142,13 @@ class SeasonController extends Controller
 
         $data = $request->validate([
             'name'              => 'sometimes|required|string|max:255',
+            'year'              => 'sometimes|required|integer|min:2020|max:2100',
+            'sport'             => ['sometimes', 'required', Rule::in(Season::SPORTS)],
+            'budget_per_team'   => 'sometimes|required|integer|min:0',
             'bid_increment'     => 'sometimes|integer|min:1|max:1000000',
             'bid_increment_usd' => 'sometimes|integer|min:1|max:1000000',
+            'start_date'        => 'sometimes|nullable|date',
+            'end_date'          => 'sometimes|nullable|date|after_or_equal:start_date',
         ]);
         $season->update($data);
 
@@ -297,5 +303,59 @@ class SeasonController extends Controller
 
         $season->update(['registration_token' => \Illuminate\Support\Str::random(20)]);
         return back()->with('success', 'New registration link generated. Old link is now dead.');
+    }
+
+    /**
+     * Replace the season's player-category list. Each row = {name, base_price}.
+     * Names that disappear leave existing players with that category nulled —
+     * forces admins to re-assign instead of silently corrupting bid analytics.
+     */
+    public function updatePlayerCategories(Request $request, Season $season): RedirectResponse
+    {
+        /** @var Organization $org */
+        $org = $request->attributes->get('current_organization');
+        abort_if($season->organization_id !== $org->id, 404);
+
+        $data = $request->validate([
+            'categories'              => 'required|array|min:1|max:20',
+            'categories.*.name'       => 'required|string|max:40',
+            'categories.*.base_price' => 'required|integer|min:0|max:100000000',
+        ]);
+
+        // Dedupe by name (case-insensitive) — last wins. Avoids "Elite" + "elite"
+        // both surviving and then the dropdown showing two visually-identical rows.
+        $byName = [];
+        foreach ($data['categories'] as $row) {
+            $key = mb_strtolower(trim($row['name']));
+            if ($key === '') continue;
+            $byName[$key] = [
+                'name'       => trim($row['name']),
+                'base_price' => (int) $row['base_price'],
+            ];
+        }
+        $clean = array_values($byName);
+
+        if (empty($clean)) {
+            return back()->with('error', 'At least one category is required.');
+        }
+
+        $oldNames = $season->categoryNames();
+        $newNames = array_map(fn ($c) => $c['name'], $clean);
+        $removed  = array_values(array_diff($oldNames, $newNames));
+
+        DB::transaction(function () use ($season, $clean, $removed) {
+            $season->update(['player_categories' => $clean]);
+
+            if ($removed) {
+                $season->players()->whereIn('category', $removed)->update(['category' => null]);
+            }
+        });
+
+        $msg = 'Player categories updated.';
+        if ($removed) {
+            $msg .= ' Players in removed categories ('.implode(', ', $removed).') have been left uncategorised — please re-assign them.';
+        }
+
+        return back()->with('success', $msg);
     }
 }

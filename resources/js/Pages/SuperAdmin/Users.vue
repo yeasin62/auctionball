@@ -53,6 +53,13 @@ const submitCreate = () => {
 
 const isPaidPlan = computed(() => createForm.plan && createForm.plan !== 'free');
 
+const roleLabel = (r) => ({
+    org_admin:  'Org Admin',
+    auctioneer: 'Auctioneer',
+    team_owner: 'Team Owner',
+    viewer:     'Viewer',
+}[r] || r);
+
 const toggleSuperAdmin = async (u) => {
     if (u.id === me) return alertDialog({ title: "You can't change your own super-admin flag.", variant: 'warning' });
     if (! await confirm({
@@ -175,7 +182,7 @@ const deleteUser = async (u) => {
                         <th class="px-4 py-2.5">USER</th>
                         <th class="px-4 py-2.5">EMAIL</th>
                         <th class="px-4 py-2.5">ORGS</th>
-                        <th class="px-4 py-2.5">SAMPLE ORG</th>
+                        <th class="px-4 py-2.5">ORGANIZATION</th>
                         <th class="px-4 py-2.5">JOINED</th>
                         <th class="px-4 py-2.5">SUPER</th>
                         <th class="px-4 py-2.5"></th>
@@ -199,7 +206,7 @@ const deleteUser = async (u) => {
                         <td class="px-4 py-2.5">
                             <div v-if="u.sample_org" class="leading-tight">
                                 <div class="text-[12.5px]">{{ u.sample_org.name }}</div>
-                                <div class="font-mono text-[10.5px] text-ink-500">{{ u.sample_org.role }}</div>
+                                <div class="font-mono text-[10.5px] text-ink-500">{{ roleLabel(u.sample_org.role) }}</div>
                             </div>
                             <span v-else class="text-ink-400">—</span>
                         </td>

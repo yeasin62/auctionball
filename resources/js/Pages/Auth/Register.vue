@@ -8,12 +8,12 @@ import { computed, watch } from 'vue';
 const appDomain = computed(() => usePage().props.appDomain || 'auctionball.com');
 
 const props = defineProps({
-    plans: { type: Array, default: () => ['free', 'starter', 'pro'] },
+    plans: { type: Array, default: () => ['free', 'starter', 'pro', 'enterprise'] },
 });
 
 const planFromUrl = (() => {
     const v = new URLSearchParams(window.location.search).get('plan');
-    return v && ['free', 'starter', 'pro'].includes(v) ? v : 'free';
+    return v && ['free', 'starter', 'pro', 'enterprise'].includes(v) ? v : 'free';
 })();
 
 const form = useForm({
@@ -39,9 +39,10 @@ watch(() => form.org_name, (v) => {
 const onSlugInput = (v) => { slugTouched = true; form.org_slug = slugify(v); };
 
 const planMeta = {
-    free:    { label: 'Free',     price: '৳0',         meta: '1 season · 20 players · 4 teams' },
-    starter: { label: 'Starter',  price: '৳1,999/mo',  meta: '3 seasons · 100 players · 10 teams' },
-    pro:     { label: 'Pro',      price: '৳4,999/mo',  meta: 'Unlimited everything' },
+    free:       { label: 'Free',       price: '৳0',         meta: '1 season · 44 players · 4 teams' },
+    starter:    { label: 'Starter',    price: '৳1,999/mo',  meta: '3 seasons · 100 players · 6 teams' },
+    pro:        { label: 'Pro',        price: '৳4,999/mo',  meta: 'Unlimited seasons & players · 10 teams' },
+    enterprise: { label: 'Enterprise', price: '৳5,999/mo',  meta: 'Unlimited everything · white-label' },
 };
 
 const visiblePlans = computed(() => props.plans.filter(p => planMeta[p]));
@@ -90,7 +91,7 @@ const submit = () => form.post(route('register'), {
             <!-- Plan block -->
             <div class="space-y-3 pt-3 border-t border-ink-200/60">
                 <div class="font-mono text-[11px] tracking-widest text-ink-500">/ PLAN</div>
-                <div class="grid grid-cols-3 gap-2">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <label v-for="p in visiblePlans" :key="p"
                            class="cursor-pointer rounded-xl border p-3 transition"
                            :class="form.plan === p

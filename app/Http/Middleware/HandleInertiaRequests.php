@@ -76,8 +76,9 @@ class HandleInertiaRequests extends Middleware
             ],
             'locale'    => app()->getLocale(),
             'locales'   => Locales::forFrontend(),
-            'appDomain' => PlatformSettings::current()->app_domain,
-            'appLogo'   => PlatformSettings::current()->app_logo_url,
+            'appDomain'             => PlatformSettings::current()->app_domain,
+            'appLogo'               => PlatformSettings::current()->app_logo_url,
+            'landingPaymentMethods' => PlatformSettings::current()->enabledLandingPaymentMethods(),
         ];
     }
 }

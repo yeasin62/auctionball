@@ -5,7 +5,7 @@ import TextField from '@/Components/TextField.vue';
 import CurrencyField from '@/Components/CurrencyField.vue';
 import ImageCropper from '@/Components/ImageCropper.vue';
 import { Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useFmt } from '@/composables/useFmt';
 import { useConfirm } from '@/composables/useConfirm';
@@ -26,6 +26,14 @@ const props = defineProps({
 });
 
 const isCricket = props.season?.sport !== 'football';
+
+// Per-season category names — falls back to legacy defaults if the season
+// hasn't been migrated yet (defensive — the backend already backfills).
+const seasonCategoryNames = computed(() => {
+    const list = props.season?.player_categories || [];
+    const names = list.map(c => c?.name).filter(Boolean);
+    return names.length ? names : ['Elite', 'Regular', 'New'];
+});
 
 // Pre-seed the `custom` map with one slot per dynamic field — keeps reactivity
 // stable so v-model binds even on first render.
@@ -48,9 +56,11 @@ const inputClasses =
 
 const showCreate = ref(false);
 const editingId  = ref(null);    // player id currently being edited inline (or null)
+const defaultCategory = () => seasonCategoryNames.value[0] || 'Regular';
+
 const form = useForm({
     name: '',
-    category: 'Regular',
+    category: defaultCategory(),
     player_type: 'New',
     position: '',
     base_price: 50000,
@@ -86,7 +96,7 @@ const filterForm = ref({ ...props.filters });
 
 const resetForm = () => {
     form.reset();
-    form.category = 'Regular';
+    form.category = defaultCategory();
     form.player_type = 'New';
     form.position = '';
     form.base_price = 50000;
@@ -98,7 +108,7 @@ const startCreate = () => { editingId.value = null; resetForm(); showCreate.valu
 const startEdit = (p) => {
     editingId.value = p.id;
     form.name          = p.name ?? '';
-    form.category      = p.category ?? 'Regular';
+    form.category      = p.category ?? defaultCategory();
     form.player_type   = p.player_type ?? 'New';
     form.position      = p.position ?? '';
     form.base_price    = p.base_price ?? 0;
@@ -274,7 +284,7 @@ const atLimit = props.season && props.used >= props.limits.players;
                     </Field>
                     <Field :label="t('forms.players.category')" :error="form.errors.category" required>
                         <select v-model="form.category" class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
-                            <option>Elite</option><option>Regular</option><option>New</option>
+                            <option v-for="c in seasonCategoryNames" :key="c" :value="c">{{ c }}</option>
                         </select>
                     </Field>
                     <Field :label="t('forms.players.type')" :error="form.errors.player_type" required>
@@ -411,7 +421,8 @@ const atLimit = props.season && props.used >= props.limits.players;
                 <input v-model="filterForm.q" @input="applyFilters" placeholder="Search by name…"
                        class="flex-1 min-w-[200px] rounded-lg border border-ink-200/70 bg-white/80 px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                 <select v-model="filterForm.category" @change="applyFilters" class="rounded-lg border border-ink-200/70 bg-white/80 px-3 py-2 text-[13px]">
-                    <option value="">All categories</option><option>Elite</option><option>Regular</option><option>New</option>
+                    <option value="">All categories</option>
+                    <option v-for="c in seasonCategoryNames" :key="c" :value="c">{{ c }}</option>
                 </select>
                 <select v-model="filterForm.type" @change="applyFilters" class="rounded-lg border border-ink-200/70 bg-white/80 px-3 py-2 text-[13px]">
                     <option value="">Old + New</option><option>Old</option><option>New</option>
