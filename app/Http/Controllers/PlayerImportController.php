@@ -57,7 +57,7 @@ class PlayerImportController extends Controller
             return back()->with('error', 'CSV is empty.');
         }
 
-        $headerRow = array_map(fn ($v) => strtolower(trim($v)), $rows[0]);
+        $headerRow = array_map(fn ($v) => $this->normalizeHeader($v), $rows[0]);
         $missing = array_diff(self::HEADERS, $headerRow);
         if (! empty($missing)) {
             return back()->with('error', 'Missing columns: ' . implode(', ', $missing));
@@ -194,5 +194,12 @@ class PlayerImportController extends Controller
         }
         fclose($h);
         return $rows;
+    }
+
+    private function normalizeHeader(string $value): string
+    {
+        $value = preg_replace('/^\xEF\xBB\xBF/', '', $value) ?? $value;
+
+        return strtolower(trim($value));
     }
 }
