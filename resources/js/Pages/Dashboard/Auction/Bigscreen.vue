@@ -185,22 +185,22 @@ const isRunning = computed(() => state.value?.status === 'running');
                     <div class="font-mono text-[14px] sm:text-[15px] tracking-wide text-ink-500">{{ t('auction_page.bigscreen_live_n_teams', { count: ld(teams.length) }) }}</div>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
-                    <div v-for="t in teams" :key="t.id"
+                    <div v-for="team in teams" :key="team.id"
                          class="rounded-2xl bg-white/[0.06] border border-white/10 p-4">
                         <div class="flex items-center justify-between mb-2">
-                            <div class="text-[22px] sm:text-[24px] lg:text-[26px] font-extrabold tracking-tight">{{ t.short_code || t.name?.slice(0,3).toUpperCase() }}</div>
-                            <span class="font-mono text-[13px] sm:text-[14px] text-ink-400 uppercase">{{ t.initial_budget > 0 ? Math.round((t.initial_budget - t.remaining_budget) / t.initial_budget * 100) : 0 }}%</span>
+                            <div class="text-[22px] sm:text-[24px] lg:text-[26px] font-extrabold tracking-tight">{{ team.short_code || team.name?.slice(0,3).toUpperCase() }}</div>
+                            <span class="font-mono text-[13px] sm:text-[14px] text-ink-400 uppercase">{{ team.initial_budget > 0 ? Math.round((team.initial_budget - team.remaining_budget) / team.initial_budget * 100) : 0 }}%</span>
                         </div>
-                        <div class="text-[15px] sm:text-[16px] text-ink-300 leading-tight truncate mb-3">{{ t.name }}</div>
+                        <div class="text-[15px] sm:text-[16px] text-ink-300 leading-tight truncate mb-3">{{ team.name }}</div>
                         <div class="text-[24px] sm:text-[26px] lg:text-[28px] font-bold font-mono tracking-tight"
-                             :style="{ color: t.remaining_budget < t.initial_budget * 0.2 ? '#fda4af' : '#a7f3d0' }">
-                            {{ fmt(t.remaining_budget) }}
+                             :style="{ color: team.remaining_budget < team.initial_budget * 0.2 ? '#fda4af' : '#a7f3d0' }">
+                            {{ fmt(team.remaining_budget) }}
                         </div>
                         <div class="font-mono text-[13px] sm:text-[14px] text-ink-500 mt-1">{{ t('auction_page.remaining_label') }}</div>
                         <div class="mt-3 h-2 rounded-full bg-white/10 overflow-hidden">
                             <div class="h-full rounded-full transition-all duration-700"
                                  style="background:linear-gradient(90deg,#22d3ee,#a78bfa);"
-                                 :style="{ width: t.initial_budget > 0 ? ((t.initial_budget - t.remaining_budget) / t.initial_budget * 100) + '%' : '0%' }"></div>
+                                 :style="{ width: team.initial_budget > 0 ? ((team.initial_budget - team.remaining_budget) / team.initial_budget * 100) + '%' : '0%' }"></div>
                         </div>
                     </div>
                 </div>
