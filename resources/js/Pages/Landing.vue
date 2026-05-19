@@ -7,6 +7,7 @@ import LanguageToggle from '@/Components/LanguageToggle.vue';
 const { t, locale } = useI18n();
 const appDomain = computed(() => usePage().props.appDomain || 'auctionball.com');
 const appLogo   = computed(() => usePage().props.appLogo);
+const authUser  = computed(() => usePage().props.auth?.user);
 
 const props = defineProps({
     plans:     { type: Array,  default: () => [] },
@@ -404,8 +405,19 @@ const footerCols = computed(() => [
 
                 <div class="flex items-center gap-1.5 sm:gap-2.5">
                     <LanguageToggle />
-                    <Link href="/login"    class="hidden sm:inline-flex btn-ghost text-[14px] py-2.5 px-4">{{ t('nav.log_in') }}</Link>
-                    <Link href="/register" class="btn-primary text-[13px] sm:text-[14px] py-2 px-3 sm:py-2.5 sm:px-4">{{ t('nav.start_free') }}</Link>
+                    <template v-if="authUser">
+                        <Link href="/logout" method="post" as="button" type="button"
+                              class="hidden sm:inline-flex btn-ghost text-[14px] py-2.5 px-4">
+                            {{ t('auth.verify_log_out') }}
+                        </Link>
+                        <Link href="/dashboard-redirect" class="btn-primary text-[13px] sm:text-[14px] py-2 px-3 sm:py-2.5 sm:px-4">
+                            {{ t('nav.dashboard') }}
+                        </Link>
+                    </template>
+                    <template v-else>
+                        <Link href="/login"    class="hidden sm:inline-flex btn-ghost text-[14px] py-2.5 px-4">{{ t('nav.log_in') }}</Link>
+                        <Link href="/register" class="btn-primary text-[13px] sm:text-[14px] py-2 px-3 sm:py-2.5 sm:px-4">{{ t('nav.start_free') }}</Link>
+                    </template>
                 </div>
             </div>
         </header>
