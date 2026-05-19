@@ -158,7 +158,7 @@ class BillingController extends Controller
     }
 
     /** Step 1: org admin picks plan + provider → create txn → redirect to provider. */
-    public function checkout(Request $request): RedirectResponse
+    public function checkout(Request $request): \Symfony\Component\HttpFoundation\Response
     {
         $data = $request->validate([
             'plan'       => ['required', Rule::in(['starter', 'pro', 'enterprise'])],
@@ -203,7 +203,7 @@ class BillingController extends Controller
             return redirect()->route('dashboard.billing.index')->with('error', 'Provider did not return a redirect URL.');
         }
 
-        return redirect()->away($result['redirect_url']);
+        return Inertia::location($result['redirect_url']);
     }
 
     /** Step 2: provider redirects user back here. Verify + activate plan. */
