@@ -182,8 +182,8 @@ const toggleFaq = (i) => (openFaq.value = openFaq.value === i ? -1 : i);
 // answer questions about it, and surface the FAQ as direct answers.
 const siteUrl       = computed(() => `https://${appDomain.value}`);
 const seoTitle      = computed(() => locale.value === 'bn'
-    ? 'AuctionBall — ক্রিকেট ও ফুটবল প্লেয়ার অকশন সফটওয়্যার (লাইভ বিডিং)'
-    : 'AuctionBall — Real-time cricket & football player auction software');
+    ? 'ক্রিকেট ও ফুটবল প্লেয়ার অকশন সফটওয়্যার (লাইভ বিডিং)'
+    : 'Real-time cricket & football player auction software');
 const seoDescription = computed(() => locale.value === 'bn'
     ? 'বাংলাদেশের সেরা টুর্নামেন্ট সংগঠকদের জন্য তৈরি — লাইভ প্লেয়ার অকশন, রিয়েল-টাইম বিডিং, বিগ-স্ক্রিন ব্রডকাস্ট, মাল্টি-টিম বাজেট, bKash/PayPal বিলিং। ৩০ সেকেন্ডে সাইনআপ।'
     : 'Run live player auctions for cricket and football tournaments. Real-time bidding, big-screen broadcast, multi-team budgets, custom registration forms, bKash/PayPal billing. Built for Bangladesh organizers. Free to start.');
