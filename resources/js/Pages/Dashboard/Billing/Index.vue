@@ -78,6 +78,13 @@ const txnStatusColor = (s) => ({
     refunded:  'text-ink-500',
 }[s] || 'text-ink-700');
 
+const txnStatusLabel = (s) => ({
+    completed: 'SUCCESSFUL',
+    pending:   'PENDING',
+    failed:    'FAILED',
+    refunded:  'REFUNDED',
+}[s] || String(s || '').toUpperCase());
+
 const planLabel = (p) => p?.charAt(0).toUpperCase() + p?.slice(1);
 const isCurrent = (plan) => org.plan === plan.plan;
 
@@ -253,7 +260,7 @@ const org = props.org;
                         <td class="px-4 py-2.5 capitalize">{{ t.provider }}</td>
                         <td class="px-4 py-2.5 capitalize">{{ t.plan }}</td>
                         <td class="px-4 py-2.5 font-mono">{{ t.currency }} {{ t.amount }}</td>
-                        <td class="px-4 py-2.5 font-mono text-[11.5px]" :class="txnStatusColor(t.status)">{{ t.status.toUpperCase() }}</td>
+                        <td class="px-4 py-2.5 font-mono text-[11.5px]" :class="txnStatusColor(t.status)">{{ txnStatusLabel(t.status) }}</td>
                         <td class="px-4 py-2.5 font-mono text-[11.5px] text-ink-500">{{ t.created_at }}</td>
                     </tr>
                     <tr v-if="transactions.length === 0">
