@@ -209,9 +209,10 @@ class PayPalProvider implements PaymentProvider, SupportsRecurring
 
     public function verifyWebhook(Request $request): array
     {
-        // Production: verify webhook signature via /v1/notifications/verify-webhook-signature.
-        // Useful events: BILLING.SUBSCRIPTION.PAYMENT.SUCCEEDED / SUSPENDED / CANCELLED, PAYMENT.SALE.COMPLETED.
-        $event = $request->input('event_type');
+        if (! $this->verifyWebhookSignature($request)) {
+            return ['ok' => false, 'provider_txn_id' => null, 'raw' => $request->all()];
+        }
+
         $resource = $request->input('resource', []);
 
         // Recurring renewal payments arrive as PAYMENT.SALE.COMPLETED with billing_agreement_id (= subscription id)
@@ -225,5 +226,33 @@ class PayPalProvider implements PaymentProvider, SupportsRecurring
             'provider_txn_id' => $providerTxnId,
             'raw'             => $request->all(),
         ];
+    }
+
+    private function verifyWebhookSignature(Request $request): bool
+    {
+        $webhookId = config('services.paypal.webhook_id');
+        if (! $webhookId) {
+            Log::warning('PayPal webhook rejected: PAYPAL_WEBHOOK_ID is not configured');
+            return false;
+        }
+
+        try {
+            $resp = Http::withToken($this->accessToken())
+                ->post("{$this->base()}/v1/notifications/verify-webhook-signature", [
+                    'auth_algo'         => $request->header('PAYPAL-AUTH-ALGO'),
+                    'cert_url'          => $request->header('PAYPAL-CERT-URL'),
+                    'transmission_id'   => $request->header('PAYPAL-TRANSMISSION-ID'),
+                    'transmission_sig'  => $request->header('PAYPAL-TRANSMISSION-SIG'),
+                    'transmission_time' => $request->header('PAYPAL-TRANSMISSION-TIME'),
+                    'webhook_id'        => $webhookId,
+                    'webhook_event'     => $request->all(),
+                ])
+                ->throw();
+
+            return $resp->json('verification_status') === 'SUCCESS';
+        } catch (\Throwable $e) {
+            Log::warning('PayPal webhook signature verification failed', ['error' => $e->getMessage()]);
+            return false;
+        }
     }
 }

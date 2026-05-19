@@ -178,6 +178,10 @@ class PlayerController extends Controller
         $org = $request->attributes->get('current_organization');
         abort_if($player->organization_id !== $org->id, 404);
 
+        if ($player->auction_status === 'pending' && $this->approvedPlayerCount($player->season) >= $org->limits()['players']) {
+            return back()->with('error', "Your {$org->plan} plan allows {$org->limits()['players']} approved players per season. Upgrade or delete a player first.");
+        }
+
         $player->update(['auction_status' => 'queue']);
         return back()->with('success', "“{$player->name}” approved.");
     }
@@ -190,8 +194,27 @@ class PlayerController extends Controller
         $season = $org->activeSeason();
         if (! $season) return back();
 
-        $count = $season->players()->where('auction_status', 'pending')->update(['auction_status' => 'queue']);
-        return back()->with('success', "{$count} player(s) approved.");
+        $headroom = max(0, $org->limits()['players'] - $this->approvedPlayerCount($season));
+        if ($headroom === 0) {
+            return back()->with('error', "Your {$org->plan} plan allows {$org->limits()['players']} approved players per season. Upgrade or delete a player first.");
+        }
+
+        $ids = $season->players()
+            ->where('auction_status', 'pending')
+            ->orderBy('registered_at')
+            ->orderBy('id')
+            ->limit($headroom)
+            ->pluck('id');
+
+        $count = $season->players()->whereIn('id', $ids)->update(['auction_status' => 'queue']);
+        $remaining = $season->players()->where('auction_status', 'pending')->count();
+
+        $message = "{$count} player(s) approved.";
+        if ($remaining > 0) {
+            $message .= " {$remaining} pending player(s) left because your plan limit is full.";
+        }
+
+        return back()->with('success', $message);
     }
 
     public function reject(Request $request, Player $player): RedirectResponse
@@ -228,6 +251,13 @@ class PlayerController extends Controller
             $path = ltrim(substr($url, strlen($base)), '/');
             Storage::disk($disk)->delete($path);
         }
+    }
+
+    private function approvedPlayerCount($season): int
+    {
+        return $season->players()
+            ->whereIn('auction_status', ['queue', 'live', 'sold', 'unsold'])
+            ->count();
     }
 
     /**

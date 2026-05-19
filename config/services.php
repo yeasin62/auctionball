@@ -39,6 +39,7 @@ return [
         'mode' => env('PAYPAL_MODE', 'sandbox'),
         'client_id' => env('PAYPAL_CLIENT_ID'),
         'secret' => env('PAYPAL_SECRET'),
+        'webhook_id' => env('PAYPAL_WEBHOOK_ID'),
         'plans' => [
             'starter' => env('PAYPAL_PLAN_STARTER'),
             'pro' => env('PAYPAL_PLAN_PRO'),

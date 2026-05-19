@@ -97,100 +97,100 @@ Route::middleware(['auth', 'org'])->prefix('dashboard')->name('dashboard.')->gro
     Route::get('/', [DashboardController::class, 'index'])->name('home');
 
     // Seasons
-    Route::get   ('/seasons',                  [SeasonController::class, 'index'])   ->name('seasons.index');
-    Route::post  ('/seasons',                  [SeasonController::class, 'store'])   ->name('seasons.store');
-    Route::patch ('/seasons/{season}',         [SeasonController::class, 'update'])  ->name('seasons.update');
-    Route::delete('/seasons/{season}',         [SeasonController::class, 'destroy']) ->name('seasons.destroy');
-    Route::post  ('/seasons/{season}/activate',  [SeasonController::class, 'activate'])  ->name('seasons.activate');
-    Route::post  ('/seasons/{season}/deactivate',[SeasonController::class, 'deactivate'])->name('seasons.deactivate');
-    Route::post  ('/seasons/{season}/registration', [SeasonController::class, 'toggleRegistration'])->name('seasons.registration');
-    Route::post  ('/seasons/{season}/registration/regenerate', [SeasonController::class, 'regenerateRegistrationToken'])->name('seasons.registration.regenerate');
-    Route::post  ('/seasons/{season}/registration/form',       [SeasonController::class, 'updateRegistrationForm'])    ->name('seasons.registration.form');
-    Route::post  ('/seasons/{season}/categories',              [SeasonController::class, 'updatePlayerCategories'])    ->name('seasons.categories');
-    Route::get   ('/seasons/{season}/export.pdf', [ExportController::class, 'seasonSummaryPdf'])->name('seasons.export.pdf');
+    Route::get   ('/seasons',                  [SeasonController::class, 'index'])   ->middleware('org-role:org_admin,auctioneer,viewer')->name('seasons.index');
+    Route::post  ('/seasons',                  [SeasonController::class, 'store'])   ->middleware('org-role:org_admin')->name('seasons.store');
+    Route::patch ('/seasons/{season}',         [SeasonController::class, 'update'])  ->middleware('org-role:org_admin')->name('seasons.update');
+    Route::delete('/seasons/{season}',         [SeasonController::class, 'destroy']) ->middleware('org-role:org_admin')->name('seasons.destroy');
+    Route::post  ('/seasons/{season}/activate',  [SeasonController::class, 'activate'])  ->middleware('org-role:org_admin')->name('seasons.activate');
+    Route::post  ('/seasons/{season}/deactivate',[SeasonController::class, 'deactivate'])->middleware('org-role:org_admin')->name('seasons.deactivate');
+    Route::post  ('/seasons/{season}/registration', [SeasonController::class, 'toggleRegistration'])->middleware('org-role:org_admin')->name('seasons.registration');
+    Route::post  ('/seasons/{season}/registration/regenerate', [SeasonController::class, 'regenerateRegistrationToken'])->middleware('org-role:org_admin')->name('seasons.registration.regenerate');
+    Route::post  ('/seasons/{season}/registration/form',       [SeasonController::class, 'updateRegistrationForm'])    ->middleware('org-role:org_admin')->name('seasons.registration.form');
+    Route::post  ('/seasons/{season}/categories',              [SeasonController::class, 'updatePlayerCategories'])    ->middleware('org-role:org_admin')->name('seasons.categories');
+    Route::get   ('/seasons/{season}/export.pdf', [ExportController::class, 'seasonSummaryPdf'])->middleware('org-role:org_admin,auctioneer,viewer')->name('seasons.export.pdf');
 
     // Players
-    Route::get   ('/players',                  [PlayerController::class, 'index'])    ->name('players.index');
-    Route::post  ('/players',                  [PlayerController::class, 'store'])    ->name('players.store');
+    Route::get   ('/players',                  [PlayerController::class, 'index'])    ->middleware('org-role:org_admin,auctioneer,viewer')->name('players.index');
+    Route::post  ('/players',                  [PlayerController::class, 'store'])    ->middleware('org-role:org_admin,auctioneer')->name('players.store');
 
     // Player CSV import
-    Route::get ('/players/import/template', [PlayerImportController::class, 'template'])->name('players.import.template');
-    Route::post('/players/import',          [PlayerImportController::class, 'preview']) ->name('players.import.preview');
-    Route::post('/players/import/confirm',  [PlayerImportController::class, 'confirm']) ->name('players.import.confirm');
+    Route::get ('/players/import/template', [PlayerImportController::class, 'template'])->middleware('org-role:org_admin,auctioneer')->name('players.import.template');
+    Route::post('/players/import',          [PlayerImportController::class, 'preview']) ->middleware('org-role:org_admin,auctioneer')->name('players.import.preview');
+    Route::post('/players/import/confirm',  [PlayerImportController::class, 'confirm']) ->middleware('org-role:org_admin,auctioneer')->name('players.import.confirm');
 
     // Player exports
-    Route::get('/players/export.csv', [ExportController::class, 'playersCsv'])->name('players.export.csv');
-    Route::get('/players/export.pdf', [ExportController::class, 'playersPdf'])->name('players.export.pdf');
-    Route::post('/players/approve-all', [PlayerController::class, 'approveAll'])->name('players.approve-all');
+    Route::get('/players/export.csv', [ExportController::class, 'playersCsv'])->middleware('org-role:org_admin,auctioneer,viewer')->name('players.export.csv');
+    Route::get('/players/export.pdf', [ExportController::class, 'playersPdf'])->middleware('org-role:org_admin,auctioneer,viewer')->name('players.export.pdf');
+    Route::post('/players/approve-all', [PlayerController::class, 'approveAll'])->middleware('org-role:org_admin,auctioneer')->name('players.approve-all');
 
-    Route::post  ('/players/{player}',         [PlayerController::class, 'update'])   ->name('players.update');
-    Route::delete('/players/{player}',         [PlayerController::class, 'destroy'])  ->name('players.destroy');
-    Route::post  ('/players/{player}/approve', [PlayerController::class, 'approve'])  ->name('players.approve');
-    Route::delete('/players/{player}/reject',  [PlayerController::class, 'reject'])   ->name('players.reject');
+    Route::post  ('/players/{player}',         [PlayerController::class, 'update'])   ->middleware('org-role:org_admin,auctioneer')->name('players.update');
+    Route::delete('/players/{player}',         [PlayerController::class, 'destroy'])  ->middleware('org-role:org_admin,auctioneer')->name('players.destroy');
+    Route::post  ('/players/{player}/approve', [PlayerController::class, 'approve'])  ->middleware('org-role:org_admin,auctioneer')->name('players.approve');
+    Route::delete('/players/{player}/reject',  [PlayerController::class, 'reject'])   ->middleware('org-role:org_admin,auctioneer')->name('players.reject');
 
     // Teams
-    Route::get   ('/teams',                            [TeamController::class, 'index'])     ->name('teams.index');
-    Route::post  ('/teams',                            [TeamController::class, 'store'])     ->name('teams.store');
-    Route::post  ('/teams/{team}',                     [TeamController::class, 'update'])    ->name('teams.update');
-    Route::delete('/teams/{team}',                     [TeamController::class, 'destroy'])   ->name('teams.destroy');
-    Route::post  ('/teams/{team}/approve',             [TeamController::class, 'approve'])   ->name('teams.approve');
-    Route::delete('/teams/{team}/reject',              [TeamController::class, 'reject'])    ->name('teams.reject');
-    Route::post  ('/teams/registration',               [TeamController::class, 'toggleRegistration'])      ->name('teams.registration');
-    Route::post  ('/teams/registration/regenerate',    [TeamController::class, 'regenerateRegistrationToken'])->name('teams.registration.regenerate');
+    Route::get   ('/teams',                            [TeamController::class, 'index'])     ->middleware('org-role:org_admin,auctioneer,viewer')->name('teams.index');
+    Route::post  ('/teams',                            [TeamController::class, 'store'])     ->middleware('org-role:org_admin,auctioneer')->name('teams.store');
+    Route::post  ('/teams/registration',               [TeamController::class, 'toggleRegistration'])      ->middleware('org-role:org_admin')->name('teams.registration');
+    Route::post  ('/teams/registration/regenerate',    [TeamController::class, 'regenerateRegistrationToken'])->middleware('org-role:org_admin')->name('teams.registration.regenerate');
 
-    Route::get('/teams/export.csv', [ExportController::class, 'teamsCsv'])->name('teams.export.csv');
-    Route::get('/teams/export.pdf', [ExportController::class, 'teamsPdf'])->name('teams.export.pdf');
+    Route::get('/teams/export.csv', [ExportController::class, 'teamsCsv'])->middleware('org-role:org_admin,auctioneer,viewer')->name('teams.export.csv');
+    Route::get('/teams/export.pdf', [ExportController::class, 'teamsPdf'])->middleware('org-role:org_admin,auctioneer,viewer')->name('teams.export.pdf');
+    Route::post  ('/teams/{team}',                     [TeamController::class, 'update'])    ->middleware('org-role:org_admin,auctioneer')->name('teams.update');
+    Route::delete('/teams/{team}',                     [TeamController::class, 'destroy'])   ->middleware('org-role:org_admin,auctioneer')->name('teams.destroy');
+    Route::post  ('/teams/{team}/approve',             [TeamController::class, 'approve'])   ->middleware('org-role:org_admin,auctioneer')->name('teams.approve');
+    Route::delete('/teams/{team}/reject',              [TeamController::class, 'reject'])    ->middleware('org-role:org_admin,auctioneer')->name('teams.reject');
 
     // Auction control
-    Route::get ('/auction',    [AuctionController::class, 'control'])  ->name('auction.control');
-    Route::get ('/bigscreen',  [AuctionController::class, 'bigscreen'])->name('auction.bigscreen');
-    Route::get ('/rosters',    [AuctionController::class, 'rosters'])  ->name('auction.rosters');
+    Route::get ('/auction',    [AuctionController::class, 'control'])  ->middleware('org-role:org_admin,auctioneer')->name('auction.control');
+    Route::get ('/bigscreen',  [AuctionController::class, 'bigscreen'])->middleware('org-role:org_admin,auctioneer,viewer')->name('auction.bigscreen');
+    Route::get ('/rosters',    [AuctionController::class, 'rosters'])  ->middleware('org-role:org_admin,auctioneer,viewer')->name('auction.rosters');
 
-    Route::post('/auction/player',  [AuctionController::class, 'setPlayer'])->name('auction.set-player');
-    Route::post('/auction/start',   [AuctionController::class, 'start'])    ->name('auction.start');
-    Route::post('/auction/pause',   [AuctionController::class, 'pause'])    ->name('auction.pause');
-    Route::post('/auction/resume', [AuctionController::class, 'resume'])    ->name('auction.resume');
-    Route::post('/auction/sold',    [AuctionController::class, 'sold'])     ->name('auction.sold');
-    Route::post('/auction/unsold',  [AuctionController::class, 'unsold'])   ->name('auction.unsold');
-    Route::post('/auction/reset',   [AuctionController::class, 'reset'])    ->name('auction.reset');
-    Route::post('/auction/extend',  [AuctionController::class, 'extendTimer'])->name('auction.extend');
-    Route::post('/auction/bid',     [AuctionController::class, 'placeBid']) ->name('auction.bid');
-    Route::post('/auction/finalize', [AuctionController::class, 'autoFinalize'])      ->name('auction.finalize');
-    Route::post('/auction/auto-finalize', [AuctionController::class, 'setAutoFinalize'])->name('auction.set-auto-finalize');
+    Route::post('/auction/player',  [AuctionController::class, 'setPlayer'])->middleware('org-role:org_admin,auctioneer')->name('auction.set-player');
+    Route::post('/auction/start',   [AuctionController::class, 'start'])    ->middleware('org-role:org_admin,auctioneer')->name('auction.start');
+    Route::post('/auction/pause',   [AuctionController::class, 'pause'])    ->middleware('org-role:org_admin,auctioneer')->name('auction.pause');
+    Route::post('/auction/resume', [AuctionController::class, 'resume'])    ->middleware('org-role:org_admin,auctioneer')->name('auction.resume');
+    Route::post('/auction/sold',    [AuctionController::class, 'sold'])     ->middleware('org-role:org_admin,auctioneer')->name('auction.sold');
+    Route::post('/auction/unsold',  [AuctionController::class, 'unsold'])   ->middleware('org-role:org_admin,auctioneer')->name('auction.unsold');
+    Route::post('/auction/reset',   [AuctionController::class, 'reset'])    ->middleware('org-role:org_admin,auctioneer')->name('auction.reset');
+    Route::post('/auction/extend',  [AuctionController::class, 'extendTimer'])->middleware('org-role:org_admin,auctioneer')->name('auction.extend');
+    Route::post('/auction/bid',     [AuctionController::class, 'placeBid']) ->middleware('org-role:org_admin,auctioneer')->name('auction.bid');
+    Route::post('/auction/finalize', [AuctionController::class, 'autoFinalize'])      ->middleware('org-role:org_admin,auctioneer')->name('auction.finalize');
+    Route::post('/auction/auto-finalize', [AuctionController::class, 'setAutoFinalize'])->middleware('org-role:org_admin,auctioneer')->name('auction.set-auto-finalize');
 
     // Analytics
-    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('/analytics', [AnalyticsController::class, 'index'])->middleware('org-role:org_admin,auctioneer,viewer')->name('analytics.index');
 
     // Audit log
-    Route::get('/audit',     [AuditLogController::class, 'index'])->name('audit.index');
+    Route::get('/audit',     [AuditLogController::class, 'index'])->middleware('org-role:org_admin,auctioneer,viewer')->name('audit.index');
 
     // Org pages
-    Route::get ('/users',             [OrgPagesController::class, 'users'])         ->name('users.index');
-    Route::get ('/settings',                [OrgPagesController::class, 'settings'])             ->name('settings.index');
-    Route::post('/settings/currency',       [OrgPagesController::class, 'updateCurrency'])       ->name('settings.currency');
-    Route::post('/settings/domain',         [OrgPagesController::class, 'updateCustomDomain'])   ->name('settings.domain');
-    Route::post('/settings/domain/verify',  [OrgPagesController::class, 'verifyCustomDomain'])   ->name('settings.domain.verify');
+    Route::get ('/users',             [OrgPagesController::class, 'users'])         ->middleware('org-role:org_admin')->name('users.index');
+    Route::get ('/settings',                [OrgPagesController::class, 'settings'])             ->middleware('org-role:org_admin')->name('settings.index');
+    Route::post('/settings/currency',       [OrgPagesController::class, 'updateCurrency'])       ->middleware('org-role:org_admin')->name('settings.currency');
+    Route::post('/settings/domain',         [OrgPagesController::class, 'updateCustomDomain'])   ->middleware('org-role:org_admin')->name('settings.domain');
+    Route::post('/settings/domain/verify',  [OrgPagesController::class, 'verifyCustomDomain'])   ->middleware('org-role:org_admin')->name('settings.domain.verify');
 
     // Billing (admin)
-    Route::get ('/billing',                  [BillingController::class, 'index'])         ->name('billing.index');
-    Route::post('/billing/checkout',         [BillingController::class, 'checkout'])      ->name('billing.checkout');
+    Route::get ('/billing',                  [BillingController::class, 'index'])         ->middleware('org-role:org_admin')->name('billing.index');
+    Route::post('/billing/checkout',         [BillingController::class, 'checkout'])      ->middleware('org-role:org_admin')->name('billing.checkout');
     // bKash manual submit — throttled. The unique-TrxID check (BillingController.php)
     // means a malicious user could otherwise burn legitimate TrxIDs by spamming.
     Route::post('/billing/bkash/manual',     [BillingController::class, 'bkashManualSubmit'])
-        ->middleware('throttle:10,1')
+        ->middleware(['org-role:org_admin', 'throttle:10,1'])
         ->name('billing.bkash-manual');
-    Route::post('/billing/auto-renew',       [BillingController::class, 'toggleAutoRenew'])->name('billing.auto-renew');
-    Route::post('/billing/cancel',           [BillingController::class, 'cancel'])        ->name('billing.cancel');
-    Route::post('/billing/renew-now',        [BillingController::class, 'renewNow'])      ->name('billing.renew-now');
+    Route::post('/billing/auto-renew',       [BillingController::class, 'toggleAutoRenew'])->middleware('org-role:org_admin')->name('billing.auto-renew');
+    Route::post('/billing/cancel',           [BillingController::class, 'cancel'])        ->middleware('org-role:org_admin')->name('billing.cancel');
+    Route::post('/billing/renew-now',        [BillingController::class, 'renewNow'])      ->middleware('org-role:org_admin')->name('billing.renew-now');
 
     // Invitations (admin)
     // Throttle store at 20 invites per minute — even legitimate batch invites
     // shouldn't need more, and it caps any spam vector if an admin account is
     // compromised.
     Route::post  ('/invitations',                [InvitationController::class, 'store'])
-        ->middleware('throttle:20,1')
+        ->middleware(['org-role:org_admin', 'throttle:20,1'])
         ->name('invitations.store');
-    Route::delete('/invitations/{invitation}',   [InvitationController::class, 'destroy'])->name('invitations.destroy');
+    Route::delete('/invitations/{invitation}',   [InvitationController::class, 'destroy'])->middleware('org-role:org_admin')->name('invitations.destroy');
 });
 
 // Super-admin
