@@ -31,4 +31,15 @@ return [
         ],
     ],
 
+    'paypal' => [
+        'mode' => env('PAYPAL_MODE', 'sandbox'),
+        'client_id' => env('PAYPAL_CLIENT_ID'),
+        'secret' => env('PAYPAL_SECRET'),
+        'plans' => [
+            'starter' => env('PAYPAL_PLAN_STARTER'),
+            'pro' => env('PAYPAL_PLAN_PRO'),
+            'enterprise' => env('PAYPAL_PLAN_ENTERPRISE'),
+        ],
+    ],
+
 ];

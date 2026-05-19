@@ -27,7 +27,7 @@ class PayPalProvider implements PaymentProvider, SupportsRecurring
 
     private function base(): string
     {
-        return env('PAYPAL_MODE', 'sandbox') === 'live'
+        return config('services.paypal.mode', 'sandbox') === 'live'
             ? 'https://api-m.paypal.com'
             : 'https://api-m.sandbox.paypal.com';
     }
@@ -35,7 +35,10 @@ class PayPalProvider implements PaymentProvider, SupportsRecurring
     private function accessToken(): string
     {
         return Cache::remember('paypal:access_token', 8 * 60, function () {
-            $resp = Http::withBasicAuth(env('PAYPAL_CLIENT_ID', ''), env('PAYPAL_SECRET', ''))
+            $resp = Http::withBasicAuth(
+                config('services.paypal.client_id', ''),
+                config('services.paypal.secret', '')
+            )
                 ->asForm()
                 ->post("{$this->base()}/v1/oauth2/token", ['grant_type' => 'client_credentials'])
                 ->throw();
@@ -89,7 +92,7 @@ class PayPalProvider implements PaymentProvider, SupportsRecurring
      */
     private function createSubscription(PaymentTransaction $txn): array
     {
-        $planId = env(strtoupper("PAYPAL_PLAN_{$txn->plan}"));
+        $planId = config("services.paypal.plans.{$txn->plan}");
         if (! $planId) {
             throw new \RuntimeException("PayPal plan id missing — set PAYPAL_PLAN_" . strtoupper($txn->plan) . " in .env after creating the plan in PayPal.");
         }

@@ -27,7 +27,7 @@ class PaymentService
 
     public function hasPaypalCreds(): bool
     {
-        return ! empty(env('PAYPAL_CLIENT_ID')) && ! empty(env('PAYPAL_SECRET'));
+        return ! empty(config('services.paypal.client_id')) && ! empty(config('services.paypal.secret'));
     }
 
     public function hasBkashCreds(): bool
