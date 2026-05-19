@@ -327,7 +327,7 @@
         "head_create_org": "Create your AuctionBall organization",
         "org_name_placeholder": "BPL Cricket Cup",
         "your_name_placeholder": "Rashed Hossain",
-        "email_placeholder": "you@example.com",
+        "email_placeholder": "you{'@'}example.com",
         "head_login": "Log in to AuctionBall",
         "plan_free_meta": "1 season · 44 players · 4 teams",
         "plan_starter_meta": "3 seasons · 100 players · 6 teams",
@@ -585,7 +585,8 @@
         "modal_after_submit_note": "After you submit, your account will be activated within {hours} hours once we verify the payment.",
         "modal_submitting": "Submitting…",
         "modal_submit_payment": "Submit payment",
-        "modal_copy": "Copy"
+        "modal_copy": "Copy",
+        "unlimited": "Unlimited"
     },
     "public_register": {
         "head_title": "Register · {org} · {season}",
@@ -1360,7 +1361,7 @@
     "users_page": {
         "send_invite_title": "Send invitation",
         "invite_button": "Invite user",
-        "email_placeholder": "captain@example.com",
+        "email_placeholder": "captain{'@'}example.com",
         "name_optional": "Name (optional)",
         "name_placeholder": "Karim Captain",
         "role": "Role",

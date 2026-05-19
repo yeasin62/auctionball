@@ -327,7 +327,7 @@
         "head_create_org": "আপনার AuctionBall প্রতিষ্ঠান তৈরি করুন",
         "org_name_placeholder": "BPL ক্রিকেট কাপ",
         "your_name_placeholder": "রাশেদ হোসেন",
-        "email_placeholder": "you@example.com",
+        "email_placeholder": "you{'@'}example.com",
         "head_login": "AuctionBall-এ লগ ইন",
         "plan_free_meta": "১ সিজন · ৪৪ প্লেয়ার · ৪ টিম",
         "plan_starter_meta": "৩ সিজন · ১০০ প্লেয়ার · ৬ টিম",
@@ -585,7 +585,8 @@
         "modal_after_submit_note": "জমা দেওয়ার পর, পেমেন্ট যাচাইয়ের পর {hours} ঘণ্টার মধ্যে অ্যাকাউন্ট সক্রিয় হবে।",
         "modal_submitting": "জমা হচ্ছে…",
         "modal_submit_payment": "পেমেন্ট জমা",
-        "modal_copy": "কপি"
+        "modal_copy": "কপি",
+        "unlimited": "আনলিমিটেড"
     },
     "public_register": {
         "head_title": "রেজিস্ট্রেশন · {org} · {season}",
@@ -1360,7 +1361,7 @@
     "users_page": {
         "send_invite_title": "আমন্ত্রণ পাঠান",
         "invite_button": "ব্যবহারকারী আমন্ত্রণ",
-        "email_placeholder": "captain@example.com",
+        "email_placeholder": "captain{'@'}example.com",
         "name_optional": "নাম (ঐচ্ছিক)",
         "name_placeholder": "করিম ক্যাপ্টেন",
         "role": "ভূমিকা",
