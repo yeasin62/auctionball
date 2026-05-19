@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,7 +13,7 @@ use Illuminate\Notifications\Notifiable;
  * Implementing HasLocalePreference makes Mail::to($user) auto-render
  * mailables in $user->locale — no per-call ->locale() needed.
  */
-class User extends Authenticatable implements HasLocalePreference
+class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
