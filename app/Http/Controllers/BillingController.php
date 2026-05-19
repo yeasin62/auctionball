@@ -169,7 +169,8 @@ class BillingController extends Controller
         /** @var Organization $org */
         $org       = $request->attributes->get('current_organization');
         $currency  = $data['provider'] === 'paypal' ? 'USD' : 'BDT';
-        $autoRenew = ! array_key_exists('auto_renew', $data) || (bool) $data['auto_renew'];
+        $requestedAutoRenew = ! array_key_exists('auto_renew', $data) || (bool) $data['auto_renew'];
+        $autoRenew = $requestedAutoRenew && filled(config("services.paypal.plans.{$data['plan']}"));
 
         $txn = PaymentTransaction::create([
             'organization_id'      => $org->id,
@@ -247,7 +248,7 @@ class BillingController extends Controller
                 'provider'                 => $txn->provider,
                 'provider_subscription_id' => $txn->provider_txn_id,
                 'is_recurring'             => (bool) $txn->is_recurring_setup,
-                'auto_renew'               => true,
+                'auto_renew'               => (bool) $txn->is_recurring_setup,
                 'amount'                   => $txn->amount,
                 'currency'                 => $txn->currency,
                 'billing_cycle'            => $txn->billing_cycle,
