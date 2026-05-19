@@ -13,7 +13,7 @@ class PaymentTransaction extends Model
 
     protected $fillable = [
         'organization_id', 'subscription_id', 'initiated_by_user_id',
-        'provider', 'provider_txn_id', 'local_ref',
+        'provider', 'provider_txn_id', 'sender_bkash_number', 'local_ref',
         'plan', 'billing_cycle', 'is_recurring_setup',
         'amount', 'currency', 'status',
         'raw_payload', 'completed_at',

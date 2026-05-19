@@ -6,7 +6,7 @@ import CurrencyField from '@/Components/CurrencyField.vue';
 import ImageCropper from '@/Components/ImageCropper.vue';
 import { Link, router, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18n, I18nT } from 'vue-i18n';
 import { useFmt } from '@/composables/useFmt';
 import { useConfirm } from '@/composables/useConfirm';
 
@@ -161,10 +161,10 @@ const applyFilters = () => router.get(route('dashboard.players.index'), filterFo
 
 const remove = async (p) => {
     if (! await confirm({
-        title: `Delete "${p.name}"?`,
-        description: 'This permanently removes the player from the season. If they were sold, the team\'s budget is restored.',
+        title: t('players_page.confirm_delete_title', { name: p.name }),
+        description: t('players_page.confirm_delete_body'),
         variant: 'danger',
-        confirmText: 'Delete player',
+        confirmText: t('players_page.delete_player'),
     })) return;
     router.delete(route('dashboard.players.destroy', p.id), { preserveScroll: true });
 };
@@ -189,19 +189,19 @@ const isImageValue = (v) => typeof v === 'string' && /^(https?:|\/storage\/)/.te
 const approve = (p) => router.post(route('dashboard.players.approve', p.id), {}, { preserveScroll: true });
 const reject  = async (p) => {
     if (! await confirm({
-        title: `Reject "${p.name}"'s registration?`,
-        description: 'Their record will be deleted. They\'ll need to re-register if you change your mind later.',
+        title: t('players_page.confirm_reject_title', { name: p.name }),
+        description: t('players_page.confirm_reject_body'),
         variant: 'danger',
-        confirmText: 'Reject & delete',
+        confirmText: t('players_page.reject_and_delete'),
     })) return;
     router.delete(route('dashboard.players.reject', p.id), { preserveScroll: true });
 };
 const approveAll = async () => {
     if (! await confirm({
-        title: `Approve all ${props.pending_count} pending players?`,
-        description: 'Each will be moved into the auction queue and become eligible for bidding.',
+        title: t('players_page.confirm_approve_all_title', { count: props.pending_count }),
+        description: t('players_page.confirm_approve_all_body'),
         variant: 'info',
-        confirmText: 'Approve all',
+        confirmText: t('players_page.approve_all'),
     })) return;
     router.post(route('dashboard.players.approve-all'), {}, { preserveScroll: true });
 };
@@ -235,48 +235,52 @@ const atLimit = props.season && props.used >= props.limits.players;
 </script>
 
 <template>
-    <DashboardLayout title="Players">
+    <DashboardLayout :title="t('players_page.title')">
         <template #actions>
             <a v-if="limits.export_csv" :href="route('dashboard.players.export.csv')" class="btn-ghost py-2 px-4 text-[13px]">
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v4h16v-4"/></svg>
-                Export CSV
+                {{ t('players_page.export_csv') }}
             </a>
             <a v-if="limits.export_pdf" :href="route('dashboard.players.export.pdf')" class="btn-ghost py-2 px-4 text-[13px]">
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path d="M14 2v6h6"/></svg>
-                Export PDF
+                {{ t('players_page.export_pdf') }}
             </a>
             <a :href="route('dashboard.players.import.template')" class="btn-ghost py-2 px-4 text-[13px]">
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
-                CSV template
+                {{ t('players_page.csv_template') }}
             </a>
             <label class="btn-ghost py-2 px-4 text-[13px] cursor-pointer">
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v4h16v-4"/></svg>
                 <input ref="csvInput" type="file" accept=".csv,text/csv" class="hidden" @change="onCsvPicked" />
-                Import CSV
+                {{ t('players_page.import_csv') }}
             </label>
             <button @click="startCreate"
                     class="btn-primary py-2 px-4 text-[13px]"
                     :class="{ 'opacity-50 pointer-events-none': !season || atLimit }"
                     :disabled="!season || atLimit">
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
-                Add player
+                {{ t('players_page.add_player') }}
             </button>
         </template>
 
         <div v-if="!season" class="glass rounded-2xl p-10 text-center">
-            <p class="text-ink-500 text-[14px] max-w-md mx-auto">No active season. <Link href="/dashboard/seasons" class="text-ink-900 underline">Create or activate one first</Link>.</p>
+            <p class="text-ink-500 text-[14px] max-w-md mx-auto">
+                <i18n-t keypath="players_page.no_active_season_msg">
+                    <template #link><Link href="/dashboard/seasons" class="text-ink-900 underline">{{ t('players_page.create_or_activate_link') }}</Link></template>
+                </i18n-t>
+            </p>
         </div>
 
         <template v-else>
             <div v-if="atLimit" class="mb-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-[13px] text-amber-800">
-                Player limit reached: <strong>{{ used }} / {{ limits.players }}</strong> on your plan.
-                <a href="/dashboard/billing" class="underline font-medium">Upgrade</a> to add more.
+                {{ t('players_page.player_limit_reached') }} <strong>{{ used }} / {{ limits.players }}</strong>
+                <a href="/dashboard/billing" class="underline font-medium">{{ t('seasons_page.upgrade_to_add') }}</a>{{ t('seasons_page.at_limit_suffix') }}
             </div>
 
             <!-- Create / Edit form -->
             <div v-if="showCreate" class="glass-strong rounded-2xl p-6 mb-5">
                 <h3 class="text-[16px] font-bold tracking-tight mb-4">
-                    {{ editingId ? `Edit player` : t('forms.players.section_title') }}
+                    {{ editingId ? t('players_page.edit_player_title') : t('forms.players.section_title') }}
                 </h3>
                 <form @submit.prevent="submit" class="grid md:grid-cols-3 gap-4">
                     <Field :label="t('forms.players.name')" :error="form.errors.name" required>
@@ -289,7 +293,8 @@ const atLimit = props.season && props.used >= props.limits.players;
                     </Field>
                     <Field :label="t('forms.players.type')" :error="form.errors.player_type" required>
                         <select v-model="form.player_type" class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
-                            <option>Old</option><option>New</option>
+                            <option value="Old">{{ t('players_page.type_old') }}</option>
+                            <option value="New">{{ t('players_page.type_new') }}</option>
                         </select>
                     </Field>
                     <Field :label="t('forms.players.position')" :error="form.errors.position">
@@ -418,17 +423,24 @@ const atLimit = props.season && props.used >= props.limits.players;
 
             <!-- Filters -->
             <div class="glass rounded-2xl p-4 mb-4 flex flex-wrap items-center gap-3">
-                <input v-model="filterForm.q" @input="applyFilters" placeholder="Search by name…"
+                <input v-model="filterForm.q" @input="applyFilters" :placeholder="t('players_page.search_placeholder')"
                        class="flex-1 min-w-[200px] rounded-lg border border-ink-200/70 bg-white/80 px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                 <select v-model="filterForm.category" @change="applyFilters" class="rounded-lg border border-ink-200/70 bg-white/80 px-3 py-2 text-[13px]">
-                    <option value="">All categories</option>
+                    <option value="">{{ t('players_page.all_categories') }}</option>
                     <option v-for="c in seasonCategoryNames" :key="c" :value="c">{{ c }}</option>
                 </select>
                 <select v-model="filterForm.type" @change="applyFilters" class="rounded-lg border border-ink-200/70 bg-white/80 px-3 py-2 text-[13px]">
-                    <option value="">Old + New</option><option>Old</option><option>New</option>
+                    <option value="">{{ t('players_page.old_plus_new') }}</option>
+                    <option value="Old">{{ t('players_page.type_old') }}</option>
+                    <option value="New">{{ t('players_page.type_new') }}</option>
                 </select>
                 <select v-model="filterForm.status" @change="applyFilters" class="rounded-lg border border-ink-200/70 bg-white/80 px-3 py-2 text-[13px]">
-                    <option value="">Any status</option><option>pending</option><option>queue</option><option>live</option><option>sold</option><option>unsold</option>
+                    <option value="">{{ t('players_page.any_status') }}</option>
+                    <option value="pending">{{ t('players_page.status_pending') }}</option>
+                    <option value="queue">{{ t('players_page.status_queue') }}</option>
+                    <option value="live">{{ t('players_page.status_live') }}</option>
+                    <option value="sold">{{ t('players_page.status_sold') }}</option>
+                    <option value="unsold">{{ t('players_page.status_unsold') }}</option>
                 </select>
                 <span class="text-[12px] font-mono text-ink-500">{{ used }} / {{ limits.players === 9223372036854775807 ? '∞' : limits.players }}</span>
             </div>
@@ -437,11 +449,11 @@ const atLimit = props.season && props.used >= props.limits.players;
             <div v-if="pending_count > 0 && filterForm.status !== 'pending'"
                  class="mb-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 flex items-center justify-between text-[13px]">
                 <span class="text-amber-800">
-                    <strong>{{ pending_count }}</strong> publicly-registered player(s) waiting for review.
+                    {{ t('players_page.pending_review_msg', { count: pending_count }) }}
                 </span>
                 <div class="flex gap-2">
-                    <button @click="filterPending" class="text-amber-900 underline font-medium text-[12.5px]">View pending</button>
-                    <button @click="approveAll" class="btn-primary py-1.5 px-3 text-[12px]">Approve all</button>
+                    <button @click="filterPending" class="text-amber-900 underline font-medium text-[12.5px]">{{ t('players_page.view_pending') }}</button>
+                    <button @click="approveAll" class="btn-primary py-1.5 px-3 text-[12px]">{{ t('players_page.approve_all') }}</button>
                 </div>
             </div>
 
@@ -450,13 +462,13 @@ const atLimit = props.season && props.used >= props.limits.players;
                 <table class="w-full text-[13.5px]">
                     <thead class="bg-white/50">
                         <tr class="text-left font-mono text-[10.5px] tracking-widest text-ink-500">
-                            <th class="px-4 py-3">NAME</th>
-                            <th class="px-4 py-3">CATEGORY</th>
-                            <th class="px-4 py-3">TYPE</th>
-                            <th class="px-4 py-3">BASE</th>
-                            <th class="px-4 py-3">STATUS</th>
-                            <th class="px-4 py-3">SOLD TO</th>
-                            <th class="px-4 py-3">SOLD PRICE</th>
+                            <th class="px-4 py-3">{{ t('players_page.th_name') }}</th>
+                            <th class="px-4 py-3">{{ t('players_page.th_category') }}</th>
+                            <th class="px-4 py-3">{{ t('players_page.th_type') }}</th>
+                            <th class="px-4 py-3">{{ t('players_page.th_base') }}</th>
+                            <th class="px-4 py-3">{{ t('players_page.th_status') }}</th>
+                            <th class="px-4 py-3">{{ t('players_page.th_sold_to') }}</th>
+                            <th class="px-4 py-3">{{ t('players_page.th_sold_price') }}</th>
                             <th class="px-4 py-3"></th>
                         </tr>
                     </thead>
@@ -465,7 +477,7 @@ const atLimit = props.season && props.used >= props.limits.players;
                             <td class="px-4 py-3">
                                 <button @click="showDetails(p)"
                                         class="flex items-center gap-2.5 hover:bg-white/40 -mx-2 px-2 py-1 rounded-lg transition-colors text-left"
-                                        title="View player card">
+                                        :title="t('players_page.view_card_title')">
                                     <img v-if="p.photo_url" :src="p.photo_url" :alt="p.name"
                                          class="h-9 w-9 rounded-full object-cover border border-ink-200 shrink-0" />
                                     <div v-else class="avatar shrink-0 text-[10px]">{{ p.name.split(' ').map(s => s[0]).slice(0,2).join('') }}</div>
@@ -485,31 +497,33 @@ const atLimit = props.season && props.used >= props.limits.players;
                             <td class="px-4 py-3 font-mono text-ink-700">{{ p.sold_price ? fmt(p.sold_price) : '—' }}</td>
                             <td class="px-4 py-3 text-right whitespace-nowrap">
                                 <button @click="showDetails(p)" class="text-ink-600 hover:text-ink-900 text-[12px] mr-3"
-                                        :title="(p.registration_data && Object.keys(p.registration_data).length) ? 'View submitted form responses' : 'View player details'">
-                                    Details
+                                        :title="(p.registration_data && Object.keys(p.registration_data).length) ? t('players_page.view_submitted_responses') : t('players_page.view_player_details')">
+                                    {{ t('players_page.details') }}
                                     <span v-if="p.registration_data && Object.keys(p.registration_data).length"
                                           class="ml-1 px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 font-mono text-[9.5px]">
                                         {{ Object.keys(p.registration_data).length }}
                                     </span>
                                 </button>
                                 <template v-if="p.auction_status === 'pending'">
-                                    <button @click="approve(p)" class="text-emerald-600 hover:text-emerald-700 text-[12px] font-medium mr-3">Approve</button>
-                                    <button @click="reject(p)"  class="text-rose-500 hover:text-rose-700 text-[12px]">Reject</button>
+                                    <button @click="approve(p)" class="text-emerald-600 hover:text-emerald-700 text-[12px] font-medium mr-3">{{ t('players_page.approve') }}</button>
+                                    <button @click="reject(p)"  class="text-rose-500 hover:text-rose-700 text-[12px]">{{ t('players_page.reject') }}</button>
                                 </template>
                                 <template v-else>
                                     <button @click="startEdit(p)" class="text-brand-indigo hover:underline text-[12px] mr-3"
                                             :class="{ 'opacity-50 pointer-events-none': p.auction_status === 'live' || p.auction_status === 'sold' }"
                                             :disabled="p.auction_status === 'live' || p.auction_status === 'sold'"
-                                            :title="p.auction_status === 'live' ? 'Cannot edit while live' : p.auction_status === 'sold' ? 'Cannot edit after sold' : 'Edit player'">
-                                        Edit
+                                            :title="p.auction_status === 'live' ? t('players_page.cannot_edit_live') : p.auction_status === 'sold' ? t('players_page.cannot_edit_sold') : t('players_page.edit_title')">
+                                        {{ t('players_page.edit') }}
                                     </button>
-                                    <button @click="remove(p)" class="text-rose-500 hover:text-rose-700 text-[12px]">Delete</button>
+                                    <button @click="remove(p)" class="text-rose-500 hover:text-rose-700 text-[12px]">{{ t('players_page.delete') }}</button>
                                 </template>
                             </td>
                         </tr>
                         <tr v-if="players.data.length === 0">
                             <td colspan="8" class="px-4 py-12 text-center text-ink-500 text-[13.5px]">
-                                No players. Click <strong>Add player</strong> to create your roster.
+                                <i18n-t keypath="players_page.empty_state">
+                                    <template #add><strong>{{ t('players_page.add_player_strong') }}</strong></template>
+                                </i18n-t>
                             </td>
                         </tr>
                     </tbody>
@@ -590,28 +604,27 @@ const atLimit = props.season && props.used >= props.limits.players;
                     <!-- ============== STATS GRID ============== -->
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-px bg-ink-100">
                         <div class="bg-white px-4 py-4 text-center">
-                            <div class="font-mono text-[9.5px] tracking-widest text-ink-500">BASE PRICE</div>
+                            <div class="font-mono text-[9.5px] tracking-widest text-ink-500">{{ t('players_page.label_base_price') }}</div>
                             <div class="text-[18px] sm:text-[20px] font-extrabold tracking-tight font-mono mt-1 leading-none">{{ fmt(detailsPlayer.base_price) }}</div>
                         </div>
                         <div class="bg-white px-4 py-4 text-center">
-                            <div class="font-mono text-[9.5px] tracking-widest text-ink-500">SOLD PRICE</div>
+                            <div class="font-mono text-[9.5px] tracking-widest text-ink-500">{{ t('players_page.label_sold_price') }}</div>
                             <div class="mt-1 leading-none">
                                 <span v-if="detailsPlayer.sold_price" class="text-[18px] sm:text-[20px] font-extrabold tracking-tight font-mono text-emerald-600">{{ fmt(detailsPlayer.sold_price) }}</span>
                                 <span v-else class="text-[14px] text-ink-400 font-mono">—</span>
                             </div>
                         </div>
                         <div class="bg-white px-4 py-4 text-center">
-                            <div class="font-mono text-[9.5px] tracking-widest text-ink-500">SOLD TO</div>
+                            <div class="font-mono text-[9.5px] tracking-widest text-ink-500">{{ t('players_page.label_sold_to') }}</div>
                             <div class="mt-1 leading-none">
                                 <span v-if="detailsPlayer.team?.name" class="text-[14px] sm:text-[15px] font-bold tracking-tight">{{ detailsPlayer.team.name }}</span>
                                 <span v-else class="text-[14px] text-ink-400 font-mono">—</span>
                             </div>
                         </div>
                         <div class="bg-white px-4 py-4 text-center">
-                            <div class="font-mono text-[9.5px] tracking-widest text-ink-500">TYPE</div>
+                            <div class="font-mono text-[9.5px] tracking-widest text-ink-500">{{ t('players_page.label_type') }}</div>
                             <div class="mt-1 leading-none text-[14px] sm:text-[15px] font-bold tracking-tight">
                                 {{ detailsPlayer.player_type }}
-                                <span class="ml-1 font-mono text-[10px] text-ink-500 align-middle">player</span>
                             </div>
                         </div>
                     </div>
@@ -624,19 +637,19 @@ const atLimit = props.season && props.used >= props.limits.players;
                             <div class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-2">/ PLAYER PROFILE</div>
                             <dl class="rounded-2xl bg-ink-50/60 border border-ink-200/60 px-5 py-4 space-y-2 text-[13.5px]">
                                 <div v-if="detailsPlayer.profession" class="flex justify-between gap-3">
-                                    <dt class="text-ink-500">Profession</dt>
+                                    <dt class="text-ink-500">{{ t('players_page.label_profession') }}</dt>
                                     <dd class="font-medium text-ink-900 truncate text-right">{{ detailsPlayer.profession }}</dd>
                                 </div>
                                 <div v-if="isCricket && detailsPlayer.batting_style" class="flex justify-between gap-3">
-                                    <dt class="text-ink-500">Batting style</dt>
+                                    <dt class="text-ink-500">{{ t('players_page.label_batting') }}</dt>
                                     <dd class="font-medium text-ink-900 truncate text-right">{{ detailsPlayer.batting_style }}</dd>
                                 </div>
                                 <div v-if="isCricket && detailsPlayer.bowling_style" class="flex justify-between gap-3">
-                                    <dt class="text-ink-500">Bowling style</dt>
+                                    <dt class="text-ink-500">{{ t('players_page.label_bowling') }}</dt>
                                     <dd class="font-medium text-ink-900 truncate text-right">{{ detailsPlayer.bowling_style }}</dd>
                                 </div>
                                 <div v-if="detailsPlayer.registration_txn_id" class="flex justify-between gap-3 pt-1 border-t border-ink-200/60">
-                                    <dt class="text-ink-500">Reg. TrxID</dt>
+                                    <dt class="text-ink-500">{{ t('players_page.label_reg_trxid') }}</dt>
                                     <dd class="font-mono text-[12.5px] text-ink-700 truncate text-right">{{ detailsPlayer.registration_txn_id }}</dd>
                                 </div>
                             </dl>
@@ -664,15 +677,15 @@ const atLimit = props.season && props.used >= props.limits.players;
                     <!-- ============== ACTIONS ============== -->
                     <div class="px-6 sm:px-8 pb-6 pt-2 flex flex-wrap gap-2 justify-end">
                         <template v-if="detailsPlayer.auction_status === 'pending'">
-                            <button @click="reject(detailsPlayer); closeDetails()" class="btn-ghost py-2 px-4 text-[13px] text-rose-600 border-rose-200 hover:bg-rose-50">Reject</button>
-                            <button @click="approve(detailsPlayer); closeDetails()" class="btn-primary py-2 px-4 text-[13px]">Approve into queue</button>
+                            <button @click="reject(detailsPlayer); closeDetails()" class="btn-ghost py-2 px-4 text-[13px] text-rose-600 border-rose-200 hover:bg-rose-50">{{ t('players_page.reject') }}</button>
+                            <button @click="approve(detailsPlayer); closeDetails()" class="btn-primary py-2 px-4 text-[13px]">{{ t('players_page.approve_into_queue') }}</button>
                         </template>
                         <template v-else-if="detailsPlayer.auction_status !== 'live' && detailsPlayer.auction_status !== 'sold'">
-                            <button @click="closeDetails" class="btn-ghost py-2 px-4 text-[13px]">Close</button>
-                            <button @click="editFromDetails" class="btn-primary py-2 px-4 text-[13px]">Edit player</button>
+                            <button @click="closeDetails" class="btn-ghost py-2 px-4 text-[13px]">{{ t('players_page.close') }}</button>
+                            <button @click="editFromDetails" class="btn-primary py-2 px-4 text-[13px]">{{ t('players_page.edit_player') }}</button>
                         </template>
                         <template v-else>
-                            <button @click="closeDetails" class="btn-primary py-2 px-4 text-[13px]">Close</button>
+                            <button @click="closeDetails" class="btn-primary py-2 px-4 text-[13px]">{{ t('players_page.close') }}</button>
                         </template>
                     </div>
                 </div>

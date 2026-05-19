@@ -4,6 +4,9 @@ import Field from '@/Components/Field.vue';
 import TextField from '@/Components/TextField.vue';
 import ImageCropper from '@/Components/ImageCropper.vue';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({ org: Object, season: Object, positions: { type: Array, default: () => [] } });
 const page = usePage();
@@ -52,7 +55,13 @@ const methodTone = (kind) => ({
     other:  { bg: 'bg-ink-50',        border: 'border-ink-200',     accent: 'text-ink-700',     dot: 'bg-ink-400'    },
 }[kind] || { bg: 'bg-ink-50', border: 'border-ink-200', accent: 'text-ink-700', dot: 'bg-ink-400' });
 
-const methodKindName = (kind) => ({ bkash: 'bKash', nagad: 'Nagad', rocket: 'Rocket', bank: 'Bank account', other: 'Other' }[kind] || kind);
+const methodKindName = (kind) => ({
+    bkash:  t('public_register.method_bkash'),
+    nagad:  t('public_register.method_nagad'),
+    rocket: t('public_register.method_rocket'),
+    bank:   t('public_register.method_bank'),
+    other:  t('public_register.method_other'),
+}[kind] || kind);
 const methodCopy = (txt) => { if (txt) navigator.clipboard?.writeText(txt); };
 
 const form = useForm({
@@ -116,7 +125,7 @@ const submit = () => form.post(route('public-register.store', props.season.token
 </script>
 
 <template>
-    <Head :title="`Register · ${org.name} · ${season.name}`" />
+    <Head :title="t('public_register.head_title', { org: org.name, season: season.name })" />
     <div class="page-bg min-h-screen">
         <header class="px-6 py-5 border-b border-ink-200/40 bg-white/40 backdrop-blur-md">
             <div class="max-w-2xl mx-auto flex items-center gap-3">
@@ -125,7 +134,7 @@ const submit = () => form.post(route('public-register.store', props.season.token
                 </span>
                 <div>
                     <div class="text-[15px] font-bold tracking-tight">{{ org.name }}</div>
-                    <div class="font-mono text-[10.5px] text-ink-500">{{ season.name }} · {{ season.year }} · player registration</div>
+                    <div class="font-mono text-[10.5px] text-ink-500">{{ t('public_register.subtitle_player', { season: season.name, year: season.year }) }}</div>
                 </div>
             </div>
         </header>
@@ -136,9 +145,9 @@ const submit = () => form.post(route('public-register.store', props.season.token
             </div>
 
             <div class="text-center mb-7">
-                <h1 class="text-[34px] font-extrabold tracking-tight">Register as a player</h1>
+                <h1 class="text-[34px] font-extrabold tracking-tight">{{ t('public_register.heading_player') }}</h1>
                 <p class="mt-2 text-ink-500 max-w-md mx-auto text-[14px]">
-                    Fill in your details. The organizer will review your registration before the auction starts.
+                    {{ t('public_register.intro_player') }}
                 </p>
             </div>
 
@@ -147,48 +156,48 @@ const submit = () => form.post(route('public-register.store', props.season.token
             </div>
 
             <form @submit.prevent="submit" class="glass-strong rounded-2xl p-7 space-y-5">
-                <div class="text-[15px] font-bold tracking-wider text-ink-800">YOUR DETAILS</div>
+                <div class="text-[15px] font-bold tracking-wider text-ink-800">{{ t('public_register.section_your_details') }}</div>
 
-                <Field label="Full name" :error="form.errors.name" required>
-                    <TextField v-model="form.name" placeholder="Shakib Rahman" autofocus />
+                <Field :label="t('public_register.full_name')" :error="form.errors.name" required>
+                    <TextField v-model="form.name" :placeholder="t('public_register.full_name_placeholder')" autofocus />
                 </Field>
 
                 <div class="grid md:grid-cols-2 gap-4">
-                    <Field label="Category" :error="form.errors.category" required>
+                    <Field :label="t('public_register.category')" :error="form.errors.category" required>
                         <select v-model="form.category" class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
                             <option v-for="c in seasonCategoryNames" :key="c" :value="c">{{ c }}</option>
                         </select>
                     </Field>
-                    <Field :label="isCricket ? 'Player position' : 'Position'" :error="form.errors.position">
+                    <Field :label="isCricket ? t('public_register.position_cricket') : t('public_register.position_football')" :error="form.errors.position">
                         <select v-model="form.position" class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
                             <option value="">—</option>
                             <option v-for="p in positions" :key="p" :value="p">{{ p }}</option>
                         </select>
                     </Field>
-                    <Field label="Jersey #" :error="form.errors.jersey_no">
-                        <TextField v-model="form.jersey_no" placeholder="07" />
+                    <Field :label="t('public_register.jersey_no')" :error="form.errors.jersey_no">
+                        <TextField v-model="form.jersey_no" :placeholder="t('public_register.jersey_no_placeholder')" />
                     </Field>
-                    <Field label="Profession" :error="form.errors.profession">
-                        <TextField v-model="form.profession" placeholder="Software engineer" />
+                    <Field :label="t('public_register.profession')" :error="form.errors.profession">
+                        <TextField v-model="form.profession" :placeholder="t('public_register.profession_placeholder')" />
                     </Field>
                     <template v-if="isCricket">
-                        <Field label="Batting style" :error="form.errors.batting_style">
-                            <TextField v-model="form.batting_style" placeholder="Right-hand bat" />
+                        <Field :label="t('public_register.batting_style')" :error="form.errors.batting_style">
+                            <TextField v-model="form.batting_style" :placeholder="t('public_register.batting_style_placeholder')" />
                         </Field>
-                        <Field label="Bowling style" :error="form.errors.bowling_style">
-                            <TextField v-model="form.bowling_style" placeholder="Right-arm off-spin" />
+                        <Field :label="t('public_register.bowling_style')" :error="form.errors.bowling_style">
+                            <TextField v-model="form.bowling_style" :placeholder="t('public_register.bowling_style_placeholder')" />
                         </Field>
                     </template>
                 </div>
 
                 <div class="pt-3 border-t border-ink-200/60">
-                    <ImageCropper :size="300" label="Player photo (300×300)" @update:file="form.photo = $event" />
+                    <ImageCropper :size="300" :label="t('public_register.player_photo', { size: 300 })" @update:file="form.photo = $event" />
                     <p v-if="form.errors.photo" class="mt-1.5 text-[12.5px] text-rose-500">{{ form.errors.photo }}</p>
                 </div>
 
                 <!-- ============== Org-defined custom fields ============== -->
                 <div v-if="customFields.length" class="pt-4 border-t border-ink-200/60 space-y-4">
-                    <div class="text-[15px] font-bold tracking-wider text-ink-800">ADDITIONAL DETAILS</div>
+                    <div class="text-[15px] font-bold tracking-wider text-ink-800">{{ t('public_register.section_additional') }}</div>
 
                     <template v-for="f in customFields" :key="f.id">
                         <!-- Fee headline — sits immediately above the first payment field
@@ -199,7 +208,7 @@ const submit = () => form.post(route('public-register.store', props.season.token
                                 <svg class="h-4 w-4 text-amber-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3 1.34 3 3-1.34 3-3 3m0-12V6m0 12v2"/></svg>
                             </span>
                             <div class="flex-1">
-                                <div class="font-mono text-[10.5px] tracking-widest text-amber-700">REGISTRATION FEE</div>
+                                <div class="font-mono text-[10.5px] tracking-widest text-amber-700">{{ t('public_register.fee_label') }}</div>
                                 <div class="text-[20px] font-extrabold tracking-tight text-amber-900 leading-none">{{ fmt(fee) }}</div>
                             </div>
                         </div>
@@ -222,7 +231,7 @@ const submit = () => form.post(route('public-register.store', props.season.token
                                    class="h-5 w-5 mt-0.5 shrink-0 rounded accent-brand-indigo cursor-pointer" />
                             <span class="flex-1">
                                 <span class="text-[14px] text-ink-800">{{ f.label }}<span v-if="f.required" class="text-rose-500 ml-0.5">*</span></span>
-                                <span v-if="form.custom[f.id]" class="ml-2 font-mono text-[10.5px] tracking-widest text-emerald-700 uppercase">checked</span>
+                                <span v-if="form.custom[f.id]" class="ml-2 font-mono text-[10.5px] tracking-widest text-emerald-700 uppercase">{{ t('public_register.checked') }}</span>
                                 <span v-if="form.errors[`custom.${f.id}`]" class="block mt-1 text-[12px] text-rose-500">{{ form.errors[`custom.${f.id}`] }}</span>
                             </span>
                         </label>
@@ -275,7 +284,7 @@ const submit = () => form.post(route('public-register.store', props.season.token
                             <select v-else-if="f.type === 'select'"
                                     v-model="form.custom[f.id]"
                                     :class="inputClasses">
-                                <option value="">— select —</option>
+                                <option value="">{{ t('public_register.select_placeholder') }}</option>
                                 <option v-for="opt in (f.options || [])" :key="opt" :value="opt">{{ opt }}</option>
                             </select>
 
@@ -329,7 +338,7 @@ const submit = () => form.post(route('public-register.store', props.season.token
                                             <div class="text-[12.5px] text-ink-700">{{ m.bank }}<span v-if="m.holder"> · {{ m.holder }}</span></div>
                                             <div class="flex items-center gap-2">
                                                 <code class="font-mono text-[14px] font-bold text-ink-900 bg-white px-2 py-0.5 rounded border border-ink-200">{{ m.account }}</code>
-                                                <button type="button" @click="methodCopy(m.account)" class="btn-ghost py-1 px-2 text-[10.5px]">Copy</button>
+                                                <button type="button" @click="methodCopy(m.account)" class="btn-ghost py-1 px-2 text-[10.5px]">{{ t('public_register.copy') }}</button>
                                             </div>
                                             <div v-if="m.branch" class="text-[11px] text-ink-500">{{ m.branch }}</div>
                                         </div>
@@ -337,7 +346,7 @@ const submit = () => form.post(route('public-register.store', props.season.token
                                         <div v-else class="mt-1">
                                             <div class="flex items-center gap-2 flex-wrap">
                                                 <code class="font-mono text-[15px] font-bold text-ink-900 bg-white px-2.5 py-0.5 rounded border border-ink-200">{{ m.number }}</code>
-                                                <button type="button" @click="methodCopy(m.number)" class="btn-ghost py-1 px-2 text-[10.5px]">Copy</button>
+                                                <button type="button" @click="methodCopy(m.number)" class="btn-ghost py-1 px-2 text-[10.5px]">{{ t('public_register.copy') }}</button>
                                             </div>
                                             <div v-if="m.instructions" class="mt-1 text-[11.5px] text-ink-600">{{ m.instructions }}</div>
                                         </div>
@@ -346,12 +355,12 @@ const submit = () => form.post(route('public-register.store', props.season.token
 
                                 <!-- TrxID input — single text the player submits -->
                                 <div class="rounded-xl bg-emerald-50/70 border border-emerald-200/70 p-3">
-                                    <label class="font-mono text-[10.5px] tracking-widest text-emerald-800">YOUR TRANSACTION ID / REFERENCE</label>
+                                    <label class="font-mono text-[10.5px] tracking-widest text-emerald-800">{{ t('public_register.trx_id_label') }}</label>
                                     <input v-model="form.custom[f.id]" type="text"
-                                           :placeholder="f.placeholder ?? 'e.g. 9F4XYZ123 (bKash) or bank reference number'"
+                                           :placeholder="f.placeholder ?? t('public_register.trx_id_placeholder')"
                                            class="mt-1.5 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-[14px] font-mono focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                                     <p class="mt-1.5 text-[11.5px] text-emerald-700">
-                                        Paste the TrxID from your bKash SMS, or your bank deposit reference. We verify before approving the registration.
+                                        {{ t('public_register.trx_id_help') }}
                                     </p>
                                 </div>
                             </div>
@@ -371,16 +380,16 @@ const submit = () => form.post(route('public-register.store', props.season.token
                             <div class="text-[20px] font-extrabold tracking-tight text-amber-900 leading-none">{{ fmt(fee) }}</div>
                         </div>
                     </div>
-                    <div class="text-[15px] font-bold tracking-wider text-ink-800">PAYMENT</div>
-                    <Field :label="`Transaction ID (${fmt(fee)} paid)`" :error="form.errors.registration_txn_id" required>
-                        <TextField v-model="form.registration_txn_id" placeholder="bKash / Nagad / Rocket TxnID" />
+                    <div class="text-[15px] font-bold tracking-wider text-ink-800">{{ t('public_register.section_payment') }}</div>
+                    <Field :label="t('public_register.trx_id_field_label', { fee: fmt(fee) })" :error="form.errors.registration_txn_id" required>
+                        <TextField v-model="form.registration_txn_id" :placeholder="t('public_register.trx_id_field_placeholder')" />
                     </Field>
                 </div>
 
                 <button type="submit" class="btn-primary w-full py-3"
                         :disabled="form.processing"
                         :class="{ 'opacity-60 pointer-events-none': form.processing }">
-                    {{ form.processing ? 'Submitting…' : 'Submit registration' }}
+                    {{ form.processing ? t('public_register.submitting') : t('public_register.submit_player') }}
                 </button>
             </form>
         </main>

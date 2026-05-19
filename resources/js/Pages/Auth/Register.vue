@@ -4,6 +4,9 @@ import Field from '@/Components/Field.vue';
 import TextField from '@/Components/TextField.vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, watch } from 'vue';
+import { useI18n, I18nT } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const appDomain = computed(() => usePage().props.appDomain || 'auctionball.com');
 
@@ -38,14 +41,14 @@ watch(() => form.org_name, (v) => {
 });
 const onSlugInput = (v) => { slugTouched = true; form.org_slug = slugify(v); };
 
-const planMeta = {
-    free:       { label: 'Free',       price: '৳0',         meta: '1 season · 44 players · 4 teams' },
-    starter:    { label: 'Starter',    price: '৳1,999/mo',  meta: '3 seasons · 100 players · 6 teams' },
-    pro:        { label: 'Pro',        price: '৳4,999/mo',  meta: 'Unlimited seasons & players · 10 teams' },
-    enterprise: { label: 'Enterprise', price: '৳5,999/mo',  meta: 'Unlimited everything · white-label' },
-};
+const planMeta = computed(() => ({
+    free:       { label: t('plans.free'),       price: t('auth.plan_free_price'),       meta: t('auth.plan_free_meta') },
+    starter:    { label: t('plans.starter'),    price: t('auth.plan_starter_price'),    meta: t('auth.plan_starter_meta') },
+    pro:        { label: t('plans.pro'),        price: t('auth.plan_pro_price'),        meta: t('auth.plan_pro_meta') },
+    enterprise: { label: t('plans.enterprise'), price: t('auth.plan_enterprise_price'), meta: t('auth.plan_enterprise_meta') },
+}));
 
-const visiblePlans = computed(() => props.plans.filter(p => planMeta[p]));
+const visiblePlans = computed(() => props.plans.filter(p => planMeta.value[p]));
 
 const submit = () => form.post(route('register'), {
     onFinish: () => form.reset('password', 'password_confirmation'),
@@ -53,17 +56,17 @@ const submit = () => form.post(route('register'), {
 </script>
 
 <template>
-    <Head title="Create your AuctionBall organization" />
-    <AuthShell title="Create your organization" subtitle="Pick a subdomain, add an admin, choose a plan. 30 seconds and you are running auctions.">
+    <Head :title="t('auth.head_create_org')" />
+    <AuthShell :title="t('auth.create_org_title')" :subtitle="t('auth.create_org_subtitle')">
         <form @submit.prevent="submit" class="space-y-5">
 
             <!-- Org block -->
             <div class="space-y-4">
-                <div class="font-mono text-[11px] tracking-widest text-ink-500">/ ORGANIZATION</div>
-                <Field label="Organization name" :error="form.errors.org_name" required>
-                    <TextField v-model="form.org_name" placeholder="BPL Cricket Cup" autofocus autocomplete="organization" />
+                <div class="font-mono text-[11px] tracking-widest text-ink-500">{{ t('auth.section_organization') }}</div>
+                <Field :label="t('auth.org_name')" :error="form.errors.org_name" required>
+                    <TextField v-model="form.org_name" :placeholder="t('auth.org_name_placeholder')" autofocus autocomplete="organization" />
                 </Field>
-                <Field label="Subdomain" :hint="'lowercase letters, numbers, dashes'" :error="form.errors.org_slug" required>
+                <Field :label="t('auth.subdomain')" :hint="t('auth.subdomain_hint')" :error="form.errors.org_slug" required>
                     <TextField :modelValue="form.org_slug" @update:modelValue="onSlugInput"
                                leading="" :trailing="`.${appDomain}`" placeholder="bpl-2026" autocomplete="off" />
                 </Field>
@@ -71,18 +74,18 @@ const submit = () => form.post(route('register'), {
 
             <!-- Admin block -->
             <div class="space-y-4 pt-3 border-t border-ink-200/60">
-                <div class="font-mono text-[11px] tracking-widest text-ink-500">/ ADMIN ACCOUNT</div>
-                <Field label="Your name" :error="form.errors.name" required>
-                    <TextField v-model="form.name" placeholder="Rashed Hossain" autocomplete="name" />
+                <div class="font-mono text-[11px] tracking-widest text-ink-500">{{ t('auth.section_admin') }}</div>
+                <Field :label="t('auth.your_name')" :error="form.errors.name" required>
+                    <TextField v-model="form.name" :placeholder="t('auth.your_name_placeholder')" autocomplete="name" />
                 </Field>
-                <Field label="Email" :error="form.errors.email" required>
-                    <TextField v-model="form.email" type="email" placeholder="you@example.com" autocomplete="username" />
+                <Field :label="t('common.email')" :error="form.errors.email" required>
+                    <TextField v-model="form.email" type="email" :placeholder="t('auth.email_placeholder')" autocomplete="username" />
                 </Field>
                 <div class="grid grid-cols-2 gap-3">
-                    <Field label="Password" :error="form.errors.password" required>
+                    <Field :label="t('common.password')" :error="form.errors.password" required>
                         <TextField v-model="form.password" type="password" autocomplete="new-password" />
                     </Field>
-                    <Field label="Confirm password" :error="form.errors.password_confirmation" required>
+                    <Field :label="t('common.confirm_password')" :error="form.errors.password_confirmation" required>
                         <TextField v-model="form.password_confirmation" type="password" autocomplete="new-password" />
                     </Field>
                 </div>
@@ -90,7 +93,7 @@ const submit = () => form.post(route('register'), {
 
             <!-- Plan block -->
             <div class="space-y-3 pt-3 border-t border-ink-200/60">
-                <div class="font-mono text-[11px] tracking-widest text-ink-500">/ PLAN</div>
+                <div class="font-mono text-[11px] tracking-widest text-ink-500">{{ t('auth.section_plan') }}</div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <label v-for="p in visiblePlans" :key="p"
                            class="cursor-pointer rounded-xl border p-3 transition"
@@ -113,19 +116,19 @@ const submit = () => form.post(route('register'), {
             <button type="submit" class="btn-primary w-full py-3"
                     :class="{ 'opacity-60 pointer-events-none': form.processing }"
                     :disabled="form.processing">
-                {{ form.processing ? 'Creating organization…' : 'Create organization' }}
+                {{ form.processing ? t('auth.creating') : t('auth.create_org_button') }}
             </button>
 
-            <p class="text-center text-[12.5px] text-ink-500 pt-1">
-                By signing up you agree to our <a href="#terms" class="text-ink-700 underline">Terms</a> and
-                <a href="#privacy" class="text-ink-700 underline">Privacy policy</a>.
-            </p>
+            <I18nT keypath="auth.terms_agreement" tag="p" class="text-center text-[12.5px] text-ink-500 pt-1">
+                <template #terms><a href="#terms" class="text-ink-700 underline">{{ t('auth.terms') }}</a></template>
+                <template #privacy><a href="#privacy" class="text-ink-700 underline">{{ t('auth.privacy') }}</a></template>
+            </I18nT>
         </form>
 
         <template #footer>
             <p class="text-[13.5px] text-ink-500">
-                Already have an account?
-                <Link :href="route('login')" class="text-ink-900 font-medium hover:underline">Log in</Link>
+                {{ t('auth.already_have_account') }}
+                <Link :href="route('login')" class="text-ink-900 font-medium hover:underline">{{ t('auth.login_button') }}</Link>
             </p>
         </template>
     </AuthShell>

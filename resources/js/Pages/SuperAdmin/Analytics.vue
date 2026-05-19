@@ -3,6 +3,9 @@ import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useFmt } from '@/composables/useFmt';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     kpi:                     Object,
@@ -160,8 +163,8 @@ const planColor = (p) => ({
 </script>
 
 <template>
-    <Head title="Platform analytics" />
-    <SuperAdminLayout title="Platform analytics">
+    <Head :title="t('super_admin.analytics_title')" />
+    <SuperAdminLayout :title="t('super_admin.analytics_title')">
 
         <!-- ============== Visitor KPIs (real-time) ============== -->
         <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">

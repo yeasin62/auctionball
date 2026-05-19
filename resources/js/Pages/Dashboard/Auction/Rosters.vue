@@ -3,6 +3,9 @@ import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, watch } from 'vue';
 import { useAuctionChannel } from '@/composables/useAuctionChannel';
 import { useFmt } from '@/composables/useFmt';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     org:           Object,
@@ -46,7 +49,7 @@ const teamGradient = (idx) => palette[idx % palette.length];
 </script>
 
 <template>
-    <Head :title="`Rosters · ${season?.name || ''}`" />
+    <Head :title="t('auction_page.rosters_head_title', { season: season?.name || '' })" />
     <div class="min-h-screen text-white relative overflow-x-hidden"
          style="background:linear-gradient(135deg,#0a0e27 0%,#1a1f3a 50%,#1a0f3a 100%);">
         <div class="absolute inset-0 grid-dark-bg opacity-30 pointer-events-none"></div>
@@ -65,13 +68,13 @@ const teamGradient = (idx) => palette[idx % palette.length];
                 </div>
                 <div>
                     <div class="text-[18px] sm:text-[20px] font-bold tracking-tight">{{ org?.name }}</div>
-                    <div class="font-mono text-[11.5px] sm:text-[12.5px] text-ink-400">{{ season?.name }} · roster board</div>
+                    <div class="font-mono text-[11.5px] sm:text-[12.5px] text-ink-400">{{ t('auction_page.rosters_subtitle', { season: season?.name }) }}</div>
                 </div>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <div class="rounded-full px-4 py-2 font-mono text-[12px] tracking-wide bg-white/5 border border-white/10 flex items-center gap-2">
                     <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    LIVE · {{ ld(totalSoldPlayers) }} sold · {{ fmt(totalSpent) }} spent
+                    {{ t('auction_page.live_summary', { sold: ld(totalSoldPlayers), spent: fmt(totalSpent) }) }}
                 </div>
             </div>
         </header>
@@ -79,9 +82,9 @@ const teamGradient = (idx) => palette[idx % palette.length];
         <!-- Empty state -->
         <main v-if="!season || teams.length === 0" class="relative px-6 pb-10 grid place-items-center min-h-[60vh]">
             <div class="text-center">
-                <div class="font-mono text-[12px] tracking-widest text-ink-400 mb-3">/ no teams</div>
-                <h1 class="text-[36px] sm:text-[48px] font-extrabold tracking-tight">Add some teams to begin.</h1>
-                <p class="mt-4 text-[15px] text-ink-300">Once teams exist and players are sold, their cards will appear here in real time.</p>
+                <div class="font-mono text-[12px] tracking-widest text-ink-400 mb-3">{{ t('auction_page.no_teams_label') }}</div>
+                <h1 class="text-[36px] sm:text-[48px] font-extrabold tracking-tight">{{ t('auction_page.no_teams_heading') }}</h1>
+                <p class="mt-4 text-[15px] text-ink-300">{{ t('auction_page.no_teams_body') }}</p>
             </div>
         </main>
 
@@ -100,12 +103,12 @@ const teamGradient = (idx) => palette[idx % palette.length];
                             <div class="min-w-0">
                                 <h2 class="text-[22px] sm:text-[28px] font-extrabold tracking-tight truncate leading-tight">{{ team.name }}</h2>
                                 <div class="font-mono text-[11.5px] sm:text-[12.5px] text-white/85 mt-0.5">
-                                    {{ ld(team.players.length) }} player{{ team.players.length === 1 ? '' : 's' }} · {{ fmt(team.initial_budget - team.remaining_budget) }} spent
+                                    {{ t('auction_page.team_players_summary', { count: ld(team.players.length), spent: fmt(team.initial_budget - team.remaining_budget) }) }}
                                 </div>
                             </div>
                         </div>
                         <div class="text-right">
-                            <div class="font-mono text-[10.5px] tracking-widest text-white/75 uppercase">remaining</div>
+                            <div class="font-mono text-[10.5px] tracking-widest text-white/75 uppercase">{{ t('auction_page.remaining_label') }}</div>
                             <div class="text-[24px] sm:text-[30px] font-extrabold font-mono leading-tight">{{ fmt(team.remaining_budget) }}</div>
                         </div>
                     </div>
@@ -143,7 +146,7 @@ const teamGradient = (idx) => palette[idx % palette.length];
                                     </span>
                                 </div>
                                 <div v-if="p.jersey_no" class="mt-1 font-mono text-[10.5px] text-ink-300">
-                                    Jersey #{{ ld(p.jersey_no) }}
+                                    {{ t('auction_page.label_jersey', { n: ld(p.jersey_no) }) }}
                                 </div>
                             </div>
                         </div>
@@ -156,15 +159,15 @@ const teamGradient = (idx) => palette[idx % palette.length];
                                 <span class="text-ink-100 truncate text-right">{{ entry.value }}</span>
                             </div>
                             <div v-if="p.profession" class="flex justify-between gap-2">
-                                <span class="text-ink-400">Profession</span>
+                                <span class="text-ink-400">{{ t('auction_page.label_profession') }}</span>
                                 <span class="text-ink-100 truncate text-right">{{ p.profession }}</span>
                             </div>
                             <div v-if="p.batting_style && season?.sport !== 'football'" class="flex justify-between gap-2">
-                                <span class="text-ink-400">Batting</span>
+                                <span class="text-ink-400">{{ t('auction_page.label_batting') }}</span>
                                 <span class="text-ink-100 truncate text-right">{{ p.batting_style }}</span>
                             </div>
                             <div v-if="p.bowling_style && season?.sport !== 'football'" class="flex justify-between gap-2">
-                                <span class="text-ink-400">Bowling</span>
+                                <span class="text-ink-400">{{ t('auction_page.label_bowling') }}</span>
                                 <span class="text-ink-100 truncate text-right">{{ p.bowling_style }}</span>
                             </div>
                         </div>
@@ -172,7 +175,7 @@ const teamGradient = (idx) => palette[idx % palette.length];
                         <!-- Sold strip -->
                         <div class="rounded-xl px-3 py-2 flex items-center justify-between"
                              style="background:linear-gradient(90deg,rgba(34,197,94,.12),rgba(99,102,241,.12));border:1px solid rgba(255,255,255,.1);">
-                            <span class="font-mono text-[10px] tracking-widest text-emerald-400 uppercase">sold for</span>
+                            <span class="font-mono text-[10px] tracking-widest text-emerald-400 uppercase">{{ t('auction_page.sold_for') }}</span>
                             <span class="text-[18px] font-extrabold font-mono leading-none bg-clip-text text-transparent"
                                   style="background-image:linear-gradient(90deg,#67e8f9,#a78bfa);">
                                 {{ fmt(p.sold_price) }}
@@ -182,12 +185,12 @@ const teamGradient = (idx) => palette[idx % palette.length];
                 </div>
 
                 <div v-else class="px-5 sm:px-6 py-8 text-center text-[13px] text-ink-400 font-mono">
-                    no picks yet
+                    {{ t('auction_page.no_picks_yet') }}
                 </div>
             </section>
 
             <p v-if="unsold_count > 0" class="text-center font-mono text-[12px] text-ink-400 pt-2">
-                {{ ld(unsold_count) }} unsold so far
+                {{ t('auction_page.unsold_so_far', { count: ld(unsold_count) }) }}
             </p>
         </main>
 

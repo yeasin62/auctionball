@@ -3,6 +3,9 @@ import { Head, usePage } from '@inertiajs/vue3';
 import { computed, watch, ref } from 'vue';
 import { useAuctionChannel } from '@/composables/useAuctionChannel';
 import { useFmt } from '@/composables/useFmt';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     org:    Object,
@@ -63,7 +66,7 @@ const isRunning = computed(() => state.value?.status === 'running');
 </script>
 
 <template>
-    <Head title="Big screen — AuctionBall" />
+    <Head :title="t('auction_page.bigscreen_head_title')" />
     <div class="min-h-screen text-white relative overflow-hidden"
          style="background:linear-gradient(135deg,#0a0e27 0%,#1a1f3a 50%,#1a0f3a 100%);">
         <div class="absolute inset-0 grid-dark-bg opacity-30 pointer-events-none"></div>
@@ -88,7 +91,7 @@ const isRunning = computed(() => state.value?.status === 'running');
             </div>
             <div class="flex items-center gap-2.5 px-5 py-2.5 rounded-full font-mono text-[16px] sm:text-[18px] tracking-wide bg-white/5 border border-white/10">
                 <span class="h-2.5 w-2.5 rounded-full" :class="isRunning ? 'bg-emerald-400 animate-pulse' : 'bg-ink-400'"></span>
-                {{ state?.status?.toUpperCase() || 'WAITING' }}
+                {{ state?.status?.toUpperCase() || t('auction_page.bigscreen_status_waiting') }}
             </div>
         </header>
 
@@ -97,7 +100,7 @@ const isRunning = computed(() => state.value?.status === 'running');
             <div class="grid lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 mb-6 lg:mb-8">
             <!-- Player profile -->
             <div class="lg:col-span-4 rounded-3xl bg-white/[0.04] border border-white/10 p-5 sm:p-6 lg:p-8 backdrop-blur-md">
-                <div class="font-mono text-[14px] sm:text-[16px] tracking-widest text-ink-400 mb-4">LOT · {{ ld(player.id) }}</div>
+                <div class="font-mono text-[14px] sm:text-[16px] tracking-widest text-ink-400 mb-4">{{ t('auction_page.bigscreen_lot', { id: ld(player.id) }) }}</div>
                 <div class="flex justify-center mb-5 sm:mb-6">
                     <img v-if="player.photo_url" :src="player.photo_url" :alt="player.name"
                          class="h-48 w-48 sm:h-64 sm:w-64 lg:h-72 lg:w-72 xl:h-80 xl:w-80 rounded-3xl object-cover border-2 border-white/20 shadow-2xl" />
@@ -115,14 +118,14 @@ const isRunning = computed(() => state.value?.status === 'running');
                         {{ player.position }}
                     </div>
                     <div class="font-mono text-[16px] sm:text-[18px] lg:text-[20px] tracking-widest text-ink-400 mt-3">
-                        {{ player.category?.toUpperCase() }} · BASE {{ fmt(player.base_price) }}
+                        {{ t('auction_page.bigscreen_category_base', { category: player.category?.toUpperCase(), base: fmt(player.base_price) }) }}
                     </div>
                 </div>
                 <div v-if="player.batting_style || player.bowling_style || player.jersey_no"
                      class="mt-6 pt-5 border-t border-white/10 space-y-2.5 text-[18px] sm:text-[20px] lg:text-[22px]">
-                    <div v-if="season?.sport !== 'football' && player.batting_style" class="flex justify-between gap-4"><span class="text-ink-400">Batting</span><span class="font-medium text-right">{{ player.batting_style }}</span></div>
-                    <div v-if="season?.sport !== 'football' && player.bowling_style" class="flex justify-between gap-4"><span class="text-ink-400">Bowling</span><span class="font-medium text-right">{{ player.bowling_style }}</span></div>
-                    <div v-if="player.jersey_no" class="flex justify-between gap-4"><span class="text-ink-400">Jersey</span><span class="font-mono font-medium">#{{ ld(player.jersey_no) }}</span></div>
+                    <div v-if="season?.sport !== 'football' && player.batting_style" class="flex justify-between gap-4"><span class="text-ink-400">{{ t('auction_page.label_batting') }}</span><span class="font-medium text-right">{{ player.batting_style }}</span></div>
+                    <div v-if="season?.sport !== 'football' && player.bowling_style" class="flex justify-between gap-4"><span class="text-ink-400">{{ t('auction_page.label_bowling') }}</span><span class="font-medium text-right">{{ player.bowling_style }}</span></div>
+                    <div v-if="player.jersey_no" class="flex justify-between gap-4"><span class="text-ink-400">{{ t('auction_page.bigscreen_jersey') }}</span><span class="font-mono font-medium">#{{ ld(player.jersey_no) }}</span></div>
                 </div>
             </div>
 
@@ -130,7 +133,7 @@ const isRunning = computed(() => state.value?.status === 'running');
             <div class="lg:col-span-5 space-y-6">
                 <div class="rounded-3xl p-5 sm:p-8 lg:p-10 text-center"
                      style="background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(139,92,246,.15));border:1px solid rgba(255,255,255,.1);">
-                    <div class="font-mono text-[16px] sm:text-[18px] lg:text-[20px] tracking-widest text-ink-400 mb-3">CURRENT BID</div>
+                    <div class="font-mono text-[16px] sm:text-[18px] lg:text-[20px] tracking-widest text-ink-400 mb-3">{{ t('auction_page.bigscreen_current_bid') }}</div>
                     <!-- Fluid bid amount: clamp 44 → 100px, prevents wrap on long
                          numbers like ৳1,25,00,000 in Bengali (extra digit-glyph width). -->
                     <div class="font-extrabold tracking-tight leading-none whitespace-nowrap tabular-nums bg-clip-text text-transparent"
@@ -138,7 +141,9 @@ const isRunning = computed(() => state.value?.status === 'running');
                         {{ fmt(state?.highest_bid || 0) }}
                     </div>
                     <div v-if="state?.highest_bidder" class="mt-4 sm:mt-5 text-[20px] sm:text-[24px] lg:text-[28px]">
-                        Leading: <span class="font-bold">{{ state.highest_bidder.name }}</span>
+                        <i18n-t keypath="auction_page.bigscreen_leading">
+                            <template #team><span class="font-bold">{{ state.highest_bidder.name }}</span></template>
+                        </i18n-t>
                     </div>
                 </div>
 
@@ -157,7 +162,7 @@ const isRunning = computed(() => state.value?.status === 'running');
             <!-- Right: bid history (team budgets moved to bottom strip) -->
             <div class="lg:col-span-3">
                 <div class="rounded-2xl bg-white/[0.04] border border-white/10 p-5 backdrop-blur-md h-full">
-                    <div class="font-mono text-[14px] sm:text-[16px] tracking-widest text-ink-400 mb-4">BID HISTORY</div>
+                    <div class="font-mono text-[14px] sm:text-[16px] tracking-widest text-ink-400 mb-4">{{ t('auction_page.bigscreen_bid_history') }}</div>
                     <ul v-if="bids.length" class="space-y-2.5 font-mono">
                         <li v-for="b in bids.slice(0, 8)" :key="b.id" class="flex justify-between items-center gap-3 px-3.5 py-2.5 rounded-lg"
                             :class="b.id === bids[0].id ? 'bg-white/15 text-white border border-white/10' : 'text-ink-300'">
@@ -168,7 +173,7 @@ const isRunning = computed(() => state.value?.status === 'running');
                             <span class="text-[18px] sm:text-[20px] lg:text-[22px] font-semibold whitespace-nowrap">{{ fmt(b.amount) }}</span>
                         </li>
                     </ul>
-                    <div v-else class="text-[16px] sm:text-[18px] text-ink-400">No bids yet.</div>
+                    <div v-else class="text-[16px] sm:text-[18px] text-ink-400">{{ t('auction_page.bigscreen_no_bids') }}</div>
                 </div>
             </div>
             </div>
@@ -176,8 +181,8 @@ const isRunning = computed(() => state.value?.status === 'running');
             <!-- ============== Team budgets — full-width bottom strip ============== -->
             <div class="rounded-3xl bg-white/[0.04] border border-white/10 p-5 sm:p-6 backdrop-blur-md">
                 <div class="flex items-center justify-between mb-4">
-                    <div class="font-mono text-[16px] sm:text-[18px] tracking-widest text-ink-400">TEAM BUDGETS</div>
-                    <div class="font-mono text-[14px] sm:text-[15px] tracking-wide text-ink-500">live · {{ ld(teams.length) }} teams</div>
+                    <div class="font-mono text-[16px] sm:text-[18px] tracking-widest text-ink-400">{{ t('auction_page.bigscreen_team_budgets') }}</div>
+                    <div class="font-mono text-[14px] sm:text-[15px] tracking-wide text-ink-500">{{ t('auction_page.bigscreen_live_n_teams', { count: ld(teams.length) }) }}</div>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
                     <div v-for="t in teams" :key="t.id"
@@ -191,7 +196,7 @@ const isRunning = computed(() => state.value?.status === 'running');
                              :style="{ color: t.remaining_budget < t.initial_budget * 0.2 ? '#fda4af' : '#a7f3d0' }">
                             {{ fmt(t.remaining_budget) }}
                         </div>
-                        <div class="font-mono text-[13px] sm:text-[14px] text-ink-500 mt-1">remaining</div>
+                        <div class="font-mono text-[13px] sm:text-[14px] text-ink-500 mt-1">{{ t('auction_page.remaining_label') }}</div>
                         <div class="mt-3 h-2 rounded-full bg-white/10 overflow-hidden">
                             <div class="h-full rounded-full transition-all duration-700"
                                  style="background:linear-gradient(90deg,#22d3ee,#a78bfa);"
@@ -207,14 +212,14 @@ const isRunning = computed(() => state.value?.status === 'running');
             <div class="text-center">
                 <div class="inline-flex items-center gap-2.5 rounded-full px-5 py-2 font-mono text-[16px] sm:text-[18px] tracking-wide bg-white/5 border border-white/10 text-ink-200 mb-6">
                     <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    {{ org?.name }} · big-screen
+                    {{ t('auction_page.bigscreen_big_screen', { org: org?.name }) }}
                 </div>
                 <h1 class="text-[60px] leading-[1.05] font-extrabold tracking-tight">
-                    Waiting for the
-                    <span class="bg-clip-text text-transparent" style="background-image:linear-gradient(90deg,#67e8f9,#a78bfa);">auction to start.</span>
+                    {{ t('auction_page.bigscreen_waiting_heading_a') }}
+                    <span class="bg-clip-text text-transparent" style="background-image:linear-gradient(90deg,#67e8f9,#a78bfa);">{{ t('auction_page.bigscreen_waiting_heading_b') }}</span>
                 </h1>
                 <p class="mt-6 text-[20px] sm:text-[22px] text-ink-300 leading-relaxed">
-                    The auctioneer hasn't selected a player yet.
+                    {{ t('auction_page.bigscreen_waiting_body') }}
                 </p>
             </div>
         </main>
@@ -233,7 +238,7 @@ const isRunning = computed(() => state.value?.status === 'running');
                 <div class="unsold-mark">
                     <div class="unsold-ring">
                         <div class="unsold-inner">
-                            <span class="unsold-text">UNSOLD</span>
+                            <span class="unsold-text">{{ t('auction_page.bigscreen_unsold') }}</span>
                             <div class="unsold-rule"></div>
                             <span class="unsold-sub">{{ ld(new Date().toLocaleDateString('en-GB')) }}</span>
                         </div>
@@ -253,7 +258,7 @@ const isRunning = computed(() => state.value?.status === 'running');
                     <div class="sold-seal grid place-items-center">
                         <div class="seal-ring">
                             <div class="seal-inner">
-                                <div class="seal-text">SOLD</div>
+                                <div class="seal-text">{{ t('auction_page.bigscreen_sold') }}</div>
                                 <div class="seal-divider"></div>
                                 <div class="seal-sub">৳ {{ ld(new Intl.NumberFormat('en-IN').format(soldData.price)) }}</div>
                             </div>
@@ -266,7 +271,9 @@ const isRunning = computed(() => state.value?.status === 'running');
                             {{ soldData.player }}
                         </div>
                         <div class="mt-2 sm:mt-3 text-[18px] sm:text-[22px] lg:text-[26px] text-ink-200">
-                            to <span class="font-bold bg-clip-text text-transparent" style="background-image:linear-gradient(90deg,#67e8f9,#a78bfa);">{{ soldData.team }}</span>
+                            <i18n-t keypath="auction_page.bigscreen_sold_to">
+                                <template #team><span class="font-bold bg-clip-text text-transparent" style="background-image:linear-gradient(90deg,#67e8f9,#a78bfa);">{{ soldData.team }}</span></template>
+                            </i18n-t>
                         </div>
                     </div>
                 </div>

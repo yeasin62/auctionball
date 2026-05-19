@@ -2,6 +2,9 @@
 import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 import { Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({ logs: Object, filters: Object, event_counts: Object, orgs: Array });
 
@@ -31,14 +34,14 @@ const eventColor = (key) => ({
 </script>
 
 <template>
-    <SuperAdminLayout title="Audit log (cross-org)">
+    <SuperAdminLayout :title="t('super_admin.audit_head')">
 
         <!-- Event chips with counts -->
         <div class="flex flex-wrap items-center gap-2 mb-4">
             <button @click="f.event = ''; apply()"
                     class="px-3 py-1.5 rounded-full text-[12px] font-mono border transition"
                     :class="!f.event ? 'bg-gradient-brand text-white border-transparent shadow-cta' : 'bg-white/70 text-ink-600 border-ink-200/60'">
-                all <span class="ml-1 opacity-70">{{ Object.values(event_counts).reduce((a, b) => a + b, 0) }}</span>
+                {{ t('super_admin.audit_all') }} <span class="ml-1 opacity-70">{{ Object.values(event_counts).reduce((a, b) => a + b, 0) }}</span>
             </button>
             <button v-for="(count, ev) in event_counts" :key="ev"
                     @click="f.event = (f.event === ev ? '' : ev); apply()"
@@ -49,16 +52,16 @@ const eventColor = (key) => ({
         </div>
 
         <div class="glass rounded-2xl p-4 mb-4 flex flex-wrap items-center gap-2">
-            <input v-model="f.q" @keyup.enter="apply" placeholder="Search summary or actor…"
+            <input v-model="f.q" @keyup.enter="apply" :placeholder="t('super_admin.audit_search_summary')"
                    class="flex-1 min-w-[220px] rounded-lg border border-ink-200/70 bg-white/80 px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
             <select v-model="f.org_id" @change="apply" class="rounded-lg border border-ink-200/70 bg-white/80 px-3 py-2 text-[13px]">
-                <option value="">All orgs</option>
+                <option value="">{{ t('super_admin.audit_all_orgs') }}</option>
                 <option v-for="o in orgs" :key="o.id" :value="o.id">{{ o.name }}</option>
             </select>
             <input v-model="f.date_from" @change="apply" type="date" class="rounded-lg border border-ink-200/70 bg-white/80 px-3 py-2 text-[13px]" />
             <input v-model="f.date_to"   @change="apply" type="date" class="rounded-lg border border-ink-200/70 bg-white/80 px-3 py-2 text-[13px]" />
-            <button @click="clear" class="btn-ghost py-2 px-3 text-[12px]">Reset</button>
-            <span class="text-[12px] font-mono text-ink-500 ml-auto">{{ logs.total }} entries</span>
+            <button @click="clear" class="btn-ghost py-2 px-3 text-[12px]">{{ t('super_admin.reset') }}</button>
+            <span class="text-[12px] font-mono text-ink-500 ml-auto">{{ t('super_admin.audit_n_entries', { n: logs.total }) }}</span>
         </div>
 
         <!-- Timeline -->
@@ -83,7 +86,7 @@ const eventColor = (key) => ({
             </ul>
         </div>
         <div v-else class="glass rounded-2xl p-10 text-center text-[14px] text-ink-500">
-            No audit events match the filters.
+            {{ t('super_admin.audit_no_match') }}
         </div>
 
         <div v-if="logs.last_page > 1" class="mt-4 flex justify-center gap-1">

@@ -40,7 +40,7 @@ const total = computed(() => Object.values(props.counts).reduce((a, b) => a + b,
 </script>
 
 <template>
-    <DashboardLayout title="Audit log">
+    <DashboardLayout :title="t('sidebar.audit_log')">
 
         <!-- Filter chips with counts -->
         <div class="glass rounded-2xl p-4 mb-4">

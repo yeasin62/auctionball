@@ -7,7 +7,7 @@ import ImageCropper from '@/Components/ImageCropper.vue';
 import Toggle from '@/Components/Toggle.vue';
 import { Link, router, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18n, I18nT } from 'vue-i18n';
 import { useFmt } from '@/composables/useFmt';
 import { useConfirm, useAlert } from '@/composables/useConfirm';
 
@@ -23,8 +23,6 @@ const props = defineProps({
     used:          Number,
     pending_count: { type: Number, default: 0 },
 });
-
-// `limits.export_csv` / `limits.export_pdf` from Organization::PLAN_LIMITS
 
 const showCreate = ref(false);
 const editingId  = ref(null);
@@ -71,10 +69,10 @@ const submit = () => {
 
 const remove = async (team) => {
     if (! await confirm({
-        title: `Delete team "${team.name}"?`,
-        description: 'All players bought by this team will be released back to the queue, and the team\'s budget is wiped. This cannot be undone.',
+        title: t('teams_page.confirm_delete_title', { name: team.name }),
+        description: t('teams_page.confirm_delete_body'),
         variant: 'danger',
-        confirmText: 'Delete team',
+        confirmText: t('teams_page.delete_team'),
     })) return;
     router.delete(route('dashboard.teams.destroy', team.id), { preserveScroll: true });
 };
@@ -82,10 +80,10 @@ const remove = async (team) => {
 const approve = (team) => router.post(route('dashboard.teams.approve', team.id), {}, { preserveScroll: true });
 const reject = async (team) => {
     if (! await confirm({
-        title: `Reject "${team.name}"'s registration?`,
-        description: 'Their record will be deleted (logo too). They\'ll need to re-register if you change your mind.',
+        title: t('teams_page.confirm_reject_title', { name: team.name }),
+        description: t('teams_page.confirm_reject_body'),
         variant: 'danger',
-        confirmText: 'Reject & delete',
+        confirmText: t('teams_page.reject_and_delete'),
     })) return;
     router.delete(route('dashboard.teams.reject', team.id), { preserveScroll: true });
 };
@@ -107,10 +105,10 @@ const updateRegistrationFee = (fee, instructions) => {
 };
 const regenerateToken = async () => {
     if (! await confirm({
-        title: 'Generate a new team registration link?',
-        description: 'The current public URL will stop working immediately. Anyone who has already submitted is unaffected.',
+        title: t('teams_page.regenerate_link_title'),
+        description: t('teams_page.regenerate_link_body'),
         variant: 'warning',
-        confirmText: 'Generate new link',
+        confirmText: t('teams_page.regenerate_link_button'),
     })) return;
     useForm({}).post(route('dashboard.teams.registration.regenerate'), { preserveScroll: true });
 };
@@ -120,7 +118,7 @@ const publicUrl = computed(() => props.season?.team_registration_token
 const copyLink = async () => {
     if (! publicUrl.value) return;
     await navigator.clipboard.writeText(publicUrl.value);
-    alertDialog({ title: 'Copied', description: 'Team registration link copied to clipboard.', variant: 'info' });
+    alertDialog({ title: t('teams_page.copied_title'), description: t('teams_page.copied_body'), variant: 'info' });
 };
 
 const showRegistrationPanel = ref(false);
@@ -130,46 +128,50 @@ const atLimit = computed(() => props.season && props.used >= props.limits.teams)
 </script>
 
 <template>
-    <DashboardLayout title="Teams">
+    <DashboardLayout :title="t('teams_page.title')">
         <template #actions>
             <a v-if="limits.export_csv" :href="route('dashboard.teams.export.csv')" class="btn-ghost py-2 px-4 text-[13px]">
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v4h16v-4"/></svg>
-                Export CSV
+                {{ t('teams_page.export_csv') }}
             </a>
             <a v-if="limits.export_pdf" :href="route('dashboard.teams.export.pdf')" class="btn-ghost py-2 px-4 text-[13px]">
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path d="M14 2v6h6"/></svg>
-                Export PDF
+                {{ t('teams_page.export_pdf') }}
             </a>
             <button @click="showRegistrationPanel = !showRegistrationPanel"
                     class="btn-ghost py-2 px-4 text-[13px]"
                     :class="{ 'opacity-50 pointer-events-none': !season }"
                     :disabled="!season">
-                Public registration
-                <span v-if="(season?.team_registration_open)" class="ml-1 px-1.5 py-0.5 rounded-full font-mono text-[9.5px] tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-100">OPEN</span>
+                {{ t('teams_page.public_registration') }}
+                <span v-if="(season?.team_registration_open)" class="ml-1 px-1.5 py-0.5 rounded-full font-mono text-[9.5px] tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-100">{{ t('teams_page.badge_open') }}</span>
             </button>
             <button @click="startCreate"
                     class="btn-primary py-2 px-4 text-[13px]"
                     :class="{ 'opacity-50 pointer-events-none': !season || atLimit }"
                     :disabled="!season || atLimit">
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
-                Add team
+                {{ t('teams_page.add_team') }}
             </button>
         </template>
 
         <div v-if="!season" class="glass rounded-2xl p-10 text-center">
-            <p class="text-ink-500 text-[14px]">No active season. <Link href="/dashboard/seasons" class="text-ink-900 underline">Create one first</Link>.</p>
+            <p class="text-ink-500 text-[14px]">
+                <I18nT keypath="teams_page.no_active_season_msg">
+                    <template #link><Link href="/dashboard/seasons" class="text-ink-900 underline">{{ t('teams_page.create_one_link') }}</Link></template>
+                </I18nT>
+            </p>
         </div>
 
         <template v-else>
             <div v-if="atLimit" class="mb-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-[13px] text-amber-800">
-                Team limit reached: <strong>{{ used }} / {{ limits.teams }}</strong> on your plan.
-                <a href="/dashboard/billing" class="underline font-medium">Upgrade</a> to add more.
+                {{ t('teams_page.team_limit_reached') }} <strong>{{ used }} / {{ limits.teams }}</strong>
+                <a href="/dashboard/billing" class="underline font-medium">{{ t('seasons_page.upgrade_to_add') }}</a>{{ t('seasons_page.at_limit_suffix') }}
             </div>
 
             <!-- Pending registrations banner -->
             <div v-if="pending_count > 0" class="mb-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 flex items-center justify-between text-[13px]">
                 <span class="text-amber-800">
-                    <strong>{{ pending_count }}</strong> publicly-registered team(s) waiting for review.
+                    {{ t('teams_page.pending_review_msg', { count: pending_count }) }}
                 </span>
             </div>
 
@@ -177,36 +179,36 @@ const atLimit = computed(() => props.season && props.used >= props.limits.teams)
             <div v-if="showRegistrationPanel" class="glass-strong rounded-2xl p-6 mb-5 space-y-4">
                 <div class="flex items-start justify-between gap-3 flex-wrap">
                     <div>
-                        <div class="font-mono text-[10.5px] tracking-widest text-ink-500">/ PUBLIC TEAM REGISTRATION</div>
+                        <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('teams_page.section_team_reg') }}</div>
                         <p class="text-[13px] text-ink-600 mt-1 max-w-lg">
-                            Share a public URL where team owners can self-register. You review + approve them on this page.
+                            {{ t('teams_page.section_team_reg_subtitle') }}
                         </p>
                     </div>
                     <Toggle :model-value="!! season.team_registration_open"
                             @update:model-value="(v) => toggleRegistration(v)"
-                            on-label="OPEN" off-label="CLOSED" />
+                            :on-label="t('teams_page.toggle_open')" :off-label="t('teams_page.toggle_closed')" />
                 </div>
 
                 <div v-if="season.team_registration_open && season.team_registration_token" class="rounded-xl bg-white/70 border border-ink-200/60 p-4">
-                    <div class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1.5">SHAREABLE URL</div>
+                    <div class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1.5">{{ t('teams_page.shareable_url') }}</div>
                     <div class="flex items-center gap-2 flex-wrap">
                         <code class="flex-1 font-mono text-[12.5px] truncate bg-white px-3 py-2 rounded-lg border border-ink-200 min-w-[200px]">
                             {{ publicUrl }}
                         </code>
-                        <button @click="copyLink" class="btn-ghost py-2 px-3 text-[12px] whitespace-nowrap">Copy</button>
-                        <a :href="publicUrl" target="_blank" class="btn-ghost py-2 px-3 text-[12px] whitespace-nowrap">Open</a>
-                        <button @click="regenerateToken" class="text-[11px] text-rose-500 hover:text-rose-700 px-2 whitespace-nowrap">Regenerate</button>
+                        <button @click="copyLink" class="btn-ghost py-2 px-3 text-[12px] whitespace-nowrap">{{ t('teams_page.copy') }}</button>
+                        <a :href="publicUrl" target="_blank" class="btn-ghost py-2 px-3 text-[12px] whitespace-nowrap">{{ t('teams_page.open_url') }}</a>
+                        <button @click="regenerateToken" class="text-[11px] text-rose-500 hover:text-rose-700 px-2 whitespace-nowrap">{{ t('teams_page.regenerate') }}</button>
                     </div>
                 </div>
 
                 <div v-if="season.team_registration_open" class="grid md:grid-cols-2 gap-4">
-                    <Field label="Registration fee (optional)">
+                    <Field :label="t('teams_page.registration_fee_label')">
                         <CurrencyField :modelValue="season.team_registration_fee"
                                        @update:modelValue="(v) => updateRegistrationFee(v, season.team_registration_instructions)" />
                     </Field>
-                    <Field label="Instructions (shown on registration page)">
+                    <Field :label="t('teams_page.registration_instructions_label')">
                         <textarea :value="season.team_registration_instructions ?? ''"
-                                  placeholder="bKash 01XXX-XXXXXXX. Send Money. Note your team name in the reference."
+                                  :placeholder="t('teams_page.registration_instructions_placeholder')"
                                   class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[13.5px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
                                   rows="2"
                                   @blur="(e) => updateRegistrationFee(season.team_registration_fee, e.target.value)"></textarea>
@@ -217,7 +219,7 @@ const atLimit = computed(() => props.season && props.used >= props.limits.teams)
             <!-- Create / Edit form -->
             <div v-if="showCreate" class="glass-strong rounded-2xl p-6 mb-5">
                 <h3 class="text-[16px] font-bold tracking-tight mb-4">
-                    {{ editingId ? 'Edit team' : t('forms.teams.section_title') }}
+                    {{ editingId ? t('teams_page.edit_team') : t('forms.teams.section_title') }}
                 </h3>
                 <form @submit.prevent="submit" class="grid md:grid-cols-3 gap-4">
                     <Field :label="t('forms.teams.name')" :error="form.errors.name" required>
@@ -226,20 +228,20 @@ const atLimit = computed(() => props.season && props.used >= props.limits.teams)
                     <Field :label="t('forms.teams.short_code')" :error="form.errors.short_code" :hint="t('forms.teams.short_hint')">
                         <TextField v-model="form.short_code" :placeholder="t('forms.teams.short_placeholder')" />
                     </Field>
-                    <Field label="Owner / captain name" :error="form.errors.owner_name">
-                        <TextField v-model="form.owner_name" placeholder="Md. Karim Ahmed" />
+                    <Field :label="t('teams_page.owner_name_label')" :error="form.errors.owner_name">
+                        <TextField v-model="form.owner_name" :placeholder="t('teams_page.owner_name_placeholder')" />
                     </Field>
                     <Field :label="t('forms.teams.initial_budget')" :error="form.errors.initial_budget" required>
                         <CurrencyField v-model="form.initial_budget" />
                     </Field>
                     <div class="md:col-span-3 pt-2 border-t border-ink-200/60">
-                        <ImageCropper :size="400" label="Team logo (400×400)" @update:file="form.logo = $event" />
+                        <ImageCropper :size="400" :label="t('teams_page.team_logo_label')" @update:file="form.logo = $event" />
                         <p v-if="form.errors.logo" class="mt-1.5 text-[12.5px] text-rose-500">{{ form.errors.logo }}</p>
                     </div>
                     <div class="md:col-span-3 flex gap-2 justify-end pt-1">
                         <button type="button" class="btn-ghost py-2 px-4 text-[13px]" @click="cancelEdit">{{ t('common.cancel') }}</button>
                         <button type="submit" class="btn-primary py-2 px-4 text-[13px]" :disabled="form.processing">
-                            <template v-if="editingId">{{ form.processing ? 'Updating…' : 'Update team' }}</template>
+                            <template v-if="editingId">{{ form.processing ? t('teams_page.updating') : t('teams_page.update_team') }}</template>
                             <template v-else>{{ form.processing ? t('forms.teams.submitting') : t('forms.teams.submit') }}</template>
                         </button>
                     </div>
@@ -247,61 +249,61 @@ const atLimit = computed(() => props.season && props.used >= props.limits.teams)
             </div>
 
             <div v-if="teams.length" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div v-for="t in teams" :key="t.id" class="glass rounded-2xl p-5"
-                     :class="t.registration_status === 'pending' ? 'ring-2 ring-amber-300/70' : ''">
+                <div v-for="team in teams" :key="team.id" class="glass rounded-2xl p-5"
+                     :class="team.registration_status === 'pending' ? 'ring-2 ring-amber-300/70' : ''">
                     <div class="flex items-center gap-3 mb-4">
-                        <img v-if="t.logo_url" :src="t.logo_url" :alt="t.name"
+                        <img v-if="team.logo_url" :src="team.logo_url" :alt="team.name"
                              class="h-12 w-12 rounded-xl object-cover bg-white border border-ink-200" />
                         <div v-else class="h-12 w-12 rounded-xl bg-gradient-to-br from-cyan-200 to-violet-300 grid place-items-center font-mono text-[12px] font-bold text-indigo-700">
-                            {{ t.short || t.name.slice(0,3).toUpperCase() }}
+                            {{ team.short || team.name.slice(0,3).toUpperCase() }}
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-1.5">
-                                <span class="text-[15px] font-bold tracking-tight truncate">{{ t.name }}</span>
-                                <span v-if="t.registration_status === 'pending'"
+                                <span class="text-[15px] font-bold tracking-tight truncate">{{ team.name }}</span>
+                                <span v-if="team.registration_status === 'pending'"
                                       class="px-1.5 py-0.5 rounded-full font-mono text-[9px] tracking-widest bg-amber-50 text-amber-700 border border-amber-100">
-                                    PENDING
+                                    {{ t('teams_page.badge_pending') }}
                                 </span>
                             </div>
                             <div class="text-[11.5px] font-mono text-ink-500">
-                                <span v-if="t.short">{{ t.short }} · </span>{{ t.players_count }} players bought
+                                <span v-if="team.short">{{ team.short }} · </span>{{ t('teams_page.n_players_bought', { count: team.players_count }) }}
                             </div>
-                            <div v-if="t.owner_name" class="text-[10.5px] text-ink-500 truncate">Owner: {{ t.owner_name }}</div>
+                            <div v-if="team.owner_name" class="text-[10.5px] text-ink-500 truncate">{{ t('teams_page.owner_prefix', { name: team.owner_name }) }}</div>
                         </div>
                     </div>
 
                     <div class="space-y-2 text-[12.5px]">
-                        <div class="flex justify-between"><span class="text-ink-500">Initial</span><span class="font-mono font-semibold">{{ fmt(t.initial) }}</span></div>
-                        <div class="flex justify-between"><span class="text-ink-500">Spent</span><span class="font-mono font-semibold text-rose-600">- {{ fmt(t.spent) }}</span></div>
-                        <div class="flex justify-between"><span class="text-ink-500">Remaining</span><span class="font-mono font-semibold text-emerald-700">{{ fmt(t.remaining) }}</span></div>
+                        <div class="flex justify-between"><span class="text-ink-500">{{ t('teams_page.stat_initial') }}</span><span class="font-mono font-semibold">{{ fmt(team.initial) }}</span></div>
+                        <div class="flex justify-between"><span class="text-ink-500">{{ t('teams_page.stat_spent') }}</span><span class="font-mono font-semibold text-rose-600">- {{ fmt(team.spent) }}</span></div>
+                        <div class="flex justify-between"><span class="text-ink-500">{{ t('teams_page.stat_remaining') }}</span><span class="font-mono font-semibold text-emerald-700">{{ fmt(team.remaining) }}</span></div>
                     </div>
                     <div class="mt-3">
-                        <div class="bar-track"><div class="bar-fill" :style="{ width: t.pct + '%' }"></div></div>
-                        <div class="mt-1 text-[10.5px] font-mono text-ink-400 text-right">{{ t.pct }}% spent</div>
+                        <div class="bar-track"><div class="bar-fill" :style="{ width: team.pct + '%' }"></div></div>
+                        <div class="mt-1 text-[10.5px] font-mono text-ink-400 text-right">{{ t('teams_page.pct_spent', { pct: team.pct }) }}</div>
                     </div>
 
-                    <div v-if="t.registration_txn_id" class="mt-3 pt-3 border-t border-ink-200/50 text-[11px]">
-                        <span class="text-ink-500">Reg. TrxID:</span>
-                        <code class="ml-1 font-mono text-ink-700">{{ t.registration_txn_id }}</code>
+                    <div v-if="team.registration_txn_id" class="mt-3 pt-3 border-t border-ink-200/50 text-[11px]">
+                        <span class="text-ink-500">{{ t('teams_page.reg_trxid_label') }}</span>
+                        <code class="ml-1 font-mono text-ink-700">{{ team.registration_txn_id }}</code>
                     </div>
 
                     <!-- Actions -->
                     <div class="mt-4 pt-3 border-t border-ink-100 flex gap-2 justify-end">
-                        <template v-if="t.registration_status === 'pending'">
-                            <button @click="reject(t)"  class="text-rose-500 hover:text-rose-700 text-[12px]">Reject</button>
-                            <button @click="approve(t)" class="text-emerald-600 hover:text-emerald-700 text-[12px] font-medium">Approve</button>
+                        <template v-if="team.registration_status === 'pending'">
+                            <button @click="reject(team)"  class="text-rose-500 hover:text-rose-700 text-[12px]">{{ t('teams_page.reject') }}</button>
+                            <button @click="approve(team)" class="text-emerald-600 hover:text-emerald-700 text-[12px] font-medium">{{ t('teams_page.approve') }}</button>
                         </template>
                         <template v-else>
-                            <button @click="startEdit(t)" class="text-brand-indigo hover:underline text-[12px]">Edit</button>
-                            <button @click="remove(t)" class="text-rose-500 hover:text-rose-700 text-[12px]">Delete</button>
+                            <button @click="startEdit(team)" class="text-brand-indigo hover:underline text-[12px]">{{ t('teams_page.edit') }}</button>
+                            <button @click="remove(team)" class="text-rose-500 hover:text-rose-700 text-[12px]">{{ t('teams_page.delete') }}</button>
                         </template>
                     </div>
                 </div>
             </div>
             <div v-else class="glass rounded-2xl p-10 text-center">
-                <div class="font-mono text-[11px] tracking-widest text-ink-500 mb-3">/ no teams</div>
-                <p class="text-ink-500 text-[14px]">Add at least 2 teams before starting an auction.</p>
-                <button @click="startCreate" class="btn-primary inline-flex mt-5 px-5">Add a team</button>
+                <div class="font-mono text-[11px] tracking-widest text-ink-500 mb-3">{{ t('teams_page.no_teams_label') }}</div>
+                <p class="text-ink-500 text-[14px]">{{ t('teams_page.no_teams_body') }}</p>
+                <button @click="startCreate" class="btn-primary inline-flex mt-5 px-5">{{ t('teams_page.add_a_team') }}</button>
             </div>
         </template>
     </DashboardLayout>

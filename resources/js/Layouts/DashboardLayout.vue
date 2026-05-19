@@ -1,6 +1,6 @@
 <script setup>
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LanguageToggle from '@/Components/LanguageToggle.vue';
 
@@ -81,6 +81,31 @@ const navGroups = computed(() => {
 // Platform-scoped nav for super admins. Labels are literal here (no i18n key)
 // since they target the SuperAdmin/* pages — vue-i18n's t() returns the raw
 // string when no matching key exists, so this is safe.
+// Pending-payments badge — starts from the Inertia shared prop on page load,
+// then re-hydrates from the `super-admin` Echo channel so a new bKash submission
+// bumps the badge live without a navigation.
+const pendingPaymentsCount = ref(Number(page.props.pendingPaymentsCount || 0));
+// Inertia page changes re-share the prop; keep the local ref in sync so a
+// regular navigation also corrects any drift if the WebSocket missed an event.
+watch(() => page.props.pendingPaymentsCount, (v) => {
+    pendingPaymentsCount.value = Number(v || 0);
+});
+
+let paymentsChannel = null;
+onMounted(() => {
+    if (! isSuperAdmin.value || ! window.Echo) return;
+    paymentsChannel = window.Echo.private('super-admin')
+        .listen('.pending-payments.changed', (payload) => {
+            if (payload && typeof payload.count === 'number') {
+                pendingPaymentsCount.value = payload.count;
+            }
+        });
+});
+onBeforeUnmount(() => {
+    if (window.Echo) window.Echo.leave('super-admin');
+    paymentsChannel = null;
+});
+
 const adminNav = computed(() => {
     const items = [
         { label: 'Overview',      href: '/admin',               icon: 'shield',   match: /^\/admin\/?$/ },
@@ -88,7 +113,8 @@ const adminNav = computed(() => {
         { label: 'Organizations', href: '/admin/orgs',          icon: 'team',     match: /^\/admin\/orgs/ },
         { label: 'Users',         href: '/admin/users',         icon: 'user',     match: /^\/admin\/users/ },
         { label: 'Subscriptions', href: '/admin/subscriptions', icon: 'card',     match: /^\/admin\/subscriptions/ },
-        { label: 'Payments',      href: '/admin/payments',      icon: 'card',     match: /^\/admin\/payments/ },
+        { label: 'Payments',      href: '/admin/payments',      icon: 'card',     match: /^\/admin\/payments/,
+          badge: pendingPaymentsCount.value > 0 ? pendingPaymentsCount.value : null },
         { label: 'Plans',         href: '/admin/plans',         icon: 'cog',      match: /^\/admin\/plans/ },
         { label: 'Audit log',     href: '/admin/audit',         icon: 'audit',    match: /^\/admin\/audit/ },
     ];
@@ -176,7 +202,11 @@ const logout = () => router.post(route('logout'));
                                     <svg v-else-if="item.icon==='audit'"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4.5 w-4.5"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
                                 </span>
                                 <span class="flex-1 truncate">{{ t(item.label) }}</span>
-                                <span v-if="item.accent" class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                                <span v-if="item.badge"
+                                      class="px-1.5 min-w-[18px] h-[18px] rounded-full bg-rose-500 text-white font-mono text-[10.5px] font-bold tracking-tight grid place-items-center leading-none">
+                                    {{ item.badge }}
+                                </span>
+                                <span v-else-if="item.accent" class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
                             </Link>
                         </li>
                     </ul>

@@ -69,8 +69,8 @@ const copyTxt = async () => {
                 <div class="grid md:grid-cols-2 gap-4">
                     <Field :label="t('auth.org_name')"><TextField :modelValue="org.name" disabled /></Field>
                     <Field :label="t('auth.subdomain')"><TextField :modelValue="org.slug" :trailing="`.${appDomain}`" disabled /></Field>
-                    <Field label="Timezone"><TextField :modelValue="org.timezone" disabled /></Field>
-                    <Field label="Plan"><TextField :modelValue="org.plan" disabled /></Field>
+                    <Field :label="t('settings_page.timezone')"><TextField :modelValue="org.timezone" disabled /></Field>
+                    <Field :label="t('settings_page.plan_label')"><TextField :modelValue="org.plan" disabled /></Field>
                 </div>
             </div>
 

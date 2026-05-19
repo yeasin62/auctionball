@@ -51,10 +51,10 @@ const sold   = () => router.post(route('dashboard.auction.sold'), {}, { preserve
 const unsold = () => router.post(route('dashboard.auction.unsold'), {}, { preserveScroll: true });
 const reset  = async () => {
     if (! await confirmDialog({
-        title: 'Reset this lot?',
-        description: 'All bids on the current player will be cleared and the player will be returned to the queue. This is intended for re-running a lot from scratch.',
+        title: t('auction_page.control_confirm_reset_title'),
+        description: t('auction_page.control_confirm_reset_body'),
         variant: 'warning',
-        confirmText: 'Reset lot',
+        confirmText: t('auction_page.control_confirm_reset_button'),
     })) return;
     router.post(route('dashboard.auction.reset'), {}, { preserveScroll: true });
 };
@@ -138,12 +138,12 @@ const statusBadge = computed(() => ({
             <!-- LEFT: Player queue -->
             <aside class="xl:col-span-3 glass rounded-2xl p-4 max-h-[82vh] flex flex-col">
                 <div class="flex items-center justify-between mb-3">
-                    <div class="font-mono text-[12.5px] tracking-widest text-ink-500">PLAYERS</div>
+                    <div class="font-mono text-[12.5px] tracking-widest text-ink-500">{{ t('auction_page.control_label_players') }}</div>
                     <select v-model="filter" class="text-[13px] font-mono bg-transparent border-0 text-ink-700 focus:ring-0">
-                        <option value="all">All</option>
-                        <option value="queue">In queue</option>
-                        <option value="sold">Sold</option>
-                        <option value="unsold">Unsold</option>
+                        <option value="all">{{ t('auction_page.control_filter_all') }}</option>
+                        <option value="queue">{{ t('auction_page.control_filter_queue') }}</option>
+                        <option value="sold">{{ t('auction_page.control_filter_sold') }}</option>
+                        <option value="unsold">{{ t('auction_page.control_filter_unsold') }}</option>
                     </select>
                 </div>
                 <ul class="space-y-1.5 overflow-y-auto flex-1">
@@ -168,14 +168,14 @@ const statusBadge = computed(() => ({
             <!-- CENTER: Live panel -->
             <section class="xl:col-span-6 glass-strong rounded-2xl p-6">
                 <div class="flex items-center justify-between mb-3">
-                    <div class="font-mono text-[12.5px] tracking-widest text-ink-500">CURRENT PLAYER</div>
+                    <div class="font-mono text-[12.5px] tracking-widest text-ink-500">{{ t('auction_page.control_current_player') }}</div>
                     <span class="px-3.5 py-1 rounded-full font-mono text-[12.5px] tracking-widest border" :class="statusBadge.cls">{{ statusBadge.text }}</span>
                 </div>
 
                 <!-- Empty placeholder -->
                 <div v-if="!livePlayer" class="rounded-2xl bg-white/60 border border-dashed border-ink-300/60 px-6 py-12 text-center">
-                    <h2 class="text-[24px] font-bold tracking-tight text-ink-700">Pick a player from the queue</h2>
-                    <p class="mt-2 text-[15px] text-ink-500">Click any queued player on the left to set them as the current player.</p>
+                    <h2 class="text-[24px] font-bold tracking-tight text-ink-700">{{ t('auction_page.control_pick_heading') }}</h2>
+                    <p class="mt-2 text-[15px] text-ink-500">{{ t('auction_page.control_pick_body') }}</p>
                 </div>
 
                 <!-- Player profile card — photo + name + meta -->
@@ -212,19 +212,19 @@ const statusBadge = computed(() => ({
                         </div>
                         <div class="mt-3.5 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1.5 text-[14.5px]">
                             <div class="flex justify-between sm:block">
-                                <span class="text-ink-500 sm:block sm:font-mono sm:text-[11.5px] sm:tracking-widest sm:uppercase">Base</span>
+                                <span class="text-ink-500 sm:block sm:font-mono sm:text-[11.5px] sm:tracking-widest sm:uppercase">{{ t('auction_page.control_label_base') }}</span>
                                 <span class="font-mono font-semibold text-ink-900">{{ fmt(livePlayer.base_price) }}</span>
                             </div>
                             <div v-if="livePlayer.profession" class="flex justify-between sm:block">
-                                <span class="text-ink-500 sm:block sm:font-mono sm:text-[11.5px] sm:tracking-widest sm:uppercase">Profession</span>
+                                <span class="text-ink-500 sm:block sm:font-mono sm:text-[11.5px] sm:tracking-widest sm:uppercase">{{ t('auction_page.control_label_profession') }}</span>
                                 <span class="font-medium text-ink-900 truncate ml-2 sm:ml-0 text-right sm:text-left">{{ livePlayer.profession }}</span>
                             </div>
                             <div v-if="livePlayer.batting_style" class="flex justify-between sm:block">
-                                <span class="text-ink-500 sm:block sm:font-mono sm:text-[11.5px] sm:tracking-widest sm:uppercase">Batting</span>
+                                <span class="text-ink-500 sm:block sm:font-mono sm:text-[11.5px] sm:tracking-widest sm:uppercase">{{ t('auction_page.control_label_batting') }}</span>
                                 <span class="font-medium text-ink-900 truncate ml-2 sm:ml-0 text-right sm:text-left">{{ livePlayer.batting_style }}</span>
                             </div>
                             <div v-if="livePlayer.bowling_style" class="flex justify-between sm:block">
-                                <span class="text-ink-500 sm:block sm:font-mono sm:text-[11.5px] sm:tracking-widest sm:uppercase">Bowling</span>
+                                <span class="text-ink-500 sm:block sm:font-mono sm:text-[11.5px] sm:tracking-widest sm:uppercase">{{ t('auction_page.control_label_bowling') }}</span>
                                 <span class="font-medium text-ink-900 truncate ml-2 sm:ml-0 text-right sm:text-left">{{ livePlayer.bowling_style }}</span>
                             </div>
                         </div>
@@ -238,7 +238,7 @@ const statusBadge = computed(() => ({
                         <!-- Current bid -->
                         <div class="rounded-2xl px-5 py-5 text-center"
                              style="background:linear-gradient(135deg,rgba(186,219,255,.45),rgba(232,213,255,.55));border:1px solid rgba(255,255,255,.7);">
-                            <div class="font-mono text-[12.5px] tracking-widest text-ink-500 mb-2">CURRENT BID</div>
+                            <div class="font-mono text-[12.5px] tracking-widest text-ink-500 mb-2">{{ t('auction_page.control_label_current_bid') }}</div>
                             <div class="font-extrabold tracking-tight text-grad leading-none whitespace-nowrap tabular-nums"
                                  style="font-size: clamp(36px, 5.5vw, 58px);">
                                 {{ fmt(liveState?.highest_bid || 0) }}
@@ -253,14 +253,14 @@ const statusBadge = computed(() => ({
 
                         <!-- Timer -->
                         <div class="rounded-2xl bg-white border border-ink-200/60 px-5 py-5 text-center">
-                            <div class="font-mono text-[12.5px] tracking-widest text-ink-500 mb-2">TIMER</div>
+                            <div class="font-mono text-[12.5px] tracking-widest text-ink-500 mb-2">{{ t('auction_page.control_label_timer') }}</div>
                             <div class="font-mono whitespace-nowrap leading-none tracking-tight tabular-nums"
                                  style="font-size: clamp(40px, 6vw, 66px);"
                                  :class="remainingSec <= 5 && isRunning ? 'text-rose-500 animate-pulse' : 'text-ink-900'">
                                 {{ timerDisplay }}
                             </div>
                             <div class="mt-2.5 inline-flex items-center gap-1.5 text-[13px] font-mono text-ink-500">
-                                <span>Next Player:</span>
+                                <span>{{ t('auction_page.control_label_next_player') }}</span>
                                 <select v-model.number="duration" class="bg-transparent border-0 focus:ring-0 text-[13px] font-mono pr-4">
                                     <option :value="30">30s</option>
                                     <option :value="60">60s</option>
@@ -292,7 +292,7 @@ const statusBadge = computed(() => ({
                     <div class="rounded-2xl bg-white/70 border border-ink-200/60 p-4 grid lg:grid-cols-[1fr_auto] gap-3 lg:gap-5 items-center">
                         <!-- Extend +N seconds -->
                         <div class="flex items-center gap-2.5 flex-wrap">
-                            <span class="font-mono text-[12.5px] tracking-widest text-ink-500 shrink-0">EXTEND TIMER</span>
+                            <span class="font-mono text-[12.5px] tracking-widest text-ink-500 shrink-0">{{ t('auction_page.control_label_extend_timer') }}</span>
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 <button v-for="s in [10, 30, 60]" :key="s"
                                         @click="extendTimer(s)" :disabled="!livePlayer"
@@ -330,7 +330,7 @@ const statusBadge = computed(() => ({
                     <!-- ============== RECENT BIDS ============== -->
                     <div class="rounded-2xl bg-white/70 border border-ink-200/60 p-4">
                         <div class="flex items-center justify-between mb-3">
-                            <div class="font-mono text-[12.5px] tracking-widest text-ink-500">RECENT BIDS</div>
+                            <div class="font-mono text-[12.5px] tracking-widest text-ink-500">{{ t('auction_page.control_label_recent_bids') }}</div>
                             <span class="font-mono text-[12.5px] text-ink-400">{{ liveBids.length }} on this lot</span>
                         </div>
                         <ul v-if="liveBids.length" class="space-y-1.5 text-[14.5px] font-mono max-h-48 overflow-y-auto">
@@ -344,26 +344,31 @@ const statusBadge = computed(() => ({
                                 <span class="font-bold text-ink-900">{{ fmt(b.amount) }}</span>
                             </li>
                         </ul>
-                        <p v-else class="text-center py-4 text-[14px] text-ink-500 font-mono">Awaiting first bid</p>
+                        <p v-else class="text-center py-4 text-[14px] text-ink-500 font-mono">{{ t('auction_page.control_no_bids') }}</p>
                     </div>
 
                     <!-- Footer: keyboard hint -->
                     <p class="text-[12.5px] font-mono text-ink-400 text-center">
-                        Shortcuts: <strong class="text-ink-700">Space</strong> start/pause · <strong class="text-ink-700">S</strong> sold · <strong class="text-ink-700">U</strong> unsold · <strong class="text-ink-700">R</strong> reset
+                        <i18n-t keypath="auction_page.control_shortcuts">
+                            <template #space><strong class="text-ink-700">Space</strong></template>
+                            <template #s><strong class="text-ink-700">S</strong></template>
+                            <template #u><strong class="text-ink-700">U</strong></template>
+                            <template #r><strong class="text-ink-700">R</strong></template>
+                        </i18n-t>
                     </p>
                 </div>
 
                 <div v-else class="grid place-items-center min-h-[40vh] text-center">
                     <div>
                         <div class="font-mono text-[12.5px] tracking-widest text-ink-500 mb-3">/ idle</div>
-                        <p class="text-[16px] text-ink-500">Click a player on the left to load them into the live slot.</p>
+                        <p class="text-[16px] text-ink-500">{{ t('auction_page.control_empty_body') }}</p>
                     </div>
                 </div>
             </section>
 
             <!-- RIGHT: Team budgets + bid panel -->
             <aside class="xl:col-span-3 glass rounded-2xl p-4 max-h-[82vh] flex flex-col">
-                <div class="font-mono text-[12.5px] tracking-widest text-ink-500 mb-3">TEAM BUDGETS</div>
+                <div class="font-mono text-[12.5px] tracking-widest text-ink-500 mb-3">{{ t('auction_page.control_label_team_budgets') }}</div>
                 <div class="space-y-3 overflow-y-auto flex-1">
                     <div v-for="t in teams" :key="t.id"
                          @click="selectedTeam = selectedTeam?.id === t.id ? null : t"

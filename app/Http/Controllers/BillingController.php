@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PendingPaymentsChanged;
 use App\Models\Organization;
 use App\Models\PaymentTransaction;
 use App\Models\PlatformSettings;
@@ -99,9 +100,22 @@ class BillingController extends Controller
     public function bkashManualSubmit(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'plan'    => ['required', Rule::in(['starter', 'pro', 'enterprise'])],
-            'trx_id'  => 'required|string|min:6|max:32',
+            'plan'          => ['required', Rule::in(['starter', 'pro', 'enterprise'])],
+            'trx_id'        => 'required|string|min:6|max:32',
+            // Bangladeshi mobile numbers are 11 digits ("01XXXXXXXXX") but accept
+            // a few common formats — bare digits, with country code, or with
+            // dashes/spaces. Strip non-digits before storing.
+            'sender_number' => 'required|string|max:32|regex:/^[0-9+\-\s]+$/',
+        ], [
+            'sender_number.regex' => 'Enter a valid phone number (digits only, optional + and spaces).',
         ]);
+
+        // Normalize: strip non-digits and drop a leading "88" country code if
+        // present, so admin comparison against bKash records is one canonical form.
+        $senderDigits = preg_replace('/\D+/', '', $data['sender_number']);
+        if (str_starts_with($senderDigits, '88') && strlen($senderDigits) === 13) {
+            $senderDigits = substr($senderDigits, 2);
+        }
 
         /** @var Organization $org */
         $org = $request->attributes->get('current_organization');
@@ -117,21 +131,26 @@ class BillingController extends Controller
             'provider'             => 'bkash',
             'local_ref'            => PaymentTransaction::generateLocalRef(),
             'provider_txn_id'      => $data['trx_id'],
+            'sender_bkash_number'  => $senderDigits,
             'plan'                 => $data['plan'],
             'billing_cycle'        => 'monthly',
             'is_recurring_setup'   => false,
             'amount'               => PlanCatalog::priceFor($data['plan'], 'BDT'),
             'currency'             => 'BDT',
             'status'               => 'pending',
-            'raw_payload'          => ['manual' => true, 'trx_id' => $data['trx_id']],
+            'raw_payload'          => ['manual' => true, 'trx_id' => $data['trx_id'], 'sender' => $senderDigits],
         ]);
 
         Audit::log(
             'payment.manual_submitted',
-            "bKash manual payment submitted: ৳{$txn->amount} for {$txn->plan} (TrxID {$data['trx_id']})",
-            ['plan' => $txn->plan, 'amount' => $txn->amount, 'trx_id' => $data['trx_id']],
+            "bKash manual payment submitted: ৳{$txn->amount} for {$txn->plan} (TrxID {$data['trx_id']}, sender {$senderDigits})",
+            ['plan' => $txn->plan, 'amount' => $txn->amount, 'trx_id' => $data['trx_id'], 'sender' => $senderDigits],
             $txn,
         );
+
+        // Wake any super admin currently on a dashboard page so their sidebar
+        // badge bumps without waiting for a navigation.
+        broadcast(new PendingPaymentsChanged());
 
         $hours = PlatformSettings::current()->manual_review_hours;
         return redirect()->route('dashboard.billing.index')

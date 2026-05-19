@@ -57,7 +57,7 @@ const checkout = (plan, provider) => {
 
 // --- Manual bKash modal: customer pays out-of-band, then submits TrxID here. ---
 const bkashModal = ref(null);                     // selected plan object or null
-const bkashForm = useForm({ plan: '', trx_id: '' });
+const bkashForm = useForm({ plan: '', trx_id: '', sender_number: '' });
 const openBkash = (plan) => {
     bkashForm.reset();
     bkashForm.plan = plan.plan;
@@ -86,7 +86,7 @@ const org = props.org;
 </script>
 
 <template>
-    <DashboardLayout title="Billing">
+    <DashboardLayout :title="t('billing.title')">
 
         <!-- Pending bKash review banner -->
         <div v-if="pending_bkash"
@@ -97,14 +97,10 @@ const org = props.org;
                 </span>
                 <div class="flex-1">
                     <div class="text-[14px] font-semibold text-amber-900">
-                        bKash payment awaiting verification
+                        {{ t('billing.bkash_awaiting') }}
                     </div>
                     <div class="mt-1 text-[12.5px] text-amber-800 leading-relaxed">
-                        We received your payment for the <strong class="capitalize">{{ pending_bkash.plan }}</strong> plan
-                        (৳{{ pending_bkash.amount.toLocaleString() }}, TrxID
-                        <code class="font-mono text-[11.5px] bg-white/60 px-1.5 py-0.5 rounded">{{ pending_bkash.trx_id }}</code>).
-                        Submitted {{ pending_bkash.submitted_at }}. Your account will be activated within
-                        <strong>{{ bkash_manual.manual_review_hours }} hours</strong> after we verify the transaction.
+                        {{ t('billing.bkash_awaiting_body', { plan: pending_bkash.plan, amount: pending_bkash.amount.toLocaleString(), trx: pending_bkash.trx_id, when: pending_bkash.submitted_at, hours: bkash_manual.manual_review_hours }) }}
                     </div>
                 </div>
             </div>
@@ -153,21 +149,21 @@ const org = props.org;
                 <div class="space-y-4">
                     <div>
                         <div class="flex justify-between text-[12.5px] mb-1.5">
-                            <span class="text-ink-600">Seasons</span>
+                            <span class="text-ink-600">{{ t('billing.usage_seasons') }}</span>
                             <span class="font-mono">{{ usage.seasons }} / {{ cap(org.limits.seasons) }}</span>
                         </div>
                         <div class="bar-track"><div class="bar-fill" :style="{ width: pct(usage.seasons, org.limits.seasons) + '%' }"></div></div>
                     </div>
                     <div>
                         <div class="flex justify-between text-[12.5px] mb-1.5">
-                            <span class="text-ink-600">Players (active season)</span>
+                            <span class="text-ink-600">{{ t('billing.usage_players') }}</span>
                             <span class="font-mono">{{ usage.players }} / {{ cap(org.limits.players) }}</span>
                         </div>
                         <div class="bar-track"><div class="bar-fill" :style="{ width: pct(usage.players, org.limits.players) + '%' }"></div></div>
                     </div>
                     <div>
                         <div class="flex justify-between text-[12.5px] mb-1.5">
-                            <span class="text-ink-600">Teams (active season)</span>
+                            <span class="text-ink-600">{{ t('billing.usage_teams') }}</span>
                             <span class="font-mono">{{ usage.teams }} / {{ cap(org.limits.teams) }}</span>
                         </div>
                         <div class="bar-track"><div class="bar-fill" :style="{ width: pct(usage.teams, org.limits.teams) + '%' }"></div></div>
@@ -201,10 +197,10 @@ const org = props.org;
 
         <!-- Plan grid -->
         <div class="flex items-center justify-between mb-3 flex-wrap gap-3">
-            <h3 class="text-[16px] font-bold tracking-tight">Upgrade your plan</h3>
+            <h3 class="text-[16px] font-bold tracking-tight">{{ t('billing.upgrade_plan_heading') }}</h3>
             <Toggle v-model="wantAutoRenew"
-                    on-label="AUTO-RENEW EVERY MONTH"
-                    off-label="PAY ONCE — NO AUTO-RENEW" />
+                    :on-label="t('billing.auto_renew_label')"
+                    :off-label="t('billing.pay_once_label')" />
         </div>
         <div class="grid md:grid-cols-3 gap-4 mb-5">
             <div v-for="p in plans" :key="p.plan"
@@ -212,24 +208,24 @@ const org = props.org;
                  :class="org.plan === p.plan ? 'glass-strong shadow-pricing-pop' : 'glass'">
                 <div class="flex items-center justify-between mb-2">
                     <div class="text-[18px] font-bold tracking-tight">{{ planLabel(p.plan) }}</div>
-                    <span v-if="org.plan === p.plan" class="px-2 py-0.5 rounded-full font-mono text-[9.5px] tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-100">CURRENT</span>
+                    <span v-if="org.plan === p.plan" class="px-2 py-0.5 rounded-full font-mono text-[9.5px] tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-100">{{ t('billing.badge_current') }}</span>
                 </div>
                 <div class="flex items-baseline gap-1 mb-1">
                     <span class="text-[18px] text-ink-700 font-semibold">৳</span>
                     <span class="text-[34px] font-extrabold tracking-tight leading-none">{{ p.amount_bdt.toLocaleString() }}</span>
-                    <span class="text-[12px] text-ink-500 ml-1">/ month</span>
+                    <span class="text-[12px] text-ink-500 ml-1">{{ t('billing.per_month') }}</span>
                 </div>
-                <div class="font-mono text-[10.5px] text-ink-500 mb-5">or ${{ p.amount_usd }} via PayPal</div>
+                <div class="font-mono text-[10.5px] text-ink-500 mb-5">{{ t('billing.or_paypal_usd', { usd: p.amount_usd }) }}</div>
 
                 <div v-if="org.plan === p.plan" class="mt-auto text-center">
-                    <span class="text-[12.5px] text-ink-500">You're on this plan.</span>
+                    <span class="text-[12.5px] text-ink-500">{{ t('billing.youre_on_plan') }}</span>
                 </div>
                 <div v-else class="mt-auto space-y-2">
                     <button @click="openBkash(p)" class="w-full btn-primary py-2.5 text-[13px]">
-                        Pay ৳{{ p.amount_bdt.toLocaleString() }} with bKash
+                        {{ t('billing.pay_bdt_bkash', { amount: p.amount_bdt.toLocaleString() }) }}
                     </button>
                     <button @click="checkout(p.plan, 'paypal')" class="w-full btn-ghost py-2.5 text-[13px]">
-                        Pay ${{ p.amount_usd }} with PayPal
+                        {{ t('billing.pay_usd_paypal', { amount: p.amount_usd }) }}
                     </button>
                 </div>
             </div>
@@ -238,17 +234,17 @@ const org = props.org;
         <!-- Transactions -->
         <div class="glass rounded-2xl overflow-hidden">
             <div class="px-5 py-3 border-b border-ink-100">
-                <h3 class="text-[15px] font-bold tracking-tight">Payment history</h3>
+                <h3 class="text-[15px] font-bold tracking-tight">{{ t('billing.payment_history') }}</h3>
             </div>
             <table class="w-full text-[13px]">
                 <thead class="bg-white/40">
                     <tr class="text-left font-mono text-[10px] tracking-widest text-ink-500">
-                        <th class="px-4 py-2.5">REF</th>
-                        <th class="px-4 py-2.5">PROVIDER</th>
-                        <th class="px-4 py-2.5">PLAN</th>
-                        <th class="px-4 py-2.5">AMOUNT</th>
-                        <th class="px-4 py-2.5">STATUS</th>
-                        <th class="px-4 py-2.5">WHEN</th>
+                        <th class="px-4 py-2.5">{{ t('billing.th_ref') }}</th>
+                        <th class="px-4 py-2.5">{{ t('billing.th_provider') }}</th>
+                        <th class="px-4 py-2.5">{{ t('billing.th_plan') }}</th>
+                        <th class="px-4 py-2.5">{{ t('billing.th_amount') }}</th>
+                        <th class="px-4 py-2.5">{{ t('billing.th_status') }}</th>
+                        <th class="px-4 py-2.5">{{ t('billing.th_when') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-ink-100">
@@ -261,7 +257,7 @@ const org = props.org;
                         <td class="px-4 py-2.5 font-mono text-[11.5px] text-ink-500">{{ t.created_at }}</td>
                     </tr>
                     <tr v-if="transactions.length === 0">
-                        <td colspan="6" class="px-4 py-6 text-center text-[13px] text-ink-500">No payments yet.</td>
+                        <td colspan="6" class="px-4 py-6 text-center text-[13px] text-ink-500">{{ t('billing.no_payments') }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -272,7 +268,7 @@ const org = props.org;
             <div class="glass-strong rounded-2xl max-w-md w-full p-6 shadow-glass-lg">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <div class="font-mono text-[10.5px] tracking-widest text-ink-500">PAY WITH bKASH</div>
+                        <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('billing.modal_pay_bkash') }}</div>
                         <div class="mt-1 text-[18px] font-bold tracking-tight capitalize">{{ bkashModal.plan }} · ৳{{ bkashModal.amount_bdt.toLocaleString() }}/mo</div>
                     </div>
                     <button @click="closeBkash" class="text-ink-400 hover:text-ink-700 text-[18px]">×</button>
@@ -280,14 +276,14 @@ const org = props.org;
 
                 <!-- Step 1: send money -->
                 <div class="rounded-xl bg-pink-50 border border-pink-200 px-4 py-3 mb-4">
-                    <div class="font-mono text-[10.5px] tracking-widest text-pink-700 mb-1.5">STEP 1 — SEND MONEY</div>
+                    <div class="font-mono text-[10.5px] tracking-widest text-pink-700 mb-1.5">{{ t('billing.modal_step1') }}</div>
                     <div class="flex items-center gap-2">
                         <code class="flex-1 font-mono text-[15px] font-bold text-ink-900 bg-white px-3 py-2 rounded-lg border border-pink-200">
                             {{ bkash_manual.merchant_number }}
                         </code>
-                        <button type="button" @click="copyMerchant" class="btn-ghost py-2 px-3 text-[12px] whitespace-nowrap">Copy</button>
+                        <button type="button" @click="copyMerchant" class="btn-ghost py-2 px-3 text-[12px] whitespace-nowrap">{{ t('billing.modal_copy') }}</button>
                     </div>
-                    <div class="mt-2 text-[11.5px] text-pink-700 font-mono">{{ bkash_manual.account_type }} — Send Money ৳{{ bkashModal.amount_bdt.toLocaleString() }}</div>
+                    <div class="mt-2 text-[11.5px] text-pink-700 font-mono">{{ t('billing.modal_send_money_line', { type: bkash_manual.account_type, amount: bkashModal.amount_bdt.toLocaleString() }) }}</div>
                 </div>
 
                 <!-- Instructions -->
@@ -298,22 +294,30 @@ const org = props.org;
                 <!-- Step 2: TrxID -->
                 <form @submit.prevent="submitBkash" class="space-y-3">
                     <div>
-                        <label class="font-mono text-[10.5px] tracking-widest text-ink-500">STEP 2 — bKASH TRANSACTION ID</label>
-                        <input v-model="bkashForm.trx_id" type="text" placeholder="e.g. 9F4XYZ123" autofocus
+                        <label class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('billing.modal_step2') }}</label>
+                        <input v-model="bkashForm.trx_id" type="text" :placeholder="t('billing.modal_trx_placeholder')" autofocus
                                class="mt-1 w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] font-mono focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                         <p v-if="bkashForm.errors.trx_id" class="mt-1 text-[12px] text-rose-500">{{ bkashForm.errors.trx_id }}</p>
-                        <p class="mt-1 text-[11.5px] text-ink-500">Found on the bKash confirmation SMS — usually 10 characters.</p>
+                        <p class="mt-1 text-[11.5px] text-ink-500">{{ t('billing.modal_trx_hint') }}</p>
+                    </div>
+
+                    <div>
+                        <label class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('billing.modal_step3') }}</label>
+                        <input v-model="bkashForm.sender_number" type="tel" inputmode="tel"
+                               :placeholder="t('billing.modal_sender_placeholder')"
+                               class="mt-1 w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] font-mono focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
+                        <p v-if="bkashForm.errors.sender_number" class="mt-1 text-[12px] text-rose-500">{{ bkashForm.errors.sender_number }}</p>
+                        <p class="mt-1 text-[11.5px] text-ink-500">{{ t('billing.modal_sender_hint') }}</p>
                     </div>
 
                     <div class="rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-[12.5px] text-amber-800">
-                        After you submit, your account will be activated within
-                        <strong>{{ bkash_manual.manual_review_hours }} hours</strong> once we verify the payment.
+                        {{ t('billing.modal_after_submit_note', { hours: bkash_manual.manual_review_hours }) }}
                     </div>
 
                     <div class="flex gap-2 pt-1">
-                        <button type="button" @click="closeBkash" class="btn-ghost py-2 px-4 text-[13px] flex-1">Cancel</button>
+                        <button type="button" @click="closeBkash" class="btn-ghost py-2 px-4 text-[13px] flex-1">{{ t('common.cancel') }}</button>
                         <button type="submit" class="btn-primary py-2 px-4 text-[13px] flex-1" :disabled="bkashForm.processing">
-                            {{ bkashForm.processing ? 'Submitting…' : 'Submit payment' }}
+                            {{ bkashForm.processing ? t('billing.modal_submitting') : t('billing.modal_submit_payment') }}
                         </button>
                     </div>
                 </form>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PendingPaymentsChanged;
 use App\Mail\PaymentApprovedMail;
 use App\Mail\PaymentRejectedMail;
 use App\Models\AuditLog;
@@ -1045,16 +1046,17 @@ class SuperAdminController extends Controller
             ->latest()
             ->get()
             ->map(fn ($t) => [
-                'id'              => $t->id,
-                'local_ref'       => $t->local_ref,
-                'org_name'        => $t->organization?->name,
-                'org_slug'        => $t->organization?->slug,
-                'current_plan'    => $t->organization?->plan,
-                'plan'            => $t->plan,
-                'amount'          => $t->amount,
-                'currency'        => $t->currency,
-                'provider_txn_id' => $t->provider_txn_id,
-                'submitted_at'    => $t->created_at?->format('Y-m-d H:i'),
+                'id'                  => $t->id,
+                'local_ref'           => $t->local_ref,
+                'org_name'            => $t->organization?->name,
+                'org_slug'            => $t->organization?->slug,
+                'current_plan'        => $t->organization?->plan,
+                'plan'                => $t->plan,
+                'amount'              => $t->amount,
+                'currency'            => $t->currency,
+                'provider_txn_id'     => $t->provider_txn_id,
+                'sender_bkash_number' => $t->sender_bkash_number,
+                'submitted_at'        => $t->created_at?->format('Y-m-d H:i'),
             ]);
 
         $recent = PaymentTransaction::where('provider', 'bkash')
@@ -1138,6 +1140,8 @@ class SuperAdminController extends Controller
             $txn,
         );
 
+        broadcast(new PendingPaymentsChanged());
+
         return back()->with('success', "Approved — {$txn->organization?->name} is now on {$txn->plan}.");
     }
 
@@ -1160,6 +1164,8 @@ class SuperAdminController extends Controller
             ['plan' => $txn->plan, 'trx_id' => $txn->provider_txn_id, 'reason' => $reason],
             $txn,
         );
+
+        broadcast(new PendingPaymentsChanged());
 
         return back()->with('success', 'Payment marked as failed.');
     }

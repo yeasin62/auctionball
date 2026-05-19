@@ -3,6 +3,9 @@ import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { useConfirm, useAlert } from '@/composables/useConfirm';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const confirm = useConfirm();
 const alertDialog = useAlert();
@@ -54,23 +57,23 @@ const submitCreate = () => {
 const isPaidPlan = computed(() => createForm.plan && createForm.plan !== 'free');
 
 const roleLabel = (r) => ({
-    org_admin:  'Org Admin',
-    auctioneer: 'Auctioneer',
-    team_owner: 'Team Owner',
-    viewer:     'Viewer',
+    org_admin:  t('super_admin.role_org_admin'),
+    auctioneer: t('super_admin.role_auctioneer'),
+    team_owner: t('super_admin.role_team_owner'),
+    viewer:     t('super_admin.role_viewer'),
 }[r] || r);
 
 const toggleSuperAdmin = async (u) => {
-    if (u.id === me) return alertDialog({ title: "You can't change your own super-admin flag.", variant: 'warning' });
+    if (u.id === me) return alertDialog({ title: t('super_admin.cant_change_own'), variant: 'warning' });
     if (! await confirm({
         title: u.is_super_admin
-            ? `Remove super-admin from ${u.name}?`
-            : `Promote ${u.name} to super-admin?`,
+            ? t('super_admin.demote_title', { name: u.name })
+            : t('super_admin.promote_title', { name: u.name }),
         description: u.is_super_admin
-            ? 'They will lose access to /admin and all platform-management tools.'
-            : 'They will gain full platform access — every org, every payment, every audit log. Only enable for trusted operators.',
+            ? t('super_admin.demote_body')
+            : t('super_admin.promote_body'),
         variant: u.is_super_admin ? 'warning' : 'danger',
-        confirmText: u.is_super_admin ? 'Remove super-admin' : 'Promote',
+        confirmText: u.is_super_admin ? t('super_admin.demote_button') : t('super_admin.promote_button'),
     })) return;
     router.post(route('admin.users.toggle-super-admin', u.id), {}, { preserveScroll: true });
 };
@@ -78,10 +81,10 @@ const toggleSuperAdmin = async (u) => {
 const resetPassword = async (u) => {
     if (u.id === me) return;
     if (! await confirm({
-        title: `Reset password for ${u.name}?`,
-        description: 'A new temporary password will be generated and shown to you once. Share it securely with the user.',
+        title: t('super_admin.reset_pw_title', { name: u.name }),
+        description: t('super_admin.reset_pw_body_long'),
         variant: 'warning',
-        confirmText: 'Reset password',
+        confirmText: t('super_admin.reset_pw'),
     })) return;
     router.post(route('admin.users.reset-password', u.id), {}, { preserveScroll: true });
 };
@@ -103,8 +106,8 @@ const todayIso = computed(() => new Date().toISOString().slice(0, 10));
 const openGrant = (u) => {
     if (! u.orgs_for_grant?.length) {
         alertDialog({
-            title: 'This user has no organization',
-            description: `${u.name} isn't a member of any organization yet — there's nothing to grant a subscription to. Attach them to an org first (via "Create user" with an existing-org attach, or from the org's Users page).`,
+            title: t('super_admin.no_org_title'),
+            description: t('super_admin.no_org_body', { name: u.name }),
             variant: 'warning',
         });
         return;
@@ -137,12 +140,12 @@ const submitGrant = () => {
 };
 
 const deleteUser = async (u) => {
-    if (u.id === me) return alertDialog({ title: "You can't delete yourself.", variant: 'warning' });
+    if (u.id === me) return alertDialog({ title: t('super_admin.delete_yourself'), variant: 'warning' });
     if (! await confirm({
-        title: `Permanently delete ${u.name}?`,
-        description: `${u.email}\n\nThis removes their account and all org memberships. If they are the sole admin of an organization, that org will lose all admin access. Type DELETE below to confirm.`,
+        title: t('super_admin.delete_user_confirm_title', { name: u.name }),
+        description: t('super_admin.delete_user_body_long', { email: u.email }),
         variant: 'danger',
-        confirmText: 'Delete account',
+        confirmText: t('super_admin.delete_account_button'),
         typeToConfirm: 'DELETE',
     })) return;
     router.delete(route('admin.users.delete', u.id), { preserveScroll: true });
@@ -150,28 +153,28 @@ const deleteUser = async (u) => {
 </script>
 
 <template>
-    <SuperAdminLayout title="Users">
+    <SuperAdminLayout :title="t('super_admin.users_title')">
 
         <div class="flex justify-end mb-4">
             <button @click="showCreate = true" class="btn-primary py-2 px-4 text-[13px]">
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
-                Create user
+                {{ t('super_admin.create_user') }}
             </button>
         </div>
 
         <!-- Filters -->
         <div class="glass rounded-2xl p-4 mb-4 flex flex-wrap items-center gap-2">
             <input v-model="f.q" @keyup.enter="apply"
-                   placeholder="Search name or email…"
+                   :placeholder="t('super_admin.users_search_placeholder')"
                    class="flex-1 min-w-[220px] rounded-lg border border-ink-200/70 bg-white/80 px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
             <select v-model="f.is_super_admin" @change="apply" class="rounded-lg border border-ink-200/70 bg-white/80 px-3 py-2 text-[13px]">
-                <option value="">All users</option>
-                <option value="1">Super admins only</option>
-                <option value="0">Regular only</option>
+                <option value="">{{ t('super_admin.all_users') }}</option>
+                <option value="1">{{ t('super_admin.users_filter_super') }}</option>
+                <option value="0">{{ t('super_admin.users_filter_regular_only') }}</option>
             </select>
-            <button @click="apply" class="btn-primary py-2 px-4 text-[13px]">Apply</button>
-            <button @click="clear" class="btn-ghost py-2 px-3 text-[12px]">Reset</button>
-            <span class="text-[12px] font-mono text-ink-500 ml-auto">{{ users.total }} total</span>
+            <button @click="apply" class="btn-primary py-2 px-4 text-[13px]">{{ t('super_admin.users_apply') }}</button>
+            <button @click="clear" class="btn-ghost py-2 px-3 text-[12px]">{{ t('super_admin.reset') }}</button>
+            <span class="text-[12px] font-mono text-ink-500 ml-auto">{{ t('super_admin.n_total', { n: users.total }) }}</span>
         </div>
 
         <!-- Users table -->
@@ -179,12 +182,12 @@ const deleteUser = async (u) => {
             <table class="w-full text-[13.5px]">
                 <thead class="bg-white/40">
                     <tr class="text-left font-mono text-[10px] tracking-widest text-ink-500">
-                        <th class="px-4 py-2.5">USER</th>
-                        <th class="px-4 py-2.5">EMAIL</th>
-                        <th class="px-4 py-2.5">ORGS</th>
-                        <th class="px-4 py-2.5">ORGANIZATION</th>
-                        <th class="px-4 py-2.5">JOINED</th>
-                        <th class="px-4 py-2.5">SUPER</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_user') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_email') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_orgs') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_organization') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_joined') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_super_short') }}</th>
                         <th class="px-4 py-2.5"></th>
                     </tr>
                 </thead>
@@ -197,7 +200,7 @@ const deleteUser = async (u) => {
                                 </div>
                                 <div class="leading-tight">
                                     <div class="font-medium">{{ u.name }}</div>
-                                    <div v-if="u.id === me" class="font-mono text-[9.5px] text-violet-600">YOU</div>
+                                    <div v-if="u.id === me" class="font-mono text-[9.5px] text-violet-600">{{ t('super_admin.you') }}</div>
                                 </div>
                             </div>
                         </td>
@@ -220,22 +223,22 @@ const deleteUser = async (u) => {
                                     <span class="absolute top-0.5 left-0.5 h-3 w-3 bg-white rounded-full transition-transform"
                                           :class="u.is_super_admin ? 'translate-x-3' : ''"></span>
                                 </span>
-                                <span v-if="u.is_super_admin" class="font-mono text-[10px] text-violet-700 font-bold tracking-wider">SUPER</span>
+                                <span v-if="u.is_super_admin" class="font-mono text-[10px] text-violet-700 font-bold tracking-wider">{{ t('super_admin.th_super_short') }}</span>
                             </button>
                         </td>
                         <td class="px-4 py-2.5 text-right whitespace-nowrap">
                             <button @click="openGrant(u)"
                                     class="text-[11.5px] text-emerald-600 hover:text-emerald-800 hover:underline mr-3"
                                     :class="{ 'opacity-40 pointer-events-none': ! u.orgs_for_grant?.length }">
-                                Grant sub
+                                {{ t('super_admin.grant_sub') }}
                             </button>
                             <button @click="resetPassword(u)" class="text-[11.5px] text-brand-indigo hover:underline mr-3"
                                     :class="u.id === me ? 'opacity-40 pointer-events-none' : ''">
-                                Reset password
+                                {{ t('super_admin.reset_pw') }}
                             </button>
                             <button @click="deleteUser(u)" class="text-[11.5px] text-rose-500 hover:text-rose-700"
                                     :class="u.id === me ? 'opacity-40 pointer-events-none' : ''">
-                                Delete
+                                {{ t('super_admin.delete') }}
                             </button>
                         </td>
                     </tr>
@@ -256,8 +259,8 @@ const deleteUser = async (u) => {
             <div class="glass-strong rounded-2xl max-w-xl w-full p-6 shadow-glass-lg">
                 <div class="flex items-center justify-between mb-5">
                     <div>
-                        <div class="font-mono text-[10.5px] tracking-widest text-ink-500">CREATE USER</div>
-                        <div class="mt-1 text-[18px] font-bold tracking-tight">Hand-create an account</div>
+                        <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.create_user_title') }}</div>
+                        <div class="mt-1 text-[18px] font-bold tracking-tight">{{ t('super_admin.create_user_subtitle') }}</div>
                     </div>
                     <button @click="showCreate = false" class="text-ink-400 hover:text-ink-700 text-[20px]">×</button>
                 </div>
@@ -266,13 +269,13 @@ const deleteUser = async (u) => {
                     <!-- Identity -->
                     <div class="grid md:grid-cols-2 gap-3">
                         <div>
-                            <label class="font-mono text-[10.5px] tracking-widest text-ink-500">FULL NAME</label>
+                            <label class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.field_full_name') }}</label>
                             <input v-model="createForm.name" type="text" autofocus
                                    class="mt-1 w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                             <p v-if="createForm.errors.name" class="mt-1 text-[12px] text-rose-500">{{ createForm.errors.name }}</p>
                         </div>
                         <div>
-                            <label class="font-mono text-[10.5px] tracking-widest text-ink-500">EMAIL</label>
+                            <label class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.field_email') }}</label>
                             <input v-model="createForm.email" type="email"
                                    class="mt-1 w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                             <p v-if="createForm.errors.email" class="mt-1 text-[12px] text-rose-500">{{ createForm.errors.email }}</p>
@@ -280,8 +283,8 @@ const deleteUser = async (u) => {
                     </div>
 
                     <div>
-                        <label class="font-mono text-[10.5px] tracking-widest text-ink-500">PASSWORD <span class="text-ink-400 normal-case tracking-normal">(leave blank to auto-generate)</span></label>
-                        <input v-model="createForm.password" type="text" placeholder="Auto-generated if empty"
+                        <label class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.field_password_label') }} <span class="text-ink-400 normal-case tracking-normal">{{ t('super_admin.field_password_hint') }}</span></label>
+                        <input v-model="createForm.password" type="text" :placeholder="t('super_admin.field_password_placeholder')"
                                class="mt-1 w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] font-mono focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                         <p v-if="createForm.errors.password" class="mt-1 text-[12px] text-rose-500">{{ createForm.errors.password }}</p>
                     </div>
@@ -289,19 +292,19 @@ const deleteUser = async (u) => {
                     <label class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-violet-50 border border-violet-200 cursor-pointer">
                         <input type="checkbox" v-model="createForm.is_super_admin" class="h-4 w-4" />
                         <div class="flex-1">
-                            <div class="text-[13px] font-semibold">Mark as super-admin</div>
-                            <div class="text-[11.5px] text-violet-700">Full platform access — only enable for trusted admins.</div>
+                            <div class="text-[13px] font-semibold">{{ t('super_admin.mark_super_admin') }}</div>
+                            <div class="text-[11.5px] text-violet-700">{{ t('super_admin.mark_super_admin_help') }}</div>
                         </div>
                     </label>
 
                     <!-- Attach mode tabs -->
                     <div>
-                        <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-2 block">ORGANIZATION</label>
+                        <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-2 block">{{ t('super_admin.field_organization') }}</label>
                         <div class="grid grid-cols-3 gap-2">
                             <button type="button" v-for="m in [
-                                { v: 'new_org', label: 'New org + gift plan' },
-                                { v: 'existing_org', label: 'Add to existing org' },
-                                { v: 'none', label: 'No org (test user)' },
+                                { v: 'new_org', label: t('super_admin.attach_new_org_label') },
+                                { v: 'existing_org', label: t('super_admin.attach_existing_org_label') },
+                                { v: 'none', label: t('super_admin.attach_none_label') },
                             ]" :key="m.v"
                                 @click="createForm.attach_mode = m.v"
                                 class="rounded-xl border px-3 py-2.5 text-[12px] transition"
@@ -317,14 +320,14 @@ const deleteUser = async (u) => {
                     <div v-if="createForm.attach_mode === 'new_org'" class="rounded-xl bg-white/70 border border-ink-200/60 p-4 space-y-3">
                         <div class="grid md:grid-cols-2 gap-3">
                             <div>
-                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500">ORG NAME</label>
+                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.field_org_name') }}</label>
                                 <input v-model="createForm.org_name" @input="onOrgNameInput" type="text"
                                        class="mt-1 w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                                 <p v-if="createForm.errors.org_name" class="mt-1 text-[12px] text-rose-500">{{ createForm.errors.org_name }}</p>
                             </div>
                             <div>
-                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500">SLUG (subdomain)</label>
-                                <input v-model="createForm.org_slug" type="text" placeholder="myclub"
+                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.field_slug') }}</label>
+                                <input v-model="createForm.org_slug" type="text" :placeholder="t('super_admin.field_slug_placeholder')"
                                        class="mt-1 w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] font-mono focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                                 <p v-if="createForm.errors.org_slug" class="mt-1 text-[12px] text-rose-500">{{ createForm.errors.org_slug }}</p>
                             </div>
@@ -332,36 +335,36 @@ const deleteUser = async (u) => {
 
                         <div class="grid md:grid-cols-2 gap-3">
                             <div>
-                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500">GIFT PLAN</label>
+                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.field_gift_plan') }}</label>
                                 <select v-model="createForm.plan"
                                         class="mt-1 w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] capitalize focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
                                     <option v-for="p in plans" :key="p" :value="p">{{ p }}</option>
                                 </select>
                             </div>
                             <div v-if="isPaidPlan">
-                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500">GIFT DURATION (MONTHS)</label>
+                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.field_gift_duration') }}</label>
                                 <input v-model.number="createForm.gift_months" type="number" min="1" max="60"
                                        class="mt-1 w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                             </div>
                         </div>
                         <p v-if="isPaidPlan" class="text-[11.5px] text-ink-500">
-                            A manual subscription is created — no payment row, auto-renew is off, expires after {{ createForm.gift_months }} month(s).
+                            {{ t('super_admin.paid_plan_note', { months: createForm.gift_months }) }}
                         </p>
                     </div>
 
                     <!-- Existing org branch -->
                     <div v-else-if="createForm.attach_mode === 'existing_org'" class="rounded-xl bg-white/70 border border-ink-200/60 p-4 space-y-3">
                         <div>
-                            <label class="font-mono text-[10.5px] tracking-widest text-ink-500">ORGANIZATION</label>
+                            <label class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.field_organization') }}</label>
                             <select v-model.number="createForm.organization_id"
                                     class="mt-1 w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
-                                <option :value="null" disabled>— pick an org —</option>
+                                <option :value="null" disabled>{{ t('super_admin.pick_org_placeholder') }}</option>
                                 <option v-for="o in orgs" :key="o.id" :value="o.id">{{ o.name }} ({{ o.slug }} · {{ o.plan }})</option>
                             </select>
                             <p v-if="createForm.errors.organization_id" class="mt-1 text-[12px] text-rose-500">{{ createForm.errors.organization_id }}</p>
                         </div>
                         <div>
-                            <label class="font-mono text-[10.5px] tracking-widest text-ink-500">ROLE</label>
+                            <label class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.field_role') }}</label>
                             <select v-model="createForm.role"
                                     class="mt-1 w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
                                 <option v-for="r in roles" :key="r" :value="r">{{ r }}</option>
@@ -370,13 +373,13 @@ const deleteUser = async (u) => {
                     </div>
 
                     <div v-else class="rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-[12.5px] text-amber-800">
-                        No organization will be attached. Useful for super-admin-only logins or quick test accounts.
+                        {{ t('super_admin.no_org_note') }}
                     </div>
 
                     <div class="flex gap-2 pt-2">
-                        <button type="button" @click="showCreate = false" class="btn-ghost py-2 px-4 text-[13px] flex-1">Cancel</button>
+                        <button type="button" @click="showCreate = false" class="btn-ghost py-2 px-4 text-[13px] flex-1">{{ t('common.cancel') }}</button>
                         <button type="submit" class="btn-primary py-2 px-4 text-[13px] flex-1" :disabled="createForm.processing">
-                            {{ createForm.processing ? 'Creating…' : 'Create user' }}
+                            {{ createForm.processing ? t('super_admin.creating') : t('super_admin.create_user') }}
                         </button>
                     </div>
                 </form>
@@ -394,10 +397,9 @@ const deleteUser = async (u) => {
                                 <svg class="h-5 w-5 text-emerald-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             </span>
                             <div class="flex-1 min-w-0">
-                                <h3 class="text-[16px] font-bold tracking-tight">Grant subscription</h3>
+                                <h3 class="text-[16px] font-bold tracking-tight">{{ t('super_admin.grant_heading') }}</h3>
                                 <p class="mt-1 text-[13px] text-ink-600 leading-relaxed">
-                                    Manually mark <strong>{{ grantUser.name }}</strong>'s organization as active until the chosen date.
-                                    Auto-renew stays off — useful for free trial / test / comp access.
+                                    {{ t('super_admin.grant_body', { name: grantUser.name }) }}
                                 </p>
                             </div>
                         </div>
@@ -405,27 +407,27 @@ const deleteUser = async (u) => {
                         <form @submit.prevent="submitGrant" class="space-y-3.5">
                             <!-- Org picker — only shown when user has 2+ orgs -->
                             <div v-if="grantUser.orgs_for_grant.length > 1">
-                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">ORGANIZATION</label>
+                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">{{ t('super_admin.field_organization') }}</label>
                                 <select v-model.number="grantForm.organization_id"
                                         class="w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
                                     <option v-for="o in grantUser.orgs_for_grant" :key="o.id" :value="o.id">
-                                        {{ o.name }} ({{ o.plan }}{{ o.sub_until ? ` · until ${o.sub_until}` : '' }})
+                                        {{ t('super_admin.grant_org_until', { name: o.name, plan: o.plan, until: o.sub_until ? t('super_admin.grant_until_suffix', { date: o.sub_until }) : '' }) }}
                                     </option>
                                 </select>
                             </div>
                             <!-- Single org — show as a read-only card -->
                             <div v-else class="rounded-xl bg-white/60 border border-ink-200/60 px-3 py-2.5">
-                                <div class="font-mono text-[10.5px] tracking-widest text-ink-500">ORGANIZATION</div>
+                                <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.field_organization') }}</div>
                                 <div class="text-[14px] font-semibold mt-0.5">{{ grantUser.orgs_for_grant[0].name }}</div>
                                 <div class="font-mono text-[11px] text-ink-500">
-                                    current: {{ grantUser.orgs_for_grant[0].plan }}
-                                    <span v-if="grantUser.orgs_for_grant[0].sub_until">· active until {{ grantUser.orgs_for_grant[0].sub_until }}</span>
-                                    <span v-else>· no active subscription</span>
+                                    {{ t('super_admin.grant_current', { plan: grantUser.orgs_for_grant[0].plan }) }}
+                                    <span v-if="grantUser.orgs_for_grant[0].sub_until">{{ t('super_admin.grant_active_until', { date: grantUser.orgs_for_grant[0].sub_until }) }}</span>
+                                    <span v-else>{{ t('super_admin.grant_no_active') }}</span>
                                 </div>
                             </div>
 
                             <div>
-                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">PLAN</label>
+                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">{{ t('super_admin.grant_plan') }}</label>
                                 <select v-model="grantForm.plan"
                                         class="w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-[14px] capitalize focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
                                     <option v-for="p in plans" :key="p" :value="p">{{ p }}</option>
@@ -434,12 +436,12 @@ const deleteUser = async (u) => {
                             </div>
 
                             <div>
-                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">ACTIVE UNTIL</label>
+                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">{{ t('super_admin.grant_active_until_label') }}</label>
                                 <input v-model="grantForm.until" type="date" :min="todayIso"
                                        class="w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                                 <p v-if="grantForm.errors.until" class="mt-1 text-[12px] text-rose-500">{{ grantForm.errors.until }}</p>
                                 <div class="mt-2 flex gap-1.5 flex-wrap">
-                                    <button v-for="(d, label) in { '+7 days': 7, '+30 days': 30, '+90 days': 90, '+1 year': 365 }"
+                                    <button v-for="(d, label) in { [t('super_admin.preset_7d')]: 7, [t('super_admin.preset_30d')]: 30, [t('super_admin.preset_90d')]: 90, [t('super_admin.preset_1y')]: 365 }"
                                             :key="label" type="button" @click="grantForm.until = todayPlus(d)"
                                             class="text-[11px] font-mono px-2 py-1 rounded-md border border-ink-200 hover:bg-white text-ink-600">
                                         {{ label }}
@@ -448,18 +450,18 @@ const deleteUser = async (u) => {
                             </div>
 
                             <div>
-                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">NOTE <span class="text-ink-400">(optional, audit log)</span></label>
+                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">{{ t('super_admin.grant_note') }} <span class="text-ink-400">{{ t('super_admin.grant_note_optional') }}</span></label>
                                 <textarea v-model="grantForm.note" rows="2"
-                                          placeholder="e.g. Free trial granted by support"
+                                          :placeholder="t('super_admin.grant_note_placeholder')"
                                           class="w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-[13.5px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"></textarea>
                             </div>
 
                             <div class="flex gap-2 justify-end pt-2">
-                                <button type="button" @click="closeGrant" class="btn-ghost py-2 px-4 text-[13px]">Cancel</button>
+                                <button type="button" @click="closeGrant" class="btn-ghost py-2 px-4 text-[13px]">{{ t('common.cancel') }}</button>
                                 <button type="submit" :disabled="grantForm.processing"
                                         class="btn-primary py-2 px-4 text-[13px]"
                                         :class="{ 'opacity-60 pointer-events-none': grantForm.processing }">
-                                    {{ grantForm.processing ? 'Saving…' : 'Grant subscription' }}
+                                    {{ grantForm.processing ? t('super_admin.saving_dots') : t('super_admin.grant_button') }}
                                 </button>
                             </div>
                         </form>

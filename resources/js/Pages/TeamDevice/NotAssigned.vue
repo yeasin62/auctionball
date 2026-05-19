@@ -9,12 +9,12 @@ defineProps({
     reason: String,
 });
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const logout = () => router.post(route('logout'));
 </script>
 
 <template>
-    <Head title="No team assigned" />
+    <Head :title="t('team_device.not_assigned_head')" />
     <div class="page-bg min-h-[100dvh] flex flex-col">
         <header class="px-4 py-3 flex items-center justify-between bg-white/70 backdrop-blur-md border-b border-ink-200/60">
             <Link href="/" class="flex items-center gap-2">
@@ -41,17 +41,13 @@ const logout = () => router.post(route('logout'));
                     </svg>
                 </div>
                 <h1 class="text-[22px] font-extrabold tracking-tight">
-                    {{ locale === 'bn' ? 'কোনো দল বরাদ্দ নেই' : 'No team assigned to you' }}
+                    {{ t('team_device.not_assigned_heading') }}
                 </h1>
                 <p class="mt-3 text-[14px] text-ink-500 leading-relaxed">
-                    {{ locale === 'bn'
-                        ? `${org?.name}-এ আপনি ${role || 'একজন সদস্য'} হিসেবে আছেন কিন্তু এই মৌসুমে কোনো দলের সাথে যুক্ত নন। বিড করার জন্য অর্গ অ্যাডমিনকে আপনাকে একটি দলের অধিনায়ক হিসেবে বরাদ্দ করতে বলুন।`
-                        : `You're a ${role || 'member'} of ${org?.name} but no team is bound to your account in the current season. Ask an org admin to assign you as a team owner before you can place bids.` }}
+                    {{ t('team_device.not_assigned_body', { role: role || t('team_device.not_assigned_default_role'), org: org?.name }) }}
                 </p>
                 <p v-if="reason === 'team_not_in_active_season'" class="mt-3 text-[12px] font-mono text-ink-400">
-                    {{ locale === 'bn'
-                        ? 'আপনার পুরনো দল সক্রিয় মৌসুমে নেই।'
-                        : 'Your old team is not part of the currently active season.' }}
+                    {{ t('team_device.not_assigned_old_team') }}
                 </p>
             </div>
         </main>

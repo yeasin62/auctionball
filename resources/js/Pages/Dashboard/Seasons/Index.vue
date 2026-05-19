@@ -83,7 +83,7 @@ const saveCategories = (season) => {
         .map(c => ({ name: (c.name || '').trim(), base_price: parseInt(c.base_price, 10) || 0 }))
         .filter(c => c.name);
     if (! cats.length) {
-        alertDialog({ title: 'At least one category is required.', variant: 'warning' });
+        alertDialog({ title: t('seasons_page.confirm_at_least_one_category'), variant: 'warning' });
         return;
     }
     useForm({ categories: cats }).post(route('dashboard.seasons.categories', season.id), { preserveScroll: true });
@@ -106,20 +106,20 @@ const submit = () => form.post(route('dashboard.seasons.store'), {
 
 const activate = async (season) => {
     if (! await confirm({
-        title: `Make "${season.name}" the active season?`,
-        description: 'The currently active season (if any) will be deactivated. Players, teams, and the auction will switch to this season.',
+        title: t('seasons_page.confirm_activate_title', { name: season.name }),
+        description: t('seasons_page.confirm_activate_body'),
         variant: 'warning',
-        confirmText: 'Set active',
+        confirmText: t('seasons_page.set_active'),
     })) return;
     useForm({}).post(route('dashboard.seasons.activate', season.id));
 };
 
 const deactivate = async (season) => {
     if (! await confirm({
-        title: `Deactivate "${season.name}"?`,
-        description: 'The season is kept (with all its players, teams, and bid history) but the dashboard will show no active season — live auction, big screen, and bidding pages will show "No active season" until you activate one.',
+        title: t('seasons_page.confirm_deactivate_title', { name: season.name }),
+        description: t('seasons_page.confirm_deactivate_body'),
         variant: 'warning',
-        confirmText: 'Set inactive',
+        confirmText: t('seasons_page.set_inactive'),
     })) return;
     useForm({}).post(route('dashboard.seasons.deactivate', season.id), { preserveScroll: true });
 };
@@ -132,18 +132,18 @@ const deleteSeason = async (season) => {
     // Build a description that names what's about to be wiped so the admin
     // sees the cascade impact before they confirm.
     const parts = [];
-    if (season.players_count > 0) parts.push(`${season.players_count} players`);
-    if (season.teams_count   > 0) parts.push(`${season.teams_count} teams`);
-    if (season.bids_count    > 0) parts.push(`${season.bids_count} bids`);
+    if (season.players_count > 0) parts.push(`${season.players_count} ${t('seasons_page.stat_players')}`);
+    if (season.teams_count   > 0) parts.push(`${season.teams_count} ${t('seasons_page.stat_teams')}`);
+    if (season.bids_count    > 0) parts.push(`${season.bids_count} ${t('seasons_page.stat_bids')}`);
     const cascade = parts.length
-        ? `Will permanently delete ${parts.join(', ')} and all auction state for this season. This cannot be undone.`
-        : 'Will permanently delete this season. This cannot be undone.';
+        ? t('seasons_page.confirm_delete_cascade', { parts: parts.join(', ') })
+        : t('seasons_page.confirm_delete_simple');
 
     if (! await confirm({
-        title: `Delete season "${season.name}"?`,
+        title: t('seasons_page.confirm_delete_title', { name: season.name }),
         description: cascade,
         variant: 'danger',
-        confirmText: 'Delete season',
+        confirmText: t('seasons_page.delete_season'),
     })) return;
 
     router.delete(route('dashboard.seasons.destroy', season.id), { preserveScroll: true });
@@ -151,27 +151,27 @@ const deleteSeason = async (season) => {
 
 const regenerate = async (season) => {
     if (! await confirm({
-        title: 'Generate a new registration link?',
-        description: 'The current public registration URL will stop working immediately. Anyone who has already submitted is unaffected — only future visitors with the old link will see a 404.',
+        title: t('seasons_page.regenerate_link_title'),
+        description: t('seasons_page.regenerate_link_body'),
         variant: 'warning',
-        confirmText: 'Generate new link',
+        confirmText: t('seasons_page.regenerate_link_button'),
     })) return;
     useForm({}).post(route('dashboard.seasons.registration.regenerate', season.id), { preserveScroll: true });
 };
 
 const changeIncrement = async (season) => {
     const raw = await promptDialog({
-        title: `BDT bid step for "${season.name}"`,
-        description: 'Each new bid must exceed the current by at least this many ৳.',
+        title: t('seasons_page.bid_step_bdt_title', { name: season.name }),
+        description: t('seasons_page.bid_step_bdt_body'),
         defaultValue: season.bid_increment || 1000,
         inputType: 'number',
         inputMin: 1,
-        confirmText: 'Save',
+        confirmText: t('common.save'),
     });
     if (raw === null) return;
     const v = parseInt(raw, 10);
     if (! Number.isFinite(v) || v < 1) {
-        await alertDialog({ title: 'Invalid value', description: 'Enter a positive integer.', variant: 'warning' });
+        await alertDialog({ title: t('seasons_page.invalid_value_title'), description: t('seasons_page.invalid_value_body'), variant: 'warning' });
         return;
     }
     router.patch(route('dashboard.seasons.update', season.id), { bid_increment: v }, { preserveScroll: true });
@@ -179,17 +179,17 @@ const changeIncrement = async (season) => {
 
 const changeIncrementUsd = async (season) => {
     const raw = await promptDialog({
-        title: `USD bid step for "${season.name}"`,
-        description: 'Each new bid must exceed the current by at least this many $.',
+        title: t('seasons_page.bid_step_usd_title', { name: season.name }),
+        description: t('seasons_page.bid_step_usd_body'),
         defaultValue: season.bid_increment_usd || 10,
         inputType: 'number',
         inputMin: 1,
-        confirmText: 'Save',
+        confirmText: t('common.save'),
     });
     if (raw === null) return;
     const v = parseInt(raw, 10);
     if (! Number.isFinite(v) || v < 1) {
-        await alertDialog({ title: 'Invalid value', description: 'Enter a positive integer.', variant: 'warning' });
+        await alertDialog({ title: t('seasons_page.invalid_value_title'), description: t('seasons_page.invalid_value_body'), variant: 'warning' });
         return;
     }
     router.patch(route('dashboard.seasons.update', season.id), { bid_increment_usd: v }, { preserveScroll: true });
@@ -198,7 +198,7 @@ const changeIncrementUsd = async (season) => {
 const publicUrl = (token) => `${window.location.origin}/r/${token}`;
 const copyLink  = async (link) => {
     await navigator.clipboard.writeText(link);
-    alertDialog({ title: 'Copied', description: 'Registration link copied to clipboard.', variant: 'info' });
+    alertDialog({ title: t('seasons_page.copied_title'), description: t('seasons_page.copied_body'), variant: 'info' });
 };
 
 // ============== Custom registration form builder ==============
@@ -282,7 +282,7 @@ const toggleConditional = (season, field) => {
     }
     const others = ensureBuilder(season).filter((g) => g.id !== field.id);
     if (! others.length) {
-        alertDialog({ title: 'Need another field first', description: 'Conditions depend on the value of another field. Add at least one other field, then come back and turn on the conditional rule.', variant: 'warning' });
+        alertDialog({ title: t('seasons_page.need_other_field_title'), description: t('seasons_page.need_other_field_body'), variant: 'warning' });
         return;
     }
     field.conditional = { field: others[0].id, operator: 'equals', value: '' };
@@ -338,20 +338,20 @@ const atLimit = props.used >= props.limits.seasons;
 </script>
 
 <template>
-    <DashboardLayout title="Seasons">
+    <DashboardLayout :title="t('seasons_page.title')">
         <template #actions>
             <button @click="showCreate = !showCreate"
                     class="btn-primary py-2 px-4 text-[13px]"
                     :class="{ 'opacity-50 pointer-events-none': atLimit }"
                     :disabled="atLimit">
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
-                New season
+                {{ t('seasons_page.new_season') }}
             </button>
         </template>
 
         <div v-if="atLimit" class="mb-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-[13px] text-amber-800">
-            You have used <strong>{{ used }} of {{ limits.seasons }}</strong> seasons on your plan.
-            <a href="/dashboard/billing" class="underline font-medium">Upgrade</a> to add more.
+            {{ t('seasons_page.at_limit_prefix') }}<strong>{{ used }} / {{ limits.seasons }}</strong>
+            <a href="/dashboard/billing" class="underline font-medium">{{ t('seasons_page.upgrade_to_add') }}</a>{{ t('seasons_page.at_limit_suffix') }}
         </div>
 
         <!-- Create form -->
@@ -374,10 +374,10 @@ const atLimit = props.used >= props.limits.seasons;
                 <Field :label="t('forms.seasons.budget_per_team')" :error="form.errors.budget_per_team" required>
                     <CurrencyField v-model="form.budget_per_team" />
                 </Field>
-                <Field label="Bid step (BDT)" hint="Each new bid in BDT mode must beat the current bid by this many ৳. Used as-is — no conversion." :error="form.errors.bid_increment">
+                <Field :label="t('seasons_page.bid_step_bdt_label')" :hint="t('seasons_page.bid_step_bdt_hint')" :error="form.errors.bid_increment">
                     <TextField v-model="form.bid_increment" type="number" leading="৳" />
                 </Field>
-                <Field label="Bid step (USD)" hint="Each new bid in USD mode must beat the current bid by this many $. Independent of BDT step — no conversion." :error="form.errors.bid_increment_usd">
+                <Field :label="t('seasons_page.bid_step_usd_label')" :hint="t('seasons_page.bid_step_usd_hint')" :error="form.errors.bid_increment_usd">
                     <TextField v-model="form.bid_increment_usd" type="number" leading="$" />
                 </Field>
                 <Field :label="t('forms.seasons.start_date')" :error="form.errors.start_date">
@@ -404,51 +404,51 @@ const atLimit = props.used >= props.limits.seasons;
                             <span class="text-[16px] font-bold tracking-tight">{{ s.name }}</span>
                             <span class="font-mono text-[11px] text-ink-500">· {{ s.year }}</span>
                             <span class="font-mono text-[10px] tracking-widest px-2 py-0.5 rounded-full bg-ink-100 text-ink-600 uppercase">{{ s.sport || 'cricket' }}</span>
-                            <span v-if="s.is_active" class="px-2 py-0.5 rounded-full font-mono text-[10px] tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-100">ACTIVE</span>
+                            <span v-if="s.is_active" class="px-2 py-0.5 rounded-full font-mono text-[10px] tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-100">{{ t('seasons_page.badge_active') }}</span>
                             <span v-else class="px-2 py-0.5 rounded-full font-mono text-[10px] tracking-widest bg-ink-100 text-ink-500">{{ s.status?.toUpperCase() }}</span>
-                            <span v-if="s.registration_open" class="px-2 py-0.5 rounded-full font-mono text-[10px] tracking-widest bg-blue-50 text-blue-700 border border-blue-100">PUBLIC REGISTRATION OPEN</span>
+                            <span v-if="s.registration_open" class="px-2 py-0.5 rounded-full font-mono text-[10px] tracking-widest bg-blue-50 text-blue-700 border border-blue-100">{{ t('seasons_page.badge_public_open') }}</span>
                         </div>
                         <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-[12px] font-mono text-ink-500">
-                            <span><strong class="text-ink-700">{{ s.players_count }}</strong> players</span>
-                            <span><strong class="text-ink-700">{{ s.teams_count }}</strong> teams</span>
-                            <span><strong class="text-ink-700">{{ s.bids_count }}</strong> bids</span>
-                            <span>budget {{ fmt(s.budget_per_team) }} /team</span>
+                            <span><strong class="text-ink-700">{{ s.players_count }}</strong> {{ t('seasons_page.stat_players') }}</span>
+                            <span><strong class="text-ink-700">{{ s.teams_count }}</strong> {{ t('seasons_page.stat_teams') }}</span>
+                            <span><strong class="text-ink-700">{{ s.bids_count }}</strong> {{ t('seasons_page.stat_bids') }}</span>
+                            <span>{{ t('seasons_page.budget_per_team_short', { amount: fmt(s.budget_per_team) }) }}</span>
                             <span class="inline-flex items-center gap-1">
-                                <span>step</span>
+                                <span>{{ t('seasons_page.step') }}</span>
                                 <strong class="text-ink-700">৳{{ s.bid_increment || 1000 }}</strong>
-                                <button type="button" @click="changeIncrement(s)" class="text-brand-indigo hover:underline ml-1">edit</button>
+                                <button type="button" @click="changeIncrement(s)" class="text-brand-indigo hover:underline ml-1">{{ t('seasons_page.edit_inline') }}</button>
                             </span>
                             <span class="inline-flex items-center gap-1">
-                                <span>step</span>
+                                <span>{{ t('seasons_page.step') }}</span>
                                 <strong class="text-ink-700">${{ s.bid_increment_usd || 10 }}</strong>
-                                <button type="button" @click="changeIncrementUsd(s)" class="text-brand-indigo hover:underline ml-1">edit</button>
+                                <button type="button" @click="changeIncrementUsd(s)" class="text-brand-indigo hover:underline ml-1">{{ t('seasons_page.edit_inline') }}</button>
                             </span>
                         </div>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
-                    <button v-if="!s.is_active" @click="activate(s)" class="btn-ghost py-2 px-4 text-[13px] whitespace-nowrap">Set active</button>
+                    <button v-if="!s.is_active" @click="activate(s)" class="btn-ghost py-2 px-4 text-[13px] whitespace-nowrap">{{ t('seasons_page.set_active') }}</button>
                     <button v-else @click="deactivate(s)"
                             class="py-2 px-4 text-[13px] font-medium rounded-xl border whitespace-nowrap bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200 transition-colors">
-                        Set inactive
+                        {{ t('seasons_page.set_inactive') }}
                     </button>
                     <button @click="expandedEdit = expandedEdit === s.id ? null : s.id"
                             class="btn-ghost py-2 px-4 text-[13px] whitespace-nowrap"
                             :class="{ 'bg-brand-indigo/10 border-brand-indigo/30 text-brand-indigo': expandedEdit === s.id }">
                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                        {{ expandedEdit === s.id ? 'Hide edit' : 'Edit' }}
+                        {{ expandedEdit === s.id ? t('seasons_page.hide_edit') : t('seasons_page.edit') }}
                     </button>
                     <a :href="`/dashboard/seasons/${s.id}/export.pdf`" target="_blank" class="btn-ghost py-2 px-4 text-[13px] whitespace-nowrap">
-                        Summary PDF
+                        {{ t('seasons_page.summary_pdf') }}
                     </a>
                     <button @click="expandedRegistration = expandedRegistration === s.id ? null : s.id"
                             class="btn-ghost py-2 px-4 text-[13px] whitespace-nowrap">
-                        {{ expandedRegistration === s.id ? 'Hide registration' : 'Public registration' }}
+                        {{ expandedRegistration === s.id ? t('seasons_page.hide_registration') : t('seasons_page.public_registration') }}
                     </button>
                     <button @click="expandedForm = expandedForm === s.id ? null : s.id"
                             class="btn-ghost py-2 px-4 text-[13px] whitespace-nowrap"
                             :class="{ 'bg-violet-50 border-violet-200 text-violet-700': expandedForm === s.id }">
                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                        {{ expandedForm === s.id ? 'Hide form builder' : 'Form builder' }}
+                        {{ expandedForm === s.id ? t('seasons_page.hide_form_builder') : t('seasons_page.form_builder') }}
                         <span v-if="(s.registration_form_schema?.length || 0) > 0"
                               class="ml-1 px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 font-mono text-[10px]">
                             {{ s.registration_form_schema.length }}
@@ -458,7 +458,7 @@ const atLimit = props.used >= props.limits.seasons;
                             class="btn-ghost py-2 px-4 text-[13px] whitespace-nowrap"
                             :class="{ 'bg-emerald-50 border-emerald-200 text-emerald-700': expandedCategories === s.id }">
                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
-                        {{ expandedCategories === s.id ? 'Hide categories' : 'Player categories' }}
+                        {{ expandedCategories === s.id ? t('seasons_page.hide_categories') : t('seasons_page.player_categories') }}
                         <span v-if="(s.player_categories?.length || 0) > 0"
                               class="ml-1 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-mono text-[10px]">
                             {{ s.player_categories.length }}
@@ -467,7 +467,7 @@ const atLimit = props.used >= props.limits.seasons;
                     <button @click="deleteSeason(s)"
                             class="py-2 px-4 text-[13px] font-medium rounded-xl border whitespace-nowrap bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 transition-colors">
                         <svg class="inline h-3.5 w-3.5 -mt-0.5 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/></svg>
-                        Delete
+                        {{ t('seasons_page.delete') }}
                     </button>
                     </div>
                 </div>
@@ -476,39 +476,39 @@ const atLimit = props.used >= props.limits.seasons;
                 <div v-if="expandedEdit === s.id" class="mt-5 pt-5 border-t border-ink-200/60 space-y-3">
                     <div class="flex items-start justify-between gap-3 flex-wrap">
                         <div>
-                            <div class="font-mono text-[10.5px] tracking-widest text-brand-indigo">/ EDIT SEASON</div>
-                            <p class="text-[13px] text-ink-700 mt-1">Update the season's name, year, sport, budget and dates.</p>
+                            <div class="font-mono text-[10.5px] tracking-widest text-brand-indigo">{{ t('seasons_page.edit_section_title') }}</div>
+                            <p class="text-[13px] text-ink-700 mt-1">{{ t('seasons_page.edit_section_subtitle') }}</p>
                         </div>
                         <div class="flex gap-2 shrink-0">
-                            <button type="button" @click="resetEditDraft(s)" class="text-[11.5px] text-ink-500 hover:text-ink-900 px-2">Reset</button>
-                            <button type="button" @click="saveEdit(s)" class="btn-primary py-2 px-4 text-[12.5px]">Save changes</button>
+                            <button type="button" @click="resetEditDraft(s)" class="text-[11.5px] text-ink-500 hover:text-ink-900 px-2">{{ t('seasons_page.reset') }}</button>
+                            <button type="button" @click="saveEdit(s)" class="btn-primary py-2 px-4 text-[12.5px]">{{ t('seasons_page.save_changes') }}</button>
                         </div>
                     </div>
 
                     <div class="grid md:grid-cols-2 gap-4">
-                        <Field label="Season name">
-                            <TextField v-model="ensureEdit(s).name" placeholder="BPL 2026 Spring Cup" />
+                        <Field :label="t('forms.seasons.name')">
+                            <TextField v-model="ensureEdit(s).name" :placeholder="t('seasons_page.season_name_placeholder')" />
                         </Field>
-                        <Field label="Year">
+                        <Field :label="t('forms.seasons.year')">
                             <TextField :modelValue="ensureEdit(s).year"
                                        @update:modelValue="(v) => ensureEdit(s).year = v"
-                                       type="number" placeholder="2026" />
+                                       type="number" :placeholder="t('seasons_page.year_placeholder')" />
                         </Field>
-                        <Field label="Sport">
+                        <Field :label="t('forms.seasons.sport')">
                             <select v-model="ensureEdit(s).sport" class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
-                                <option value="cricket">Cricket</option>
-                                <option value="football">Football</option>
+                                <option value="cricket">{{ t('forms.seasons.sport_cricket') }}</option>
+                                <option value="football">{{ t('forms.seasons.sport_football') }}</option>
                             </select>
                         </Field>
-                        <Field label="Budget per team (৳)">
+                        <Field :label="t('seasons_page.budget_per_team_label')">
                             <CurrencyField :modelValue="ensureEdit(s).budget_per_team"
                                            @update:modelValue="(v) => ensureEdit(s).budget_per_team = v" />
                         </Field>
-                        <Field label="Start date">
+                        <Field :label="t('forms.seasons.start_date')">
                             <input type="date" v-model="ensureEdit(s).start_date"
                                    class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                         </Field>
-                        <Field label="End date">
+                        <Field :label="t('forms.seasons.end_date')">
                             <input type="date" v-model="ensureEdit(s).end_date"
                                    class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                         </Field>
@@ -519,37 +519,37 @@ const atLimit = props.used >= props.limits.seasons;
                 <div v-if="expandedRegistration === s.id" class="mt-5 pt-5 border-t border-ink-200/60 space-y-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="font-mono text-[10.5px] tracking-widest text-ink-500">/ public registration link</div>
+                            <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('seasons_page.public_reg_label') }}</div>
                             <p class="text-[13px] text-ink-600 mt-1 max-w-lg">
-                                Share a public URL where players can self-register. You review and approve them in the Players page.
+                                {{ t('seasons_page.public_reg_subtitle') }}
                             </p>
                         </div>
                         <Toggle :model-value="!!s.registration_open"
                                 @update:model-value="(v) => toggleReg(s, { open: v, registration_fee: s.registration_fee, registration_instructions: s.registration_instructions })"
-                                on-label="OPEN" off-label="CLOSED" />
+                                :on-label="t('seasons_page.toggle_open')" :off-label="t('seasons_page.toggle_closed')" />
                     </div>
 
                     <div v-if="s.registration_open && s.registration_token" class="rounded-xl bg-white/70 border border-ink-200/60 p-4">
-                        <div class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1.5">SHAREABLE URL</div>
+                        <div class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1.5">{{ t('seasons_page.shareable_url') }}</div>
                         <div class="flex items-center gap-2">
                             <code class="flex-1 font-mono text-[12.5px] truncate bg-white px-3 py-2 rounded-lg border border-ink-200">
                                 {{ publicUrl(s.registration_token) }}
                             </code>
-                            <button @click="copyLink(publicUrl(s.registration_token))" class="btn-ghost py-2 px-3 text-[12px] whitespace-nowrap">Copy</button>
-                            <a :href="publicUrl(s.registration_token)" target="_blank" class="btn-ghost py-2 px-3 text-[12px] whitespace-nowrap">Open</a>
-                            <button @click="regenerate(s)" class="text-[11px] text-rose-500 hover:text-rose-700 px-2 whitespace-nowrap">Regenerate</button>
+                            <button @click="copyLink(publicUrl(s.registration_token))" class="btn-ghost py-2 px-3 text-[12px] whitespace-nowrap">{{ t('seasons_page.copy') }}</button>
+                            <a :href="publicUrl(s.registration_token)" target="_blank" class="btn-ghost py-2 px-3 text-[12px] whitespace-nowrap">{{ t('seasons_page.open_url') }}</a>
+                            <button @click="regenerate(s)" class="text-[11px] text-rose-500 hover:text-rose-700 px-2 whitespace-nowrap">{{ t('seasons_page.regenerate') }}</button>
                         </div>
                     </div>
 
                     <div v-if="s.registration_open" class="grid md:grid-cols-2 gap-4">
-                        <Field label="Registration fee (optional)">
+                        <Field :label="t('seasons_page.registration_fee_label')">
                             <CurrencyField :modelValue="s.registration_fee"
                                            @update:modelValue="(v) => s.registration_fee = v"
                                            @blur="toggleReg(s, { open: true, registration_fee: s.registration_fee, registration_instructions: s.registration_instructions })" />
                         </Field>
-                        <Field label="Instructions (shown on registration page)">
+                        <Field :label="t('seasons_page.registration_instructions_label')">
                             <textarea :value="s.registration_instructions ?? ''"
-                                      placeholder="bKash 01XXX-XXXXXXX. Note your name in the reference."
+                                      :placeholder="t('seasons_page.registration_instructions_placeholder')"
                                       class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[13.5px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
                                       rows="2"
                                       @blur="(e) => toggleReg(s, { open: true, registration_fee: s.registration_fee, registration_instructions: e.target.value })"></textarea>
@@ -562,15 +562,14 @@ const atLimit = props.used >= props.limits.seasons;
                 <div v-if="expandedForm === s.id" class="mt-5 pt-5 border-t border-ink-200/60 space-y-3">
                     <div class="flex items-start justify-between gap-3 flex-wrap">
                         <div>
-                            <div class="font-mono text-[10.5px] tracking-widest text-violet-700">/ REGISTRATION FORM BUILDER</div>
+                            <div class="font-mono text-[10.5px] tracking-widest text-violet-700">{{ t('seasons_page.form_builder_label') }}</div>
                             <p class="text-[13px] text-ink-700 mt-1">
-                                Add custom fields to collect any info you want from registering players.
-                                Drag to reorder. These appear below the built-in fields on the public registration page.
+                                {{ t('seasons_page.form_builder_subtitle') }}
                             </p>
                         </div>
                         <div class="flex gap-2 shrink-0">
-                            <button type="button" @click="resetSchemaDraft(s)" class="text-[11.5px] text-ink-500 hover:text-ink-900 px-2">Reset</button>
-                            <button type="button" @click="saveFormSchema(s)" class="btn-primary py-2 px-4 text-[12.5px]">Save form</button>
+                            <button type="button" @click="resetSchemaDraft(s)" class="text-[11.5px] text-ink-500 hover:text-ink-900 px-2">{{ t('seasons_page.reset') }}</button>
+                            <button type="button" @click="saveFormSchema(s)" class="btn-primary py-2 px-4 text-[12.5px]">{{ t('seasons_page.save_form') }}</button>
                         </div>
                     </div>
 
@@ -587,32 +586,32 @@ const atLimit = props.used >= props.limits.seasons;
                                 <span draggable="true"
                                       @dragstart="onDragStart(s.id, idx, $event)"
                                       class="grid place-items-center h-7 w-7 rounded text-ink-400 hover:text-ink-700 hover:bg-ink-100 shrink-0 cursor-grab active:cursor-grabbing select-none"
-                                      title="Drag to reorder">
+                                      :title="t('seasons_page.drag_to_reorder')">
                                     <svg class="h-4 w-4 pointer-events-none" fill="currentColor" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
                                 </span>
 
                                 <div class="flex-1 grid sm:grid-cols-3 gap-2">
-                                    <input v-model="field.label" type="text" placeholder="Field label"
+                                    <input v-model="field.label" type="text" :placeholder="t('seasons_page.field_label_placeholder')"
                                            class="rounded-lg border border-ink-200/70 px-3 py-1.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30 sm:col-span-2" />
                                     <select v-model="field.type"
                                             class="rounded-lg border border-ink-200/70 px-2 py-1.5 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
                                         <option v-for="t in fieldTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
                                     </select>
                                     <input v-if="!['select','radio','multi','checkbox','image','heading','payment'].includes(field.type)"
-                                           v-model="field.placeholder" type="text" placeholder="Placeholder (optional)"
+                                           v-model="field.placeholder" type="text" :placeholder="t('seasons_page.placeholder_placeholder')"
                                            class="rounded-lg border border-ink-200/70 px-3 py-1.5 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30 sm:col-span-2" />
                                     <label v-if="field.type !== 'heading'" class="inline-flex items-center gap-1.5 text-[12.5px] text-ink-700">
                                         <input type="checkbox" v-model="field.required" class="h-3.5 w-3.5" />
-                                        Required
+                                        {{ t('common.required') }}
                                     </label>
                                 </div>
 
-                                <button type="button" @click="removeField(s, idx)" class="text-rose-500 hover:text-rose-700 px-2 text-[15px] shrink-0" title="Remove field">×</button>
+                                <button type="button" @click="removeField(s, idx)" class="text-rose-500 hover:text-rose-700 px-2 text-[15px] shrink-0" :title="t('seasons_page.remove_field_title')">×</button>
                             </div>
 
                             <!-- Options editor — used by select / radio / multi -->
                             <div v-if="isOptionType(field.type)" class="mt-3 ml-9 space-y-1.5">
-                                <div class="font-mono text-[10px] tracking-widest text-ink-500">OPTIONS</div>
+                                <div class="font-mono text-[10px] tracking-widest text-ink-500">{{ t('seasons_page.options_label') }}</div>
                                 <div v-for="(opt, oIdx) in field.options || []" :key="oIdx" class="flex items-center gap-2">
                                     <input v-model="field.options[oIdx]" type="text"
                                            class="flex-1 rounded-lg border border-ink-200/70 px-2 py-1 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
@@ -628,7 +627,7 @@ const atLimit = props.used >= props.limits.seasons;
 
                             <!-- Payment methods editor — multiple bKash / bank / etc. -->
                             <div v-if="field.type === 'payment'" class="mt-3 ml-9 space-y-2">
-                                <div class="font-mono text-[10px] tracking-widest text-ink-500">PAYMENT METHODS — players see all of these on the form</div>
+                                <div class="font-mono text-[10px] tracking-widest text-ink-500">{{ t('seasons_page.payment_methods_label') }}</div>
                                 <div v-for="(m, mIdx) in (field.methods || [])" :key="mIdx"
                                      class="rounded-lg bg-violet-50/50 border border-violet-200/70 p-2.5 space-y-1.5">
                                     <div class="flex items-center gap-2">
@@ -637,28 +636,28 @@ const atLimit = props.used >= props.limits.seasons;
                                             <option v-for="k in methodKinds" :key="k.value" :value="k.value">{{ k.label }}</option>
                                         </select>
                                         <span class="flex-1"></span>
-                                        <button type="button" @click="removeMethod(field, mIdx)" class="text-rose-500 hover:text-rose-700 text-[14px] px-2" title="Remove method">×</button>
+                                        <button type="button" @click="removeMethod(field, mIdx)" class="text-rose-500 hover:text-rose-700 text-[14px] px-2" :title="t('seasons_page.remove_method_title')">×</button>
                                     </div>
 
                                     <!-- Mobile wallets (bKash / Nagad / Rocket / Other) -->
                                     <div v-if="m.kind !== 'bank'" class="grid sm:grid-cols-3 gap-1.5">
-                                        <input v-model="m.label" type="text" placeholder="Label (e.g. Personal bKash)"
+                                        <input v-model="m.label" type="text" :placeholder="t('seasons_page.method_label_placeholder')"
                                                class="rounded-md border border-ink-200/70 bg-white px-2 py-1 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-violet-300" />
-                                        <input v-model="m.number" type="text" placeholder="Number (01XXX-XXXXXXX)"
+                                        <input v-model="m.number" type="text" :placeholder="t('seasons_page.method_number_placeholder')"
                                                class="rounded-md border border-ink-200/70 bg-white px-2 py-1 text-[12.5px] font-mono focus:outline-none focus:ring-2 focus:ring-violet-300" />
-                                        <input v-model="m.instructions" type="text" placeholder="Instructions (e.g. Send Money)"
+                                        <input v-model="m.instructions" type="text" :placeholder="t('seasons_page.method_instructions_placeholder')"
                                                class="rounded-md border border-ink-200/70 bg-white px-2 py-1 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-violet-300" />
                                     </div>
 
                                     <!-- Bank account -->
                                     <div v-else class="grid sm:grid-cols-2 gap-1.5">
-                                        <input v-model="m.bank" type="text" placeholder="Bank name (BRAC Bank)"
+                                        <input v-model="m.bank" type="text" :placeholder="t('seasons_page.bank_name_placeholder')"
                                                class="rounded-md border border-ink-200/70 bg-white px-2 py-1 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-violet-300" />
-                                        <input v-model="m.account" type="text" placeholder="Account number"
+                                        <input v-model="m.account" type="text" :placeholder="t('seasons_page.account_number_placeholder')"
                                                class="rounded-md border border-ink-200/70 bg-white px-2 py-1 text-[12.5px] font-mono focus:outline-none focus:ring-2 focus:ring-violet-300" />
-                                        <input v-model="m.holder" type="text" placeholder="Account holder name (optional)"
+                                        <input v-model="m.holder" type="text" :placeholder="t('seasons_page.holder_name_placeholder')"
                                                class="rounded-md border border-ink-200/70 bg-white px-2 py-1 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-violet-300" />
-                                        <input v-model="m.branch" type="text" placeholder="Branch (optional)"
+                                        <input v-model="m.branch" type="text" :placeholder="t('seasons_page.branch_placeholder')"
                                                class="rounded-md border border-ink-200/70 bg-white px-2 py-1 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-violet-300" />
                                     </div>
                                 </div>
@@ -671,12 +670,12 @@ const atLimit = props.used >= props.limits.seasons;
                                     </button>
                                 </div>
 
-                                <p class="text-[11px] text-ink-500">Players see all configured methods on the form, then enter their bKash TrxID or bank reference in a single text input below the cards.</p>
+                                <p class="text-[11px] text-ink-500">{{ t('seasons_page.payment_methods_help') }}</p>
                             </div>
 
                             <!-- Image: square-crop size config -->
                             <div v-if="field.type === 'image'" class="mt-3 ml-9">
-                                <div class="font-mono text-[10px] tracking-widest text-ink-500 mb-1.5">CROP SIZE (PX, SQUARE)</div>
+                                <div class="font-mono text-[10px] tracking-widest text-ink-500 mb-1.5">{{ t('seasons_page.crop_size_label') }}</div>
                                 <div class="flex flex-wrap gap-1.5">
                                     <button type="button" v-for="px in [300, 400, 600, 800, 1200]" :key="px"
                                             @click="field.size = px"
@@ -686,17 +685,17 @@ const atLimit = props.used >= props.limits.seasons;
                                                 : 'bg-ink-50 border-ink-200 text-ink-700 hover:bg-violet-50'">
                                         {{ px }}×{{ px }}
                                     </button>
-                                    <input v-model.number="field.size" type="number" min="100" max="2000" placeholder="Custom"
+                                    <input v-model.number="field.size" type="number" min="100" max="2000" :placeholder="t('seasons_page.crop_custom_placeholder')"
                                            class="w-20 rounded-md border border-ink-200/70 px-2 py-1 text-[11.5px] font-mono focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                                 </div>
-                                <p class="mt-1 text-[11px] text-ink-500">Uploaded image is cropped to this square size before save. Recommended 600×600.</p>
+                                <p class="mt-1 text-[11px] text-ink-500">{{ t('seasons_page.image_size_help') }}</p>
                             </div>
 
                             <!-- Conditional visibility -->
                             <div class="mt-3 ml-9">
                                 <label class="inline-flex items-center gap-2 cursor-pointer text-[12px] text-ink-700">
                                     <input type="checkbox" :checked="!!field.conditional" @change="toggleConditional(s, field)" class="h-3.5 w-3.5" />
-                                    Show this field only when…
+                                    {{ t('seasons_page.conditional_toggle') }}
                                 </label>
                                 <div v-if="field.conditional" class="mt-2 rounded-lg bg-violet-50/60 border border-violet-200/70 p-3 space-y-2">
                                     <div class="grid sm:grid-cols-3 gap-2 text-[12px]">
@@ -714,33 +713,33 @@ const atLimit = props.used >= props.limits.seasons;
                                             <select v-if="sourceField(s, field)?.type === 'select'"
                                                     v-model="field.conditional.value"
                                                     class="rounded-md border border-ink-200/70 bg-white px-2 py-1.5 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-violet-300">
-                                                <option value="">— pick value —</option>
+                                                <option value="">{{ t('seasons_page.pick_value_placeholder') }}</option>
                                                 <option v-for="opt in (sourceField(s, field)?.options || [])" :key="opt" :value="opt">{{ opt }}</option>
                                             </select>
                                             <select v-else-if="sourceField(s, field)?.type === 'checkbox'"
                                                     v-model="field.conditional.value"
                                                     class="rounded-md border border-ink-200/70 bg-white px-2 py-1.5 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-violet-300">
-                                                <option value="true">Yes (checked)</option>
-                                                <option value="false">No (unchecked)</option>
+                                                <option value="true">{{ t('seasons_page.yes_checked') }}</option>
+                                                <option value="false">{{ t('seasons_page.no_unchecked') }}</option>
                                             </select>
-                                            <input v-else v-model="field.conditional.value" type="text" placeholder="value"
+                                            <input v-else v-model="field.conditional.value" type="text" :placeholder="t('seasons_page.value_placeholder')"
                                                    class="rounded-md border border-ink-200/70 bg-white px-2 py-1.5 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-violet-300" />
                                         </template>
-                                        <span v-else class="text-[11.5px] text-ink-500 self-center">(no value needed)</span>
+                                        <span v-else class="text-[11.5px] text-ink-500 self-center">{{ t('seasons_page.no_value_needed') }}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <div v-if="ensureBuilder(s).length === 0" class="text-center py-8 rounded-xl border-2 border-dashed border-ink-200 text-ink-500">
-                            <div class="text-[13px] font-medium mb-1">No custom fields yet</div>
-                            <div class="text-[12px]">Click any field type below to add. Built-in fields (name, category, position, photo) are always included.</div>
+                            <div class="text-[13px] font-medium mb-1">{{ t('seasons_page.no_fields_title') }}</div>
+                            <div class="text-[12px]">{{ t('seasons_page.no_fields_body') }}</div>
                         </div>
                     </div>
 
                     <!-- Add field row -->
                     <div class="flex flex-wrap gap-1.5 pt-3 border-t border-ink-200/60">
-                        <span class="text-[10.5px] font-mono text-ink-500 self-center mr-1">ADD FIELD:</span>
+                        <span class="text-[10.5px] font-mono text-ink-500 self-center mr-1">{{ t('seasons_page.add_field') }}</span>
                         <button v-for="t in fieldTypes" :key="t.value" type="button"
                                 @click="addField(s, t.value)"
                                 class="rounded-md bg-ink-100 hover:bg-violet-100 hover:text-violet-700 text-ink-700 px-2.5 py-1 text-[11.5px] transition-colors">
@@ -753,14 +752,14 @@ const atLimit = props.used >= props.limits.seasons;
                 <div v-if="expandedCategories === s.id" class="mt-5 pt-5 border-t border-ink-200/60 space-y-3">
                     <div class="flex items-start justify-between gap-3 flex-wrap">
                         <div>
-                            <div class="font-mono text-[10.5px] tracking-widest text-emerald-700">/ PLAYER CATEGORIES</div>
+                            <div class="font-mono text-[10.5px] tracking-widest text-emerald-700">{{ t('seasons_page.categories_label') }}</div>
                             <p class="text-[13px] text-ink-700 mt-1 max-w-2xl">
-                                Define the categories players are sorted into for this season, and the default base price each one gets on public registration. Renaming or removing a category will leave existing players with that category uncategorised — you'll need to re-assign them.
+                                {{ t('seasons_page.categories_subtitle') }}
                             </p>
                         </div>
                         <div class="flex gap-2 shrink-0">
-                            <button type="button" @click="resetCategoriesDraft(s)" class="text-[11.5px] text-ink-500 hover:text-ink-900 px-2">Reset</button>
-                            <button type="button" @click="saveCategories(s)" class="btn-primary py-2 px-4 text-[12.5px]">Save categories</button>
+                            <button type="button" @click="resetCategoriesDraft(s)" class="text-[11.5px] text-ink-500 hover:text-ink-900 px-2">{{ t('seasons_page.reset') }}</button>
+                            <button type="button" @click="saveCategories(s)" class="btn-primary py-2 px-4 text-[12.5px]">{{ t('seasons_page.save_categories') }}</button>
                         </div>
                     </div>
 
@@ -768,39 +767,39 @@ const atLimit = props.used >= props.limits.seasons;
                         <div v-for="(c, idx) in ensureCategories(s)" :key="idx"
                              class="grid grid-cols-12 gap-2 items-center rounded-xl border border-ink-200/70 bg-white/70 px-3 py-2">
                             <div class="col-span-12 sm:col-span-5">
-                                <label class="font-mono text-[10px] tracking-widest text-ink-500">NAME</label>
-                                <input v-model="c.name" type="text" placeholder="Elite"
+                                <label class="font-mono text-[10px] tracking-widest text-ink-500">{{ t('seasons_page.category_name_label') }}</label>
+                                <input v-model="c.name" type="text" :placeholder="t('seasons_page.category_name_placeholder')"
                                        class="mt-1 w-full rounded-lg border border-ink-200/70 bg-white px-3 py-2 text-[13.5px] focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                             </div>
                             <div class="col-span-9 sm:col-span-5">
-                                <label class="font-mono text-[10px] tracking-widest text-ink-500">DEFAULT BASE PRICE (৳)</label>
-                                <input v-model.number="c.base_price" type="number" min="0" placeholder="50000"
+                                <label class="font-mono text-[10px] tracking-widest text-ink-500">{{ t('seasons_page.category_price_label') }}</label>
+                                <input v-model.number="c.base_price" type="number" min="0" :placeholder="t('seasons_page.category_price_placeholder')"
                                        class="mt-1 w-full rounded-lg border border-ink-200/70 bg-white px-3 py-2 text-[13.5px] font-mono focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                             </div>
                             <div class="col-span-3 sm:col-span-2 flex justify-end pt-5">
                                 <button type="button" @click="removeCategory(s, idx)"
-                                        class="text-[11.5px] text-rose-500 hover:text-rose-700 px-2">Remove</button>
+                                        class="text-[11.5px] text-rose-500 hover:text-rose-700 px-2">{{ t('seasons_page.remove') }}</button>
                             </div>
                         </div>
                         <div v-if="ensureCategories(s).length === 0" class="text-center py-6 rounded-xl border-2 border-dashed border-ink-200 text-ink-500">
-                            <div class="text-[13px] font-medium mb-1">No categories</div>
-                            <div class="text-[12px]">Add at least one — the player form needs something to pick from.</div>
+                            <div class="text-[13px] font-medium mb-1">{{ t('seasons_page.no_categories_title') }}</div>
+                            <div class="text-[12px]">{{ t('seasons_page.no_categories_body') }}</div>
                         </div>
                     </div>
 
                     <div class="pt-2 border-t border-ink-200/60">
                         <button type="button" @click="addCategory(s)"
                                 class="rounded-md bg-ink-100 hover:bg-emerald-100 hover:text-emerald-700 text-ink-700 px-3 py-1.5 text-[12px] transition-colors">
-                            + Add category
+                            {{ t('seasons_page.add_category') }}
                         </button>
                     </div>
                 </div>
             </div>
         </div>
         <div v-else class="glass rounded-2xl p-10 text-center">
-            <div class="font-mono text-[11px] tracking-widest text-ink-500 mb-3">/ no seasons yet</div>
-            <p class="text-ink-500 text-[14px] max-w-md mx-auto">Create your first season to add players and run an auction.</p>
-            <button @click="showCreate = true" class="btn-primary inline-flex mt-5 px-5">Create a season</button>
+            <div class="font-mono text-[11px] tracking-widest text-ink-500 mb-3">{{ t('seasons_page.no_seasons_label') }}</div>
+            <p class="text-ink-500 text-[14px] max-w-md mx-auto">{{ t('seasons_page.no_seasons_body') }}</p>
+            <button @click="showCreate = true" class="btn-primary inline-flex mt-5 px-5">{{ t('seasons_page.create_first_season') }}</button>
         </div>
     </DashboardLayout>
 </template>

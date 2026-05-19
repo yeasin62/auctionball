@@ -15,6 +15,15 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
  *   2) Team-device session — anyone holding a valid /join/{token} session
  *      that resolves to a team in this org+season.
  */
+/**
+ * Platform-wide super-admin channel. Used today for the pending-payments
+ * badge in the sidebar — add other admin-only broadcasts (new signup,
+ * incident, etc.) on the same channel later if needed.
+ */
+Broadcast::channel('super-admin', function ($user) {
+    return $user && $user->isSuperAdmin();
+});
+
 Broadcast::channel('auction.{orgId}.{seasonId}', function ($user, $orgId, $seasonId) {
     // Path A: logged-in org member
     if ($user) {

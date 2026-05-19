@@ -3,6 +3,9 @@ import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useConfirm } from '@/composables/useConfirm';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const confirm = useConfirm();
 
@@ -19,20 +22,20 @@ const clear = () => { f.value = { q: '', plan: '' }; apply(); };
 const setPlan = async (org, plan) => {
     if (plan === org.plan) return;
     if (! await confirm({
-        title: `Change plan for ${org.name}?`,
-        description: `Current plan: ${org.plan} → New plan: ${plan}. Limits apply immediately. This is logged in the audit trail.`,
+        title: t('super_admin.change_plan_title', { org: org.name }),
+        description: t('super_admin.change_plan_body', { current: org.plan, next: plan }),
         variant: 'warning',
-        confirmText: `Switch to ${plan}`,
+        confirmText: t('super_admin.switch_to_plan', { plan }),
     })) return;
     router.post(route('admin.orgs.set-plan', org.id), { plan }, { preserveScroll: true });
 };
 
 const impersonate = async (org) => {
     if (! await confirm({
-        title: `Impersonate ${org.name}?`,
-        description: 'You\'ll be signed in as one of their org admins. Use the orange "Stop" banner at the top to return to your super-admin session.',
+        title: t('super_admin.impersonate_title', { org: org.name }),
+        description: t('super_admin.impersonate_body'),
         variant: 'info',
-        confirmText: 'Impersonate',
+        confirmText: t('super_admin.impersonate'),
     })) return;
     router.post(route('admin.orgs.impersonate', org.id), {}, { preserveScroll: false });
 };
@@ -71,10 +74,10 @@ const todayIso = computed(() => new Date().toISOString().slice(0, 10));
 
 const removeOrg = async (org) => {
     if (! await confirm({
-        title: `Permanently delete "${org.name}"?`,
-        description: 'This deletes ALL of their seasons, players, teams, bids, payments and audit log. Cannot be undone. To prevent accidents, type the org\'s slug below.',
+        title: t('super_admin.permanently_delete_title', { name: org.name }),
+        description: t('super_admin.permanently_delete_body'),
         variant: 'danger',
-        confirmText: 'Delete organization',
+        confirmText: t('super_admin.orgs_delete_button'),
         typeToConfirm: org.slug,
     })) return;
     router.delete(route('admin.orgs.delete', org.id), { preserveScroll: true });
@@ -96,21 +99,21 @@ const subColor = (s) => ({
 </script>
 
 <template>
-    <Head title="Organizations — Super admin" />
-    <SuperAdminLayout title="Organizations">
+    <Head :title="t('super_admin.head_orgs')" />
+    <SuperAdminLayout :title="t('super_admin.orgs_title')">
 
         <!-- Filters -->
         <div class="glass rounded-2xl p-4 mb-4 flex flex-wrap items-center gap-2">
             <input v-model="f.q" @keyup.enter="apply"
-                   placeholder="Search name or slug…"
+                   :placeholder="t('super_admin.orgs_search_placeholder')"
                    class="flex-1 min-w-[220px] rounded-lg border border-ink-200/70 bg-white/80 px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
             <select v-model="f.plan" @change="apply" class="rounded-lg border border-ink-200/70 bg-white/80 px-3 py-2 text-[13px] capitalize">
-                <option value="">All plans</option>
+                <option value="">{{ t('super_admin.all_plans') }}</option>
                 <option v-for="p in plans" :key="p" :value="p">{{ p }}</option>
             </select>
-            <button @click="apply" class="btn-primary py-2 px-4 text-[13px]">Apply</button>
-            <button @click="clear" class="btn-ghost py-2 px-3 text-[12px]">Reset</button>
-            <span class="text-[12px] font-mono text-ink-500 ml-auto">{{ orgs.total }} total</span>
+            <button @click="apply" class="btn-primary py-2 px-4 text-[13px]">{{ t('super_admin.users_apply') }}</button>
+            <button @click="clear" class="btn-ghost py-2 px-3 text-[12px]">{{ t('super_admin.reset') }}</button>
+            <span class="text-[12px] font-mono text-ink-500 ml-auto">{{ t('super_admin.n_total', { n: orgs.total }) }}</span>
         </div>
 
         <!-- Org table -->
@@ -118,13 +121,13 @@ const subColor = (s) => ({
             <table class="w-full text-[13.5px]">
                 <thead class="bg-white/40">
                     <tr class="text-left font-mono text-[10px] tracking-widest text-ink-500">
-                        <th class="px-4 py-2.5">ORG</th>
-                        <th class="px-4 py-2.5">PLAN</th>
-                        <th class="px-4 py-2.5">SUBSCRIPTION</th>
-                        <th class="px-4 py-2.5">USAGE</th>
-                        <th class="px-4 py-2.5">DOMAIN</th>
-                        <th class="px-4 py-2.5">JOINED</th>
-                        <th class="px-4 py-2.5 text-right">ACTIONS</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_org') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_plan') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.orgs_th_subscription') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.orgs_th_usage') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.orgs_th_domain') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_joined') }}</th>
+                        <th class="px-4 py-2.5 text-right">{{ t('super_admin.orgs_th_actions') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-ink-100">
@@ -144,16 +147,16 @@ const subColor = (s) => ({
                         <td class="px-4 py-2.5">
                             <div v-if="o.sub_status" class="leading-tight">
                                 <div class="font-mono text-[11px] uppercase" :class="subColor(o.sub_status)">{{ o.sub_status }}</div>
-                                <div class="font-mono text-[10.5px] text-ink-500">{{ o.sub_provider }} · until {{ o.sub_until }}</div>
+                                <div class="font-mono text-[10.5px] text-ink-500">{{ t('super_admin.orgs_until', { provider: o.sub_provider, date: o.sub_until }) }}</div>
                             </div>
-                            <div v-else class="text-ink-400 text-[12px]">No active sub</div>
+                            <div v-else class="text-ink-400 text-[12px]">{{ t('super_admin.no_active_sub') }}</div>
                             <button @click="openExtend(o)"
                                     class="mt-1 text-[11px] text-brand-indigo hover:underline">
-                                {{ o.sub_status ? 'Change end date' : 'Grant access' }}
+                                {{ o.sub_status ? t('super_admin.change_end_date') : t('super_admin.grant_access') }}
                             </button>
                         </td>
                         <td class="px-4 py-2.5 font-mono text-[11.5px] text-ink-700">
-                            {{ o.users_count }}u · {{ o.seasons_count }}s · {{ o.players_count }}p
+                            {{ t('super_admin.orgs_usage_short', { u: o.users_count, s: o.seasons_count, p: o.players_count }) }}
                         </td>
                         <td class="px-4 py-2.5">
                             <code v-if="o.custom_domain" class="font-mono text-[11px] text-ink-700">{{ o.custom_domain }}</code>
@@ -161,12 +164,12 @@ const subColor = (s) => ({
                         </td>
                         <td class="px-4 py-2.5 font-mono text-[11.5px] text-ink-500">{{ o.created_at }}</td>
                         <td class="px-4 py-2.5 text-right whitespace-nowrap">
-                            <button @click="impersonate(o)" class="text-[11.5px] text-brand-indigo hover:underline mr-3">Impersonate</button>
-                            <button @click="removeOrg(o)" class="text-[11.5px] text-rose-500 hover:text-rose-700">Delete</button>
+                            <button @click="impersonate(o)" class="text-[11.5px] text-brand-indigo hover:underline mr-3">{{ t('super_admin.impersonate') }}</button>
+                            <button @click="removeOrg(o)" class="text-[11.5px] text-rose-500 hover:text-rose-700">{{ t('super_admin.delete') }}</button>
                         </td>
                     </tr>
                     <tr v-if="orgs.data.length === 0">
-                        <td colspan="7" class="px-4 py-12 text-center text-[13.5px] text-ink-500">No organizations match.</td>
+                        <td colspan="7" class="px-4 py-12 text-center text-[13.5px] text-ink-500">{{ t('super_admin.no_orgs_match') }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -191,34 +194,33 @@ const subColor = (s) => ({
                                 <svg class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 7V3m8 4V3M3 11h18M5 6h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z"/></svg>
                             </span>
                             <div class="flex-1 min-w-0">
-                                <h3 class="text-[16px] font-bold tracking-tight">Grant / extend subscription</h3>
+                                <h3 class="text-[16px] font-bold tracking-tight">{{ t('super_admin.extend_heading') }}</h3>
                                 <p class="mt-1 text-[13px] text-ink-600 leading-relaxed">
-                                    Manually mark <strong>{{ extendOrg.name }}</strong> as active until the chosen date.
-                                    Auto-renew stays off — useful for free trial / test / comp access.
+                                    {{ t('super_admin.extend_body', { name: extendOrg.name }) }}
                                 </p>
                             </div>
                         </div>
 
                         <form @submit.prevent="submitExtend" class="space-y-3.5">
                             <div>
-                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">PLAN</label>
+                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">{{ t('super_admin.grant_plan') }}</label>
                                 <select v-model="extendForm.plan"
                                         class="w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-[14px] capitalize focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
                                     <option v-for="p in plans" :key="p" :value="p">{{ p }}</option>
                                 </select>
                                 <p v-if="extendForm.errors.plan" class="mt-1 text-[12px] text-rose-500">{{ extendForm.errors.plan }}</p>
                                 <p class="mt-1 text-[11.5px] text-ink-500">
-                                    Picking a different plan also updates the org's plan column.
+                                    {{ t('super_admin.extend_plan_help') }}
                                 </p>
                             </div>
 
                             <div>
-                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">ACTIVE UNTIL</label>
+                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">{{ t('super_admin.grant_active_until_label') }}</label>
                                 <input v-model="extendForm.until" type="date" :min="todayIso"
                                        class="w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                                 <p v-if="extendForm.errors.until" class="mt-1 text-[12px] text-rose-500">{{ extendForm.errors.until }}</p>
                                 <div class="mt-2 flex gap-1.5">
-                                    <button v-for="(d, label) in { '+7 days': 7, '+30 days': 30, '+90 days': 90, '+1 year': 365 }"
+                                    <button v-for="(d, label) in { [t('super_admin.preset_7d')]: 7, [t('super_admin.preset_30d')]: 30, [t('super_admin.preset_90d')]: 90, [t('super_admin.preset_1y')]: 365 }"
                                             :key="label"
                                             type="button"
                                             @click="extendForm.until = todayPlus(d)"
@@ -229,18 +231,18 @@ const subColor = (s) => ({
                             </div>
 
                             <div>
-                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">NOTE <span class="text-ink-400">(optional, audit log)</span></label>
+                                <label class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-1 block">{{ t('super_admin.grant_note') }} <span class="text-ink-400">{{ t('super_admin.grant_note_optional') }}</span></label>
                                 <textarea v-model="extendForm.note" rows="2"
-                                          placeholder="e.g. Test access for evaluation, expires 30 days"
+                                          :placeholder="t('super_admin.extend_note_placeholder')"
                                           class="w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-[13.5px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"></textarea>
                             </div>
 
                             <div class="flex gap-2 justify-end pt-2">
-                                <button type="button" @click="closeExtend" class="btn-ghost py-2 px-4 text-[13px]">Cancel</button>
+                                <button type="button" @click="closeExtend" class="btn-ghost py-2 px-4 text-[13px]">{{ t('common.cancel') }}</button>
                                 <button type="submit" :disabled="extendForm.processing"
                                         class="btn-primary py-2 px-4 text-[13px]"
                                         :class="{ 'opacity-60 pointer-events-none': extendForm.processing }">
-                                    {{ extendForm.processing ? 'Saving…' : 'Set end date' }}
+                                    {{ extendForm.processing ? t('super_admin.saving_dots') : t('super_admin.extend_button') }}
                                 </button>
                             </div>
                         </form>

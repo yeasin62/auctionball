@@ -278,7 +278,7 @@ const bidIsMine  = (b) => b.team === props.team.short_code;
                         −
                     </button>
                     <div class="flex-1 rounded-xl bg-white border border-ink-200/70 px-3 py-2.5 text-center shadow-sm">
-                        <div class="font-mono text-[11.5px] tracking-widest text-ink-500">YOUR BID</div>
+                        <div class="font-mono text-[11.5px] tracking-widest text-ink-500">{{ t('team_device.your_bid_label') }}</div>
                         <div class="text-[32px] font-extrabold tracking-tight text-grad leading-none mt-1 tabular-nums whitespace-nowrap">
                             {{ fmt(bidAmount) }}
                         </div>

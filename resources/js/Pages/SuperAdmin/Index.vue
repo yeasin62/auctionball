@@ -4,6 +4,9 @@ import { router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useFmt } from '@/composables/useFmt';
 import { useConfirm } from '@/composables/useConfirm';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const confirm = useConfirm();
 
@@ -17,10 +20,10 @@ const props = defineProps({
 
 const forceRenew = async (sub) => {
     if (! await confirm({
-        title: `Force renewal for ${sub.org}?`,
-        description: `Subscription #${sub.id} (${sub.plan} via ${sub.provider}). Billing will be attempted now instead of waiting for the cron.`,
+        title: t('super_admin.force_renew_title', { org: sub.org }),
+        description: t('super_admin.force_renew_body', { id: sub.id, plan: sub.plan, provider: sub.provider }),
         variant: 'warning',
-        confirmText: 'Run renewal now',
+        confirmText: t('super_admin.force_renew_button'),
     })) return;
     router.post(route('admin.subs.force-renew', sub.id), {}, { preserveScroll: true });
 };
@@ -40,10 +43,10 @@ const fmt = useFmt().money;
 
 const impersonate = async (org) => {
     if (! await confirm({
-        title: `Impersonate ${org.name}?`,
-        description: 'You\'ll be signed in as one of their org admins for support. Use the orange "Stop" banner at the top to return to your super-admin session.',
+        title: t('super_admin.impersonate_title', { org: org.name }),
+        description: t('super_admin.impersonate_body'),
         variant: 'info',
-        confirmText: 'Impersonate',
+        confirmText: t('super_admin.impersonate'),
     })) return;
     router.post(route('admin.orgs.impersonate', org.id));
 };
@@ -71,25 +74,25 @@ const txnStatus = (s) => ({
 </script>
 
 <template>
-    <SuperAdminLayout title="Super admin">
+    <SuperAdminLayout :title="t('super_admin.title')">
 
         <!-- Global stats -->
         <div class="grid md:grid-cols-4 gap-4 mb-5">
             <div class="glass rounded-2xl p-5">
-                <div class="font-mono text-[10.5px] tracking-widest text-ink-500">ORGANIZATIONS</div>
+                <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.stat_organizations') }}</div>
                 <div class="text-[28px] font-extrabold tracking-tight mt-1">{{ stats.orgs_total }}</div>
             </div>
             <div class="glass rounded-2xl p-5">
-                <div class="font-mono text-[10.5px] tracking-widest text-ink-500">USERS</div>
+                <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.stat_users') }}</div>
                 <div class="text-[28px] font-extrabold tracking-tight mt-1">{{ stats.users_total }}</div>
             </div>
             <div class="glass rounded-2xl p-5">
-                <div class="font-mono text-[10.5px] tracking-widest text-ink-500">RUNNING NOW</div>
+                <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.stat_running_now') }}</div>
                 <div class="text-[28px] font-extrabold tracking-tight mt-1 text-emerald-600">{{ stats.auctions_running }}</div>
-                <div class="text-[11px] font-mono text-ink-500">{{ stats.seasons_active }} active seasons</div>
+                <div class="text-[11px] font-mono text-ink-500">{{ t('super_admin.stat_active_seasons', { count: stats.seasons_active }) }}</div>
             </div>
             <div class="glass rounded-2xl p-5 bg-gradient-to-br from-blue-50 to-violet-50 border border-violet-100">
-                <div class="font-mono text-[10.5px] tracking-widest text-ink-500">EST. MRR (BDT)</div>
+                <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.stat_mrr') }}</div>
                 <div class="text-[24px] font-extrabold tracking-tight mt-1 text-grad">{{ fmt(stats.mrr_estimate_bdt) }}</div>
                 <div class="text-[11px] font-mono text-ink-500">
                     <template v-for="(c, p) in stats.plans_breakdown" :key="p">
@@ -103,32 +106,32 @@ const txnStatus = (s) => ({
         <!-- Renewal health -->
         <div class="grid md:grid-cols-2 gap-4 mb-5">
             <div class="glass rounded-2xl p-5">
-                <div class="font-mono text-[10.5px] tracking-widest text-ink-500">PAST-DUE SUBSCRIPTIONS</div>
+                <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.stat_past_due') }}</div>
                 <div class="text-[28px] font-extrabold tracking-tight mt-1" :class="stats.subs_past_due > 0 ? 'text-amber-600' : 'text-ink-400'">{{ stats.subs_past_due }}</div>
-                <div class="text-[11px] font-mono text-ink-500">in dunning, retrying automatically</div>
+                <div class="text-[11px] font-mono text-ink-500">{{ t('super_admin.stat_past_due_help') }}</div>
             </div>
             <div class="glass rounded-2xl p-5">
-                <div class="font-mono text-[10.5px] tracking-widest text-ink-500">EXPIRING IN 7 DAYS</div>
+                <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('super_admin.stat_expiring_7d') }}</div>
                 <div class="text-[28px] font-extrabold tracking-tight mt-1">{{ stats.subs_expiring_7d }}</div>
-                <div class="text-[11px] font-mono text-ink-500">renewals coming up</div>
+                <div class="text-[11px] font-mono text-ink-500">{{ t('super_admin.stat_expiring_help') }}</div>
             </div>
         </div>
 
         <!-- Subscriptions needing attention -->
         <div v-if="duesoon_subs.length" class="glass rounded-2xl overflow-hidden mb-5">
             <div class="px-5 py-3 border-b border-ink-100">
-                <h3 class="text-[15px] font-bold tracking-tight">Subscriptions due soon / past due <span class="font-mono text-[11px] text-ink-400 ml-1">{{ duesoon_subs.length }}</span></h3>
+                <h3 class="text-[15px] font-bold tracking-tight">{{ t('super_admin.subs_due_title') }} <span class="font-mono text-[11px] text-ink-400 ml-1">{{ duesoon_subs.length }}</span></h3>
             </div>
             <table class="w-full text-[13px]">
                 <thead class="bg-white/40">
                     <tr class="text-left font-mono text-[10px] tracking-widest text-ink-500">
-                        <th class="px-4 py-2.5">ORG</th>
-                        <th class="px-4 py-2.5">PLAN</th>
-                        <th class="px-4 py-2.5">PROVIDER</th>
-                        <th class="px-4 py-2.5">STATUS</th>
-                        <th class="px-4 py-2.5">PERIOD ENDS</th>
-                        <th class="px-4 py-2.5">ATTEMPTS</th>
-                        <th class="px-4 py-2.5">NEXT TRY</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_org') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_plan') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_provider') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_status') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_period_ends') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_attempts') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_next_try') }}</th>
                         <th class="px-4 py-2.5"></th>
                     </tr>
                 </thead>
@@ -142,7 +145,7 @@ const txnStatus = (s) => ({
                         <td class="px-4 py-2.5 font-mono">{{ s.attempts }} / 3</td>
                         <td class="px-4 py-2.5 font-mono text-[12px] text-ink-500">{{ s.next_attempt_at || '—' }}</td>
                         <td class="px-4 py-2.5 text-right">
-                            <button @click="forceRenew(s)" class="text-[12px] text-brand-indigo hover:underline">Force renew</button>
+                            <button @click="forceRenew(s)" class="text-[12px] text-brand-indigo hover:underline">{{ t('super_admin.force_renew') }}</button>
                         </td>
                     </tr>
                 </tbody>
@@ -152,18 +155,18 @@ const txnStatus = (s) => ({
         <!-- Organizations -->
         <div class="glass rounded-2xl overflow-hidden mb-5">
             <div class="px-5 py-3 border-b border-ink-100 flex items-center justify-between">
-                <h3 class="text-[15px] font-bold tracking-tight">Organizations <span class="font-mono text-[11px] text-ink-400 ml-1">{{ orgs.length }}</span></h3>
+                <h3 class="text-[15px] font-bold tracking-tight">{{ t('super_admin.organizations') }} <span class="font-mono text-[11px] text-ink-400 ml-1">{{ orgs.length }}</span></h3>
             </div>
             <table class="w-full text-[13.5px]">
                 <thead class="bg-white/40">
                     <tr class="text-left font-mono text-[10px] tracking-widest text-ink-500">
-                        <th class="px-4 py-2.5">NAME</th>
-                        <th class="px-4 py-2.5">SLUG</th>
-                        <th class="px-4 py-2.5">PLAN</th>
-                        <th class="px-4 py-2.5">USERS</th>
-                        <th class="px-4 py-2.5">SEASONS</th>
-                        <th class="px-4 py-2.5">PLAYERS</th>
-                        <th class="px-4 py-2.5">CREATED</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_name') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_slug') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_plan') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_users') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_seasons') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_players') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_created') }}</th>
                         <th class="px-4 py-2.5"></th>
                     </tr>
                 </thead>
@@ -176,8 +179,8 @@ const txnStatus = (s) => ({
                                 <select v-model="newPlan" class="rounded-lg border border-ink-200/70 bg-white/80 px-2 py-1 text-[12px] mr-1">
                                     <option v-for="p in plans" :key="p" :value="p">{{ p }}</option>
                                 </select>
-                                <button @click="savePlan(o)" class="text-[11px] font-medium text-emerald-700 hover:underline">save</button>
-                                <button @click="editingPlan = null" class="ml-1 text-[11px] text-ink-500 hover:underline">cancel</button>
+                                <button @click="savePlan(o)" class="text-[11px] font-medium text-emerald-700 hover:underline">{{ t('super_admin.save') }}</button>
+                                <button @click="editingPlan = null" class="ml-1 text-[11px] text-ink-500 hover:underline">{{ t('super_admin.cancel') }}</button>
                             </template>
                             <button v-else @click="startEdit(o)" class="cursor-pointer">
                                 <span class="px-2 py-0.5 rounded-full font-mono text-[10.5px] uppercase border" :class="planColor(o.plan)">{{ o.plan }}</span>
@@ -188,7 +191,7 @@ const txnStatus = (s) => ({
                         <td class="px-4 py-2.5 font-mono">{{ o.players_count }}</td>
                         <td class="px-4 py-2.5 font-mono text-[12px] text-ink-500">{{ o.created_at }}</td>
                         <td class="px-4 py-2.5 text-right">
-                            <button @click="impersonate(o)" class="text-[12px] text-brand-indigo hover:underline">Impersonate</button>
+                            <button @click="impersonate(o)" class="text-[12px] text-brand-indigo hover:underline">{{ t('super_admin.impersonate') }}</button>
                         </td>
                     </tr>
                 </tbody>
@@ -198,18 +201,18 @@ const txnStatus = (s) => ({
         <!-- Recent transactions -->
         <div class="glass rounded-2xl overflow-hidden">
             <div class="px-5 py-3 border-b border-ink-100">
-                <h3 class="text-[15px] font-bold tracking-tight">Recent payment transactions</h3>
+                <h3 class="text-[15px] font-bold tracking-tight">{{ t('super_admin.recent_transactions') }}</h3>
             </div>
             <table class="w-full text-[13px]">
                 <thead class="bg-white/40">
                     <tr class="text-left font-mono text-[10px] tracking-widest text-ink-500">
-                        <th class="px-4 py-2.5">REF</th>
-                        <th class="px-4 py-2.5">ORG</th>
-                        <th class="px-4 py-2.5">PROVIDER</th>
-                        <th class="px-4 py-2.5">PLAN</th>
-                        <th class="px-4 py-2.5">AMOUNT</th>
-                        <th class="px-4 py-2.5">STATUS</th>
-                        <th class="px-4 py-2.5">WHEN</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_ref') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_org') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_provider') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_plan') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_amount') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_status') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_when') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-ink-100">
@@ -223,7 +226,7 @@ const txnStatus = (s) => ({
                         <td class="px-4 py-2.5 font-mono text-[11.5px] text-ink-500">{{ t.created_at }}</td>
                     </tr>
                     <tr v-if="recent_txns.length === 0">
-                        <td colspan="7" class="px-4 py-6 text-center text-[13px] text-ink-500">No transactions yet.</td>
+                        <td colspan="7" class="px-4 py-6 text-center text-[13px] text-ink-500">{{ t('super_admin.no_transactions') }}</td>
                     </tr>
                 </tbody>
             </table>

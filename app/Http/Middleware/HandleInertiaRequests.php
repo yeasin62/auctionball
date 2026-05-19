@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Organization;
+use App\Models\PaymentTransaction;
 use App\Models\PlatformSettings;
 use App\Support\Locales;
 use Illuminate\Http\Request;
@@ -79,6 +80,11 @@ class HandleInertiaRequests extends Middleware
             'appDomain'             => PlatformSettings::current()->app_domain,
             'appLogo'               => PlatformSettings::current()->app_logo_url,
             'landingPaymentMethods' => PlatformSettings::current()->enabledLandingPaymentMethods(),
+            // Pending-payments badge for the super admin sidebar. Closure so the
+            // count is only queried for super admins (single small COUNT query).
+            'pendingPaymentsCount'  => fn () => ($user && $user->isSuperAdmin())
+                ? PaymentTransaction::where('provider', 'bkash')->where('status', 'pending')->count()
+                : 0,
         ];
     }
 }

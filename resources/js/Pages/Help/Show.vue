@@ -2,6 +2,9 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import LanguageToggle from '@/Components/LanguageToggle.vue';
+import { useI18n, I18nT } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     toc:  { type: Array, default: () => [] },
@@ -27,10 +30,12 @@ const filteredToc = computed(() => {
 });
 
 // SEO: every help page is indexable on its own URL.
-const seoTitle = computed(() => props.doc ? `${props.doc.title} — AuctionBall help` : 'AuctionBall help');
+const seoTitle = computed(() => props.doc
+    ? t('help_page.seo_title_with_doc', { title: props.doc.title })
+    : t('help_page.seo_title_default'));
 const seoDesc  = computed(() => props.doc?.body
     ? props.doc.body.replace(/[#*`>_\-\[\]\(\)]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160)
-    : 'Step-by-step guides for setting up tournaments, running live auctions, and managing teams on AuctionBall.');
+    : t('help_page.seo_desc_default'));
 
 const sidebarOpen = ref(false);
 </script>
@@ -48,7 +53,7 @@ const sidebarOpen = ref(false);
         <!-- ============== TOP BAR ============== -->
         <header class="sticky top-0 z-30 bg-white/70 backdrop-blur-md border-b border-ink-200/40">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 py-3 flex items-center gap-3">
-                <button class="lg:hidden p-2 -ml-2" @click="sidebarOpen = !sidebarOpen" aria-label="Toggle docs sidebar">
+                <button class="lg:hidden p-2 -ml-2" @click="sidebarOpen = !sidebarOpen" :aria-label="t('help_page.toggle_sidebar')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
                 </button>
                 <Link href="/" class="flex items-center gap-2.5">
@@ -57,12 +62,12 @@ const sidebarOpen = ref(false);
                         <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12h8M8 8h5"/></svg>
                     </span>
                     <span class="font-semibold text-[16px] tracking-tight">AuctionBall</span>
-                    <span class="hidden sm:inline-block font-mono text-[11px] tracking-widest text-ink-500 ml-2 px-2 py-0.5 rounded-full border border-ink-200/60">DOCS</span>
+                    <span class="hidden sm:inline-block font-mono text-[11px] tracking-widest text-ink-500 ml-2 px-2 py-0.5 rounded-full border border-ink-200/60">{{ t('help_page.docs_badge') }}</span>
                 </Link>
                 <div class="ml-auto flex items-center gap-2">
                     <LanguageToggle />
-                    <Link href="/login" class="hidden sm:inline-flex btn-ghost text-[13px] py-2 px-3">Log in</Link>
-                    <Link href="/register" class="btn-primary text-[13px] py-2 px-3">Get started</Link>
+                    <Link href="/login" class="hidden sm:inline-flex btn-ghost text-[13px] py-2 px-3">{{ t('help_page.log_in') }}</Link>
+                    <Link href="/register" class="btn-primary text-[13px] py-2 px-3">{{ t('help_page.get_started') }}</Link>
                 </div>
             </div>
         </header>
@@ -76,7 +81,7 @@ const sidebarOpen = ref(false);
             <aside class="hidden lg:block w-64 shrink-0 border-r border-ink-200/60 bg-white/40 self-start sticky top-[80px] h-[calc(100vh-80px)] mt-5">
                 <div class="flex flex-col h-full px-4 py-5">
                     <div class="sticky top-0 z-10 -mx-4 px-4 pb-3 bg-white/40 backdrop-blur-md border-b border-ink-200/40">
-                        <input v-model="search" type="search" placeholder="Search the docs…"
+                        <input v-model="search" type="search" :placeholder="t('help_page.search_placeholder')"
                                class="w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                     </div>
                     <nav class="flex-1 overflow-y-auto space-y-5 pt-4 pb-4 scroll-smooth">
@@ -94,7 +99,7 @@ const sidebarOpen = ref(false);
                                 </li>
                             </ul>
                         </div>
-                        <div v-if="filteredToc.length === 0" class="px-2 text-[12.5px] text-ink-500">No docs match.</div>
+                        <div v-if="filteredToc.length === 0" class="px-2 text-[12.5px] text-ink-500">{{ t('help_page.no_docs_match') }}</div>
                     </nav>
                 </div>
             </aside>
@@ -103,7 +108,7 @@ const sidebarOpen = ref(false);
             <div v-if="sidebarOpen" class="lg:hidden fixed inset-0 z-40">
                 <div class="absolute inset-0 bg-ink-900/30" @click="sidebarOpen = false"></div>
                 <aside class="absolute inset-y-0 left-0 w-72 bg-white p-4 shadow-xl overflow-y-auto">
-                    <input v-model="search" type="search" placeholder="Search the docs…"
+                    <input v-model="search" type="search" :placeholder="t('help_page.search_placeholder')"
                            class="mb-5 w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                     <div v-for="g in filteredToc" :key="g.group" class="mb-5">
                         <div class="px-2 pb-1.5 font-mono text-[10px] tracking-widest text-ink-400 uppercase">{{ g.group }}</div>
@@ -125,7 +130,7 @@ const sidebarOpen = ref(false);
                 <article v-if="doc" class="max-w-3xl mx-auto">
                     <!-- Breadcrumb -->
                     <nav class="text-[12px] font-mono tracking-wide text-ink-500 mb-4 flex gap-1.5 items-center">
-                        <Link href="/help" class="hover:underline">Help</Link>
+                        <Link href="/help" class="hover:underline">{{ t('help_page.breadcrumb_help') }}</Link>
                         <span>/</span>
                         <span class="text-ink-700">{{ doc.group }}</span>
                         <span>/</span>
@@ -138,25 +143,26 @@ const sidebarOpen = ref(false);
                     <!-- Prev / Next -->
                     <div v-if="prev || next" class="mt-12 pt-6 border-t border-ink-200/60 grid sm:grid-cols-2 gap-3">
                         <Link v-if="prev" :href="`/help/${prev.slug}`" class="block rounded-xl border border-ink-200/60 bg-white/60 hover:bg-white px-5 py-4 transition">
-                            <div class="font-mono text-[10.5px] tracking-widest text-ink-500">← PREVIOUS</div>
+                            <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('help_page.prev') }}</div>
                             <div class="text-[14px] font-semibold text-ink-900 mt-0.5">{{ prev.title }}</div>
                         </Link>
                         <span v-else></span>
                         <Link v-if="next" :href="`/help/${next.slug}`" class="block sm:text-right rounded-xl border border-ink-200/60 bg-white/60 hover:bg-white px-5 py-4 transition">
-                            <div class="font-mono text-[10.5px] tracking-widest text-ink-500">NEXT →</div>
+                            <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('help_page.next') }}</div>
                             <div class="text-[14px] font-semibold text-ink-900 mt-0.5">{{ next.title }}</div>
                         </Link>
                     </div>
 
                     <p class="mt-8 text-center text-[12.5px] text-ink-500">
-                        Still stuck? <a href="mailto:support@auctionball.com" class="text-brand-indigo hover:underline">Email support</a>
-                        — we usually reply within a few hours.
+                        <I18nT keypath="help_page.still_stuck">
+                            <template #link><a href="mailto:support@auctionball.com" class="text-brand-indigo hover:underline">{{ t('help_page.email_support') }}</a></template>
+                        </I18nT>
                     </p>
                 </article>
 
                 <div v-else class="max-w-2xl mx-auto text-center py-20">
-                    <h1 class="text-[28px] font-extrabold tracking-tight">Docs are loading...</h1>
-                    <p class="mt-3 text-ink-500">If this stays empty, no markdown files are present in <code>resources/docs/{en,bn}</code>.</p>
+                    <h1 class="text-[28px] font-extrabold tracking-tight">{{ t('help_page.loading_heading') }}</h1>
+                    <p class="mt-3 text-ink-500">{{ t('help_page.loading_body') }}</p>
                 </div>
             </main>
         </div>
