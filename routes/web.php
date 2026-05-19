@@ -112,11 +112,6 @@ Route::middleware(['auth', 'org'])->prefix('dashboard')->name('dashboard.')->gro
     // Players
     Route::get   ('/players',                  [PlayerController::class, 'index'])    ->name('players.index');
     Route::post  ('/players',                  [PlayerController::class, 'store'])    ->name('players.store');
-    Route::post  ('/players/{player}',         [PlayerController::class, 'update'])   ->name('players.update');
-    Route::delete('/players/{player}',         [PlayerController::class, 'destroy'])  ->name('players.destroy');
-    Route::post  ('/players/{player}/approve', [PlayerController::class, 'approve'])  ->name('players.approve');
-    Route::delete('/players/{player}/reject',  [PlayerController::class, 'reject'])   ->name('players.reject');
-    Route::post  ('/players/approve-all',      [PlayerController::class, 'approveAll'])->name('players.approve-all');
 
     // Player CSV import
     Route::get ('/players/import/template', [PlayerImportController::class, 'template'])->name('players.import.template');
@@ -126,6 +121,12 @@ Route::middleware(['auth', 'org'])->prefix('dashboard')->name('dashboard.')->gro
     // Player exports
     Route::get('/players/export.csv', [ExportController::class, 'playersCsv'])->name('players.export.csv');
     Route::get('/players/export.pdf', [ExportController::class, 'playersPdf'])->name('players.export.pdf');
+    Route::post('/players/approve-all', [PlayerController::class, 'approveAll'])->name('players.approve-all');
+
+    Route::post  ('/players/{player}',         [PlayerController::class, 'update'])   ->name('players.update');
+    Route::delete('/players/{player}',         [PlayerController::class, 'destroy'])  ->name('players.destroy');
+    Route::post  ('/players/{player}/approve', [PlayerController::class, 'approve'])  ->name('players.approve');
+    Route::delete('/players/{player}/reject',  [PlayerController::class, 'reject'])   ->name('players.reject');
 
     // Teams
     Route::get   ('/teams',                            [TeamController::class, 'index'])     ->name('teams.index');
