@@ -77,6 +77,7 @@ class AuctionStateUpdated implements ShouldBroadcastNow
                 'timer_end'               => $state->timer_end?->toIso8601String(),
                 'timer_duration_seconds'  => (int) $state->timer_duration_seconds,
                 'last_bid_at'             => $state->last_bid_at?->toIso8601String(),
+                'server_now'              => now()->toIso8601String(),
             ] : null,
             'player'    => $state?->currentPlayer ? [
                 'id'             => $state->currentPlayer->id,

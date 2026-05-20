@@ -155,6 +155,7 @@ class TeamDeviceController extends Controller
                 'name'  => $state->highestBidder->name,
             ] : null,
             'timer_end' => $state->timer_end?->toIso8601String(),
+            'server_now' => now()->toIso8601String(),
             'player'    => $state->currentPlayer ? [
                 'id'             => $state->currentPlayer->id,
                 'name'           => $state->currentPlayer->name,

@@ -263,6 +263,7 @@ class AuctionController extends Controller
             ] : null,
             'timer_end'               => $state->timer_end?->toIso8601String(),
             'timer_duration_seconds'  => (int) $state->timer_duration_seconds,
+            'server_now'              => now()->toIso8601String(),
             'player'                  => $state->currentPlayer ? [
                 'id'         => $state->currentPlayer->id,
                 'name'       => $state->currentPlayer->name,

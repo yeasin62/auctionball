@@ -15,6 +15,7 @@ export function useAuctionChannel(orgId, seasonId, initial = {}) {
     const bids   = ref(initial.bids ?? []);
     const lastReason = ref(null);
     const now    = ref(Date.now());
+    const serverOffsetMs = ref(0);
 
     // Pusher connection state — one of: initialized / connecting / connected /
     // unavailable / failed / disconnected. Plus a raw `navigator.onLine` mirror.
@@ -30,10 +31,19 @@ export function useAuctionChannel(orgId, seasonId, initial = {}) {
 
     const channelName = `auction.${orgId}.${seasonId}`;
 
+    const syncServerClock = (serverIso) => {
+        if (! serverIso) return;
+        const serverTime = new Date(serverIso).getTime();
+        if (! Number.isFinite(serverTime)) return;
+        serverOffsetMs.value = serverTime - Date.now();
+    };
+
+    syncServerClock(state.value?.server_now);
+
     const remainingMs = computed(() => {
         if (! state.value?.timer_end) return 0;
         const end = new Date(state.value.timer_end).getTime();
-        return Math.max(0, end - now.value);
+        return Math.max(0, end - (now.value + serverOffsetMs.value));
     });
     const remainingSec  = computed(() => Math.ceil(remainingMs.value / 1000));
     const timerDisplay  = computed(() => {
@@ -50,6 +60,7 @@ export function useAuctionChannel(orgId, seasonId, initial = {}) {
 
         channel = window.Echo.private(channelName).listen('.auction.event', (e) => {
             lastReason.value = e.reason;
+            syncServerClock(e.broadcast_at || e.state?.server_now);
             if (e.state)  state.value  = e.state;
             if (e.player) player.value = e.player;
             if (e.bids)   bids.value   = e.bids;
