@@ -43,24 +43,28 @@ watch(lastReason, (reason) => {
         };
         showSold.value = true;
         showUnsold.value = false;
-        setTimeout(() => { showSold.value = false; }, 5000);
         return;
     }
 
     if (reason === 'auction.unsold') {
         showUnsold.value = true;
+        showSold.value = false;
         return;
     }
 
     // New lot or full reset clears the persistent stamp.
     if (['player.changed', 'auction.reset', 'auction.started'].includes(reason)) {
+        showSold.value = false;
         showUnsold.value = false;
     }
 });
 
 // Belt-and-braces: also clear the stamp when the player id changes by any
 // other path (initial load with a different lot, manual setPlayer, etc.).
-watch(() => player.value?.id, () => { showUnsold.value = false; });
+watch(() => player.value?.id, () => {
+    showSold.value = false;
+    showUnsold.value = false;
+});
 
 const isRunning = computed(() => state.value?.status === 'running');
 </script>
