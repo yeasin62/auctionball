@@ -42,8 +42,12 @@ const props = defineProps({
     pending_bkash: { type: Object, default: () => null },
 });
 
-const cap = (n) => (n === Number.MAX_SAFE_INTEGER || n > 1e15) ? '∞' : n;
-const pct = (used, max) => cap(max) === '∞' ? 0 : Math.min(100, Math.round(used / max * 100));
+// Limits >= 999_999_999 (PlanPricing::UNLIMITED) or PHP_INT_MAX surface as
+// the translated "Unlimited" label rather than a raw 9-digit number.
+const UNLIMITED_THRESHOLD = 999_999_999;
+const isUnlimited = (n) => n >= UNLIMITED_THRESHOLD;
+const cap = (n) => isUnlimited(n) ? t('billing.unlimited') : n;
+const pct = (used, max) => isUnlimited(max) ? 0 : Math.min(100, Math.round(used / max * 100));
 const fmt = _fmt.money;
 
 const checkoutPlan = ref(null);

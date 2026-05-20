@@ -264,7 +264,7 @@ const isRunning = computed(() => state.value?.status === 'running');
                             <div class="seal-inner">
                                 <div class="seal-text">{{ t('auction_page.bigscreen_sold') }}</div>
                                 <div class="seal-divider"></div>
-                                <div class="seal-sub">৳ {{ ld(new Intl.NumberFormat('en-IN').format(soldData.price)) }}</div>
+                                <div class="seal-sub">{{ fmt(soldData.price) }}</div>
                             </div>
                         </div>
                     </div>

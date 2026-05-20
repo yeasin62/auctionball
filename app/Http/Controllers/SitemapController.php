@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PlatformSettings;
+use App\Models\BlogPost;
 use Illuminate\Http\Response;
 
 /**
@@ -27,12 +28,23 @@ class SitemapController extends Controller
 
         $urls = [
             ['loc' => "{$base}/",         'priority' => '1.0', 'changefreq' => 'weekly'],
-            ['loc' => "{$base}/#features",   'priority' => '0.8', 'changefreq' => 'monthly'],
-            ['loc' => "{$base}/#how-it-works",'priority' => '0.8', 'changefreq' => 'monthly'],
-            ['loc' => "{$base}/#big-screen", 'priority' => '0.7', 'changefreq' => 'monthly'],
-            ['loc' => "{$base}/#pricing",    'priority' => '0.9', 'changefreq' => 'weekly'],
-            ['loc' => "{$base}/#faq",        'priority' => '0.8', 'changefreq' => 'monthly'],
+            ['loc' => "{$base}/features",   'priority' => '0.8', 'changefreq' => 'monthly'],
+            ['loc' => "{$base}/pricing",    'priority' => '0.9', 'changefreq' => 'weekly'],
+            ['loc' => "{$base}/live-demo",  'priority' => '0.7', 'changefreq' => 'monthly'],
+            ['loc' => "{$base}/blog",       'priority' => '0.7', 'changefreq' => 'weekly'],
+            ['loc' => "{$base}/help",       'priority' => '0.8', 'changefreq' => 'monthly'],
         ];
+
+        foreach (\App\Http\Controllers\PublicPageController::PAGE_SLUGS as $slug) {
+            if (in_array($slug, ['features', 'pricing', 'live-demo'], true)) {
+                continue;
+            }
+            $urls[] = ['loc' => "{$base}/{$slug}", 'priority' => '0.6', 'changefreq' => 'monthly'];
+        }
+
+        foreach (BlogPost::query()->published()->latest('published_at')->get(['slug']) as $post) {
+            $urls[] = ['loc' => "{$base}/blog/{$post->slug}", 'priority' => '0.6', 'changefreq' => 'monthly'];
+        }
 
         $xml  = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">';

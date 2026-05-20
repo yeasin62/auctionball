@@ -120,8 +120,8 @@ const submit = () => form.post(route('register'), {
             </button>
 
             <I18nT keypath="auth.terms_agreement" tag="p" class="text-center text-[12.5px] text-ink-500 pt-1">
-                <template #terms><a href="#terms" class="text-ink-700 underline">{{ t('auth.terms') }}</a></template>
-                <template #privacy><a href="#privacy" class="text-ink-700 underline">{{ t('auth.privacy') }}</a></template>
+                <template #terms><Link href="/terms" class="text-ink-700 underline">{{ t('auth.terms') }}</Link></template>
+                <template #privacy><Link href="/privacy" class="text-ink-700 underline">{{ t('auth.privacy') }}</Link></template>
             </I18nT>
         </form>
 

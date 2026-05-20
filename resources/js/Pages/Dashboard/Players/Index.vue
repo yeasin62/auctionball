@@ -442,7 +442,7 @@ const atLimit = props.season && props.used >= props.limits.players;
                     <option value="sold">{{ t('players_page.status_sold') }}</option>
                     <option value="unsold">{{ t('players_page.status_unsold') }}</option>
                 </select>
-                <span class="text-[12px] font-mono text-ink-500">{{ used }} / {{ limits.players === 9223372036854775807 ? '∞' : limits.players }}</span>
+                <span class="text-[12px] font-mono text-ink-500">{{ used }} / {{ limits.players >= 999999999 ? t('billing.unlimited') : limits.players }}</span>
             </div>
 
             <!-- Pending review banner -->

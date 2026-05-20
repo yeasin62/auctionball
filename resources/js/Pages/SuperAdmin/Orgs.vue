@@ -122,6 +122,7 @@ const subColor = (s) => ({
                 <thead class="bg-white/40">
                     <tr class="text-left font-mono text-[10px] tracking-widest text-ink-500">
                         <th class="px-4 py-2.5">{{ t('super_admin.th_org') }}</th>
+                        <th class="px-4 py-2.5">{{ t('super_admin.th_owner_admin') }}</th>
                         <th class="px-4 py-2.5">{{ t('super_admin.th_plan') }}</th>
                         <th class="px-4 py-2.5">{{ t('super_admin.orgs_th_subscription') }}</th>
                         <th class="px-4 py-2.5">{{ t('super_admin.orgs_th_usage') }}</th>
@@ -135,6 +136,13 @@ const subColor = (s) => ({
                         <td class="px-4 py-2.5">
                             <div class="font-medium leading-tight">{{ o.name }}</div>
                             <div class="font-mono text-[10.5px] text-ink-500">{{ o.slug }}</div>
+                        </td>
+                        <td class="px-4 py-2.5">
+                            <div v-if="o.owner_admin" class="leading-tight">
+                                <div class="font-medium">{{ o.owner_admin.name }}</div>
+                                <div class="font-mono text-[10.5px] text-ink-500">{{ o.owner_admin.email }}</div>
+                            </div>
+                            <div v-else class="text-ink-400 text-[12px]">—</div>
                         </td>
                         <td class="px-4 py-2.5">
                             <select :value="o.plan"
@@ -169,7 +177,7 @@ const subColor = (s) => ({
                         </td>
                     </tr>
                     <tr v-if="orgs.data.length === 0">
-                        <td colspan="7" class="px-4 py-12 text-center text-[13.5px] text-ink-500">{{ t('super_admin.no_orgs_match') }}</td>
+                        <td colspan="8" class="px-4 py-12 text-center text-[13.5px] text-ink-500">{{ t('super_admin.no_orgs_match') }}</td>
                     </tr>
                 </tbody>
             </table>

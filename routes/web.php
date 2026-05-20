@@ -13,10 +13,12 @@ use App\Http\Controllers\OrgPagesController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\PlayerImportController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicPageController;
 use App\Http\Controllers\PublicRegistrationController;
 use App\Http\Controllers\SeasonController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\SuperAdminContentController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TeamDeviceController;
 use Illuminate\Support\Facades\Route;
@@ -39,6 +41,17 @@ Route::get('/', function () {
         'unlimited' => \App\Models\PlanPricing::UNLIMITED,
     ]);
 })->name('home');
+
+foreach (PublicPageController::PAGE_SLUGS as $slug) {
+    Route::get("/{$slug}", [PublicPageController::class, 'show'])
+        ->defaults('slug', $slug)
+        ->name("public.{$slug}");
+}
+Route::post('/contact', [PublicPageController::class, 'submitContact'])
+    ->middleware('throttle:6,1')
+    ->name('public.contact.submit');
+Route::get('/blog', [PublicPageController::class, 'blog'])->name('public.blog');
+Route::get('/blog/{post:slug}', [PublicPageController::class, 'blogPost'])->name('public.blog.show');
 
 // Language switcher (works for guests via cookie, signed-in users via DB)
 Route::post('/lang/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
@@ -210,6 +223,12 @@ Route::middleware(['auth', 'super-admin'])->prefix('admin')->name('admin.')->gro
     Route::patch('/platform-settings',              [SuperAdminController::class, 'updatePlatformSettings'])->name('platform-settings.update');
     Route::post  ('/platform-settings/logo',         [SuperAdminController::class, 'uploadPlatformLogo'])    ->name('platform-settings.logo.upload');
     Route::delete('/platform-settings/logo',         [SuperAdminController::class, 'deletePlatformLogo'])    ->name('platform-settings.logo.delete');
+
+    Route::get   ('/content',                        [SuperAdminContentController::class, 'index'])         ->name('content.index');
+    Route::post  ('/content/blog',                   [SuperAdminContentController::class, 'storePost'])     ->name('content.blog.store');
+    Route::patch ('/content/blog/{post:slug}',       [SuperAdminContentController::class, 'updatePost'])    ->name('content.blog.update');
+    Route::delete('/content/blog/{post:slug}',       [SuperAdminContentController::class, 'deletePost'])    ->name('content.blog.delete');
+    Route::patch ('/content/scripts',                [SuperAdminContentController::class, 'updateScripts']) ->name('content.scripts.update');
 
     Route::post('/orgs/{organization}/plan',         [SuperAdminController::class, 'setPlan'])    ->name('orgs.set-plan');
     Route::post('/orgs/{organization}/extend-sub',   [SuperAdminController::class, 'extendSubscription'])->name('orgs.extend-sub');

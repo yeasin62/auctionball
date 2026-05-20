@@ -22,6 +22,9 @@ class PlatformSettings extends Model
         'bkash_instructions',
         'manual_review_hours',
         'landing_payment_methods',
+        'head_scripts',
+        'body_start_scripts',
+        'body_end_scripts',
     ];
 
     protected $casts = [

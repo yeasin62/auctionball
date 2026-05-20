@@ -110,9 +110,16 @@ class SuperAdminController extends Controller
             'plan' => 'nullable|string|max:32',
         ]);
 
-        $q = Organization::query()->withCount(['users', 'seasons', 'players']);
+        $q = Organization::query()
+            ->with(['users' => fn ($query) => $query->select('users.id', 'name', 'email')])
+            ->withCount(['users', 'seasons', 'players']);
         if ($s = $filters['q'] ?? null) {
-            $q->where(fn ($qq) => $qq->where('name', 'like', "%{$s}%")->orWhere('slug', 'like', "%{$s}%"));
+            $q->where(fn ($qq) => $qq
+                ->where('name', 'like', "%{$s}%")
+                ->orWhere('slug', 'like', "%{$s}%")
+                ->orWhereHas('users', fn ($uq) => $uq
+                    ->where('users.name', 'like', "%{$s}%")
+                    ->orWhere('users.email', 'like', "%{$s}%")));
         }
         if ($p = $filters['plan'] ?? null) {
             $q->where('plan', $p);
@@ -122,10 +129,18 @@ class SuperAdminController extends Controller
 
         $orgs->getCollection()->transform(function ($o) {
             $sub = $o->subscriptions()->whereIn('status', ['active','past_due'])->latest()->first();
+            $owner = $o->users->first(fn ($user) => $user->pivot?->role === 'org_admin')
+                ?? $o->users->first();
+
             return [
                 'id'              => $o->id,
                 'name'            => $o->name,
                 'slug'            => $o->slug,
+                'owner_admin'     => $owner ? [
+                    'name'  => $owner->name,
+                    'email' => $owner->email,
+                    'role'  => $owner->pivot?->role,
+                ] : null,
                 'plan'            => $o->plan,
                 'created_at'      => $o->created_at?->format('Y-m-d'),
                 'users_count'     => $o->users_count,

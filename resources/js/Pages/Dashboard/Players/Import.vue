@@ -37,7 +37,7 @@ const fmt = useFmt().money;
             <div class="glass rounded-2xl p-4">
                 <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('players_import.plan_headroom') }}</div>
                 <div class="text-[28px] font-extrabold tracking-tight mt-1">{{ preview.headroom }}</div>
-                <div class="text-[11px] font-mono text-ink-500">{{ t('players_import.used_count', { used, limit: limits.players === 9223372036854775807 ? '∞' : limits.players }) }}</div>
+                <div class="text-[11px] font-mono text-ink-500">{{ t('players_import.used_count', { used, limit: limits.players >= 999999999 ? t('billing.unlimited') : limits.players }) }}</div>
             </div>
             <div class="glass rounded-2xl p-4 bg-gradient-to-br from-blue-50 to-violet-50 border border-violet-100">
                 <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('players_import.will_import') }}</div>

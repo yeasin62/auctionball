@@ -17,6 +17,7 @@ const tabs = computed(() => [
     { label: 'Subscriptions', href: '/admin/subscriptions', match: /^\/admin\/subscriptions/ },
     { label: 'Payments',      href: '/admin/payments',      match: /^\/admin\/payments/,
       badge: pendingPaymentsCount.value > 0 ? pendingPaymentsCount.value : null },
+    { label: 'Content',       href: '/admin/content',       match: /^\/admin\/content/ },
     { label: 'Plans',         href: '/admin/plans',         match: /^\/admin\/plans/ },
     { label: 'Audit log',     href: '/admin/audit',         match: /^\/admin\/audit/ },
 ]);

@@ -16,7 +16,10 @@
         <meta name="apple-mobile-web-app-title" content="AuctionBall">
 
         {{-- Favicon set — uses appLogo if uploaded, falls back to generic / svg. --}}
-        @php $logo = \App\Models\PlatformSettings::current()->app_logo_url ?? null; @endphp
+        @php
+            $platformSettings = \App\Models\PlatformSettings::current();
+            $logo = $platformSettings->app_logo_url ?? null;
+        @endphp
         @if ($logo)
             <link rel="icon" type="image/png" href="{{ $logo }}">
             <link rel="apple-touch-icon" href="{{ $logo }}">
@@ -43,10 +46,13 @@
         />
 
         @routes
-        @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
+        @vite('resources/js/app.js')
         @inertiaHead
+        {!! $platformSettings->head_scripts !!}
     </head>
     <body class="font-sans antialiased text-ink-900">
+        {!! $platformSettings->body_start_scripts !!}
         @inertia
+        {!! $platformSettings->body_end_scripts !!}
     </body>
 </html>
