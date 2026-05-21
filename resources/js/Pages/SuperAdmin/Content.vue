@@ -358,6 +358,30 @@ const savePost = () => {
     postForm.post(route('admin.content.blog.store'), options);
 };
 
+const generationErrorMessage = (error) => {
+    const data = error.response?.data;
+
+    if (data?.message) return data.message;
+    if (data?.errors) {
+        const first = Object.values(data.errors).flat()[0];
+        if (first) return first;
+    }
+
+    if (error.response?.status) {
+        return `Post generation failed with server status ${error.response.status}. Check Laravel logs for the exact provider error.`;
+    }
+
+    if (error.code === 'ECONNABORTED') {
+        return 'Post generation timed out. Try a smaller word count or a faster model.';
+    }
+
+    if (error.message) {
+        return `Post generation failed: ${error.message}`;
+    }
+
+    return 'Post generation failed. Please try again.';
+};
+
 const generateAiPost = async () => {
     aiError.value = '';
     aiGenerating.value = true;
@@ -385,7 +409,7 @@ const generateAiPost = async () => {
         Object.assign(postForm, payload);
         await setEditorHtml(generated.body || '');
     } catch (error) {
-        aiError.value = error.response?.data?.message || 'Post generation failed. Please try again.';
+        aiError.value = generationErrorMessage(error);
     } finally {
         aiGenerating.value = false;
     }

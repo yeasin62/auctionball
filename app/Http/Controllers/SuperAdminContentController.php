@@ -138,7 +138,7 @@ class SuperAdminContentController extends Controller
             'language' => ['required', Rule::in(['en', 'bn'])],
             'tone' => ['required', 'string', 'max:80'],
             'audience' => ['nullable', 'string', 'max:160'],
-            'extra_notes' => ['nullable', 'string', 'max:1000'],
+            'extra_notes' => ['nullable', 'string'],
             'blog_category_id' => ['nullable', Rule::exists('blog_categories', 'id')],
             'include_schema' => ['boolean'],
         ]);
@@ -181,8 +181,25 @@ class SuperAdminContentController extends Controller
             return response()->json(['message' => $aiResponse['message']], 422);
         }
 
+        if (trim($aiResponse['text']) === '') {
+            Log::warning('AI blog generation returned empty text', [
+                'provider' => $provider['name'],
+                'model' => $provider['model'],
+            ]);
+
+            return response()->json([
+                'message' => "AI returned an empty response from {$provider['name']} ({$provider['model']}). Try a smaller word count or a faster model.",
+            ], 422);
+        }
+
         $generated = $this->decodeGeneratedPost($aiResponse['text']);
         if (! $generated) {
+            Log::warning('AI blog generation response parse failed', [
+                'provider' => $provider['name'],
+                'model' => $provider['model'],
+                'text' => Str::limit($aiResponse['text'], 1500),
+            ]);
+
             return response()->json(['message' => 'AI response could not be parsed. Try again.'], 422);
         }
 
@@ -327,12 +344,13 @@ class SuperAdminContentController extends Controller
         try {
             $response = Http::withToken($provider['key'])
                 ->acceptJson()
-                ->timeout(120)
+                ->connectTimeout(10)
+                ->timeout(55)
                 ->post('https://api.openai.com/v1/responses', [
                     'model' => $provider['model'],
                     'instructions' => $this->aiInstructions(),
                     'input' => $prompt,
-                    'max_output_tokens' => min(8000, max(1400, $wordCount * 4)),
+                    'max_output_tokens' => min(5500, max(1200, $wordCount * 3)),
                     'text' => [
                         'format' => [
                             'type' => 'json_schema',
@@ -371,10 +389,11 @@ class SuperAdminContentController extends Controller
                     'anthropic-version' => '2023-06-01',
                 ])
                 ->acceptJson()
-                ->timeout(120)
+                ->connectTimeout(10)
+                ->timeout(55)
                 ->post('https://api.anthropic.com/v1/messages', [
                     'model' => $provider['model'],
-                    'max_tokens' => min(8000, max(1400, $wordCount * 4)),
+                    'max_tokens' => min(5500, max(1200, $wordCount * 3)),
                     'system' => $this->aiInstructions(),
                     'messages' => [
                         ['role' => 'user', 'content' => $prompt],
@@ -411,7 +430,7 @@ class SuperAdminContentController extends Controller
 
         return [
             'ok' => false,
-            'message' => "{$providerName} request failed before a response was received. Check server internet access, API key, and selected model.",
+            'message' => "{$providerName} request timed out or failed before a response was received. Try a smaller word count first, then check server internet access, API key, and selected model.",
             'text' => '',
         ];
     }
