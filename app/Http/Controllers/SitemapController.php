@@ -122,6 +122,11 @@ class SitemapController extends Controller
         $dom = new \DOMDocument('1.0', 'UTF-8');
         $dom->formatOutput = true;
 
+        $dom->appendChild($dom->createProcessingInstruction(
+            'xml-stylesheet',
+            'type="text/xsl" href="/sitemap.xsl"'
+        ));
+
         $urlset = $dom->createElement('urlset');
         $urlset->setAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
         $urlset->setAttribute('xmlns:xhtml', 'http://www.w3.org/1999/xhtml');
