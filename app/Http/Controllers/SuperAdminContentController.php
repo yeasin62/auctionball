@@ -35,17 +35,39 @@ class SuperAdminContentController extends Controller
     public function blogPosts(): Response
     {
         return Inertia::render('SuperAdmin/BlogPosts', [
+            'posts' => BlogPost::query()
+                ->with('blogCategory')
+                ->latest('updated_at')
+                ->get()
+                ->map(fn (BlogPost $post) => $this->postPayload($post)),
+        ]);
+    }
+
+    public function createPost(): Response
+    {
+        return Inertia::render('SuperAdmin/BlogPostEditor', [
             'categories' => BlogCategory::query()
                 ->withCount('posts')
                 ->orderBy('sort_order')
                 ->orderBy('name')
                 ->get()
                 ->map(fn (BlogCategory $category) => $this->categoryPayload($category)),
-            'posts' => BlogPost::query()
-                ->with('blogCategory')
-                ->latest('updated_at')
+            'post' => null,
+        ]);
+    }
+
+    public function editPost(BlogPost $post): Response
+    {
+        $post->load('blogCategory');
+
+        return Inertia::render('SuperAdmin/BlogPostEditor', [
+            'categories' => BlogCategory::query()
+                ->withCount('posts')
+                ->orderBy('sort_order')
+                ->orderBy('name')
                 ->get()
-                ->map(fn (BlogPost $post) => $this->postPayload($post)),
+                ->map(fn (BlogCategory $category) => $this->categoryPayload($category)),
+            'post' => $this->postPayload($post),
         ]);
     }
 
@@ -75,7 +97,7 @@ class SuperAdminContentController extends Controller
 
         Audit::log('blog.created', "Blog post created: {$post->title}", ['post_id' => $post->id]);
 
-        return back()->with('success', 'Blog post created.');
+        return redirect()->route('admin.content.blog-posts.index')->with('success', 'Blog post created.');
     }
 
     public function updatePost(Request $request, BlogPost $post): RedirectResponse
@@ -91,7 +113,7 @@ class SuperAdminContentController extends Controller
 
         Audit::log('blog.updated', "Blog post updated: {$post->title}", ['post_id' => $post->id]);
 
-        return back()->with('success', 'Blog post updated.');
+        return redirect()->route('admin.content.blog-posts.index')->with('success', 'Blog post updated.');
     }
 
     public function deletePost(BlogPost $post): RedirectResponse

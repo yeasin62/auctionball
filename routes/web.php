@@ -228,6 +228,8 @@ Route::middleware(['auth', 'super-admin'])->prefix('admin')->name('admin.')->gro
 
     Route::get   ('/content',                        [SuperAdminContentController::class, 'index'])         ->name('content.index');
     Route::get   ('/content/blog-posts',             [SuperAdminContentController::class, 'blogPosts'])     ->name('content.blog-posts.index');
+    Route::get   ('/content/blog-posts/create',      [SuperAdminContentController::class, 'createPost'])    ->name('content.blog-posts.create');
+    Route::get   ('/content/blog-posts/{post:slug}/edit', [SuperAdminContentController::class, 'editPost']) ->name('content.blog-posts.edit');
     Route::get   ('/advanced',                       [SuperAdminContentController::class, 'advanced'])      ->name('advanced.index');
     Route::get   ('/integrations',                   [SuperAdminIntegrationController::class, 'index'])     ->name('integrations.index');
     Route::patch ('/integrations',                   [SuperAdminIntegrationController::class, 'update'])    ->name('integrations.update');
