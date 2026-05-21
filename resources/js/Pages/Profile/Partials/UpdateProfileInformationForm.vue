@@ -4,6 +4,7 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -17,22 +18,59 @@ defineProps({
     },
 });
 
-const user = usePage().props.auth.user;
+const page = usePage();
+const user = computed(() => page.props.auth.user);
+const avatarInput = ref(null);
 
 const form = useForm({
-    name: user.name,
-    email: user.email,
+    name: user.value.name,
+    email: user.value.email,
 });
+
+const avatarForm = useForm({
+    avatar: null,
+});
+
+const initials = computed(() => String(user.value.name || '')
+    .split(' ')
+    .map((part) => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase());
+
+const chooseAvatar = () => {
+    avatarInput.value?.click();
+};
+
+const uploadAvatar = (event) => {
+    const file = event.target.files?.[0];
+    if (! file) return;
+
+    avatarForm.avatar = file;
+    avatarForm.post(route('profile.avatar.update'), {
+        forceFormData: true,
+        preserveScroll: true,
+        onFinish: () => {
+            avatarForm.reset('avatar');
+            event.target.value = '';
+        },
+    });
+};
+
+const removeAvatar = () => {
+    avatarForm.delete(route('profile.avatar.delete'), { preserveScroll: true });
+};
 </script>
 
 <template>
     <section>
         <header>
-            <h2 class="text-lg font-medium text-gray-900">
+            <h2 class="text-[18px] font-extrabold tracking-tight text-ink-900">
                 {{ t('profile.info_title') }}
             </h2>
 
-            <p class="mt-1 text-sm text-gray-600">
+            <p class="mt-1 text-[13px] leading-6 text-ink-500">
                 {{ t('profile.info_subtitle') }}
             </p>
         </header>
@@ -41,6 +79,29 @@ const form = useForm({
             @submit.prevent="form.patch(route('profile.update'))"
             class="mt-6 space-y-6"
         >
+            <div>
+                <InputLabel value="Profile image" />
+                <div class="mt-2 flex flex-wrap items-center gap-4">
+                    <img v-if="user.avatar_url" :src="user.avatar_url" :alt="user.name" class="h-20 w-20 rounded-2xl border border-ink-200/70 object-cover shadow-card" />
+                    <div v-else class="grid h-20 w-20 place-items-center rounded-2xl border border-ink-200/70 bg-indigo-50 text-lg font-bold text-indigo-700 shadow-card">
+                        {{ initials || 'U' }}
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" @click="chooseAvatar" class="btn-primary px-4 py-2 text-[12px]" :disabled="avatarForm.processing">
+                                {{ avatarForm.processing ? 'Uploading...' : 'Upload image' }}
+                            </button>
+                            <button v-if="user.avatar_url" type="button" @click="removeAvatar" class="btn-ghost px-4 py-2 text-[12px] text-rose-600" :disabled="avatarForm.processing">
+                                Remove
+                            </button>
+                        </div>
+                        <p class="text-[12px] text-ink-500">JPG, PNG, WebP, or GIF. Max 4 MB.</p>
+                        <input ref="avatarInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" @change="uploadAvatar" />
+                        <InputError class="mt-2" :message="avatarForm.errors.avatar" />
+                    </div>
+                </div>
+            </div>
+
             <div>
                 <InputLabel for="name" :value="t('profile.name')" />
 
@@ -104,7 +165,7 @@ const form = useForm({
                 >
                     <p
                         v-if="form.recentlySuccessful"
-                        class="text-sm text-gray-600"
+                        class="text-sm text-ink-500"
                     >
                         {{ t('profile.saved') }}
                     </p>

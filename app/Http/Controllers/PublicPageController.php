@@ -88,6 +88,7 @@ class PublicPageController extends Controller
     {
         return Inertia::render('Public/Blog', [
             'posts' => BlogPost::query()
+                ->with('blogCategory')
                 ->published()
                 ->latest('published_at')
                 ->get()
@@ -502,11 +503,13 @@ class PublicPageController extends Controller
             'title' => $post->title,
             'slug' => $post->slug,
             'url' => route('public.blog.show', $post),
-            'category' => $post->category,
+            'category' => $post->categoryName(),
+            'featured_image_url' => $post->featured_image_url,
             'excerpt' => $post->excerpt,
             'body' => $includeBody ? $post->body : null,
             'meta_title' => $post->meta_title,
             'meta_description' => $post->meta_description,
+            'schema_json' => $includeBody ? $post->schema_json : null,
             'read_time' => $post->read_time,
             'date' => $post->formattedDate(),
         ], fn ($value) => $value !== null);

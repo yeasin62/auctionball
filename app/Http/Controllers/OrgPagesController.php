@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Invitation;
+use App\Models\Team;
+use App\Models\User;
+use App\Support\Audit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -24,6 +27,7 @@ class OrgPagesController extends Controller
                 'team_id'        => $u->pivot->team_id,
                 'last_active_at' => $u->pivot->last_active_at,
                 'joined_at'      => $u->pivot->created_at,
+                'can_remove'     => $u->id !== $request->user()->id,
             ]);
 
         $invitations = Invitation::where('organization_id', $org->id)
@@ -51,6 +55,49 @@ class OrgPagesController extends Controller
             'invitations' => $invitations,
             'teams'       => $teams,
         ]);
+    }
+
+    public function removeUser(Request $request, User $user): RedirectResponse
+    {
+        $org = $request->attributes->get('current_organization');
+        $member = $org->users()->where('users.id', $user->id)->first();
+
+        if (! $member) {
+            return back()->with('error', 'That user is not a member of this organization.');
+        }
+
+        if ($request->user()->id === $user->id) {
+            return back()->with('error', 'You cannot remove your own admin access.');
+        }
+
+        if ($member->pivot->role === 'org_admin') {
+            $adminCount = $org->users()->wherePivot('role', 'org_admin')->count();
+            if ($adminCount <= 1) {
+                return back()->with('error', 'Add another organization admin before removing this one.');
+            }
+        }
+
+        $teamIds = Team::query()
+            ->where('organization_id', $org->id)
+            ->where('owner_user_id', $user->id)
+            ->pluck('id')
+            ->all();
+
+        Team::query()
+            ->where('organization_id', $org->id)
+            ->where('owner_user_id', $user->id)
+            ->update(['owner_user_id' => null]);
+
+        $org->users()->detach($user->id);
+
+        Audit::log('org_user.removed', "Removed {$user->name} ({$user->email}) from organization", [
+            'target_user_id' => $user->id,
+            'role' => $member->pivot->role,
+            'team_id' => $member->pivot->team_id,
+            'cleared_team_owner_ids' => $teamIds,
+        ], $user, $org->id);
+
+        return back()->with('success', 'User removed from this organization.');
     }
 
     public function settings(Request $request): Response

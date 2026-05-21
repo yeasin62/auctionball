@@ -52,6 +52,17 @@ const copyLink = async (link) => {
     alertDialog({ title: t('users_page.invite_link_copied'), variant: 'info' });
 };
 
+const removeUser = async (u) => {
+    if (! await confirmDialog({
+        title: `Remove ${u.name}?`,
+        body: `${u.email}\n\nThis removes their access to this organization. If they are a team owner, their team login link will stop working until another owner is assigned.`,
+        variant: 'danger',
+        confirmText: 'Remove user',
+    })) return;
+
+    router.delete(route('dashboard.users.remove', u.id), { preserveScroll: true });
+};
+
 const roleLabel = (r) => ({
     org_admin:  'Admin',
     auctioneer: t('users_page.role_auctioneer'),
@@ -155,6 +166,7 @@ const roleColor = (r) => ({
                         <th class="px-4 py-2.5">{{ t('users_page.col_email') }}</th>
                         <th class="px-4 py-2.5">{{ t('users_page.col_role') }}</th>
                         <th class="px-4 py-2.5">{{ t('users_page.col_joined') }}</th>
+                        <th class="px-4 py-2.5"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-ink-100">
@@ -165,6 +177,11 @@ const roleColor = (r) => ({
                             <span class="px-2 py-0.5 rounded-full font-mono text-[10.5px] uppercase border" :class="roleColor(u.role)">{{ roleLabel(u.role) }}</span>
                         </td>
                         <td class="px-4 py-2.5 font-mono text-[12px] text-ink-500">{{ u.joined_at?.slice(0,10) }}</td>
+                        <td class="px-4 py-2.5 text-right">
+                            <button v-if="u.can_remove" type="button" @click="removeUser(u)" class="text-[12px] text-rose-500 hover:text-rose-700">
+                                Delete
+                            </button>
+                        </td>
                     </tr>
                 </tbody>
             </table>

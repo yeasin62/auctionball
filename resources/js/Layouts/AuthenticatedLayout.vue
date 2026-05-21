@@ -1,13 +1,15 @@
 <script setup>
-import { ref } from 'vue';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
+import { computed, ref } from 'vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 
 const showingNavigationDropdown = ref(false);
+const page = usePage();
+const appLogo = computed(() => page.props.appLogo);
+const user = computed(() => page.props.auth?.user);
 </script>
 
 <template>
@@ -23,9 +25,10 @@ const showingNavigationDropdown = ref(false);
                             <!-- Logo -->
                             <div class="flex shrink-0 items-center">
                                 <Link :href="route('dashboard')">
-                                    <ApplicationLogo
-                                        class="block h-9 w-auto fill-current text-gray-800"
-                                    />
+                                    <img v-if="appLogo" :src="appLogo" alt="AuctionBall" class="h-9 w-9 rounded-lg border border-gray-200 bg-white object-contain" />
+                                    <span v-else class="grid h-9 w-9 place-items-center rounded-lg bg-gradient-brand text-white shadow-sm">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12h8M8 8h5"/></svg>
+                                    </span>
                                 </Link>
                             </div>
 
@@ -52,7 +55,11 @@ const showingNavigationDropdown = ref(false);
                                                 type="button"
                                                 class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
                                             >
-                                                {{ $page.props.auth.user.name }}
+                                                <img v-if="user?.avatar_url" :src="user.avatar_url" :alt="user.name" class="-my-1 me-2 h-7 w-7 rounded-full object-cover" />
+                                                <span v-else class="-my-1 me-2 grid h-7 w-7 place-items-center rounded-full bg-indigo-100 text-[11px] font-bold text-indigo-700">
+                                                    {{ user?.name?.[0]?.toUpperCase() }}
+                                                </span>
+                                                {{ user?.name }}
 
                                                 <svg
                                                     class="-me-0.5 ms-2 h-4 w-4"

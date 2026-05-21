@@ -9,6 +9,7 @@ defineProps({
 });
 
 const appLogo = computed(() => usePage().props.appLogo);
+const user = computed(() => usePage().props.auth?.user);
 </script>
 
 <template>
@@ -34,8 +35,11 @@ const appLogo = computed(() => usePage().props.appLogo);
                 </nav>
                 <div class="ml-auto flex items-center gap-2">
                     <LanguageToggle />
-                    <Link href="/login" class="hidden sm:inline-flex btn-ghost text-[13px] py-2 px-3">Log in</Link>
-                    <Link href="/register" class="btn-primary text-[13px] py-2 px-3">Start free</Link>
+                    <Link v-if="user" href="/dashboard" class="btn-primary text-[13px] py-2 px-3">Dashboard</Link>
+                    <template v-else>
+                        <Link href="/login" class="hidden sm:inline-flex btn-ghost text-[13px] py-2 px-3">Log in</Link>
+                        <Link href="/register" class="btn-primary text-[13px] py-2 px-3">Start free</Link>
+                    </template>
                 </div>
             </div>
         </header>
@@ -50,18 +54,23 @@ const appLogo = computed(() => usePage().props.appLogo);
             </section>
 
             <section class="mt-10 grid lg:grid-cols-3 gap-4">
-                <article v-for="post in posts" :key="post.slug" class="rounded-lg border border-ink-200/70 bg-white p-6">
-                    <div class="flex items-center justify-between gap-3 text-[11px] font-mono text-ink-500">
-                        <span>{{ post.category }}</span>
-                        <span>{{ post.read_time }}</span>
-                    </div>
-                    <h2 class="mt-5 text-[20px] font-bold tracking-tight leading-snug">
-                        <Link :href="post.url" class="hover:text-brand-indigo">{{ post.title }}</Link>
-                    </h2>
-                    <p class="mt-3 text-[14.5px] leading-7 text-ink-600">{{ post.excerpt }}</p>
-                    <div class="mt-6 flex items-center justify-between gap-3">
-                        <div class="text-[12px] font-mono text-ink-500">{{ post.date }}</div>
-                        <Link :href="post.url" class="text-[13px] font-semibold text-brand-indigo hover:text-brand-violet">Read</Link>
+                <article v-for="post in posts" :key="post.slug" class="overflow-hidden rounded-lg border border-ink-200/70 bg-white">
+                    <Link v-if="post.featured_image_url" :href="post.url" class="block aspect-[16/9] bg-ink-100">
+                        <img :src="post.featured_image_url" :alt="post.title" class="h-full w-full object-cover" />
+                    </Link>
+                    <div class="p-6">
+                        <div class="flex items-center justify-between gap-3 text-[11px] font-mono text-ink-500">
+                            <span>{{ post.category || 'Uncategorized' }}</span>
+                            <span>{{ post.read_time }}</span>
+                        </div>
+                        <h2 class="mt-5 text-[20px] font-bold tracking-tight leading-snug">
+                            <Link :href="post.url" class="hover:text-brand-indigo">{{ post.title }}</Link>
+                        </h2>
+                        <p class="mt-3 text-[14.5px] leading-7 text-ink-600">{{ post.excerpt }}</p>
+                        <div class="mt-6 flex items-center justify-between gap-3">
+                            <div class="text-[12px] font-mono text-ink-500">{{ post.date }}</div>
+                            <Link :href="post.url" class="text-[13px] font-semibold text-brand-indigo hover:text-brand-violet">Read</Link>
+                        </div>
                     </div>
                 </article>
                 <div v-if="!posts.length" class="lg:col-span-3 rounded-lg border border-ink-200/70 bg-white p-8 text-center">

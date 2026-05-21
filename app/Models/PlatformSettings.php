@@ -25,11 +25,18 @@ class PlatformSettings extends Model
         'head_scripts',
         'body_start_scripts',
         'body_end_scripts',
+        'ai_provider',
+        'openai_api_key',
+        'openai_model',
+        'anthropic_api_key',
+        'anthropic_model',
     ];
 
     protected $casts = [
         'manual_review_hours'     => 'integer',
         'landing_payment_methods' => 'array',
+        'openai_api_key'          => 'encrypted',
+        'anthropic_api_key'       => 'encrypted',
     ];
 
     /**

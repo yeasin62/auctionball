@@ -19,6 +19,7 @@ use App\Http\Controllers\SeasonController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SuperAdminContentController;
+use App\Http\Controllers\SuperAdminIntegrationController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TeamDeviceController;
 use Illuminate\Support\Facades\Route;
@@ -179,6 +180,7 @@ Route::middleware(['auth', 'org'])->prefix('dashboard')->name('dashboard.')->gro
 
     // Org pages
     Route::get ('/users',             [OrgPagesController::class, 'users'])         ->middleware('org-role:org_admin')->name('users.index');
+    Route::delete('/users/{user}',    [OrgPagesController::class, 'removeUser'])    ->middleware('org-role:org_admin')->name('users.remove');
     Route::get ('/settings',                [OrgPagesController::class, 'settings'])             ->middleware('org-role:org_admin')->name('settings.index');
     Route::post('/settings/currency',       [OrgPagesController::class, 'updateCurrency'])       ->middleware('org-role:org_admin')->name('settings.currency');
     Route::post('/settings/domain',         [OrgPagesController::class, 'updateCustomDomain'])   ->middleware('org-role:org_admin')->name('settings.domain');
@@ -225,10 +227,17 @@ Route::middleware(['auth', 'super-admin'])->prefix('admin')->name('admin.')->gro
     Route::delete('/platform-settings/logo',         [SuperAdminController::class, 'deletePlatformLogo'])    ->name('platform-settings.logo.delete');
 
     Route::get   ('/content',                        [SuperAdminContentController::class, 'index'])         ->name('content.index');
+    Route::get   ('/advanced',                       [SuperAdminContentController::class, 'advanced'])      ->name('advanced.index');
+    Route::get   ('/integrations',                   [SuperAdminIntegrationController::class, 'index'])     ->name('integrations.index');
+    Route::patch ('/integrations',                   [SuperAdminIntegrationController::class, 'update'])    ->name('integrations.update');
+    Route::post  ('/content/categories',             [SuperAdminContentController::class, 'storeCategory']) ->name('content.categories.store');
+    Route::delete('/content/categories/{category}',   [SuperAdminContentController::class, 'deleteCategory'])->name('content.categories.delete');
+    Route::post  ('/content/blog/generate',          [SuperAdminContentController::class, 'generatePost'])  ->name('content.blog.generate');
     Route::post  ('/content/blog',                   [SuperAdminContentController::class, 'storePost'])     ->name('content.blog.store');
     Route::patch ('/content/blog/{post:slug}',       [SuperAdminContentController::class, 'updatePost'])    ->name('content.blog.update');
     Route::delete('/content/blog/{post:slug}',       [SuperAdminContentController::class, 'deletePost'])    ->name('content.blog.delete');
-    Route::patch ('/content/scripts',                [SuperAdminContentController::class, 'updateScripts']) ->name('content.scripts.update');
+    Route::post  ('/content/images',                 [SuperAdminContentController::class, 'uploadImage'])   ->name('content.images.upload');
+    Route::patch ('/advanced/scripts',               [SuperAdminContentController::class, 'updateScripts']) ->name('advanced.scripts.update');
 
     Route::post('/orgs/{organization}/plan',         [SuperAdminController::class, 'setPlan'])    ->name('orgs.set-plan');
     Route::post('/orgs/{organization}/extend-sub',   [SuperAdminController::class, 'extendSubscription'])->name('orgs.extend-sub');
@@ -253,6 +262,8 @@ Route::get('/dashboard-redirect', fn () => redirect()->route('dashboard.home'))-
 Route::middleware('auth')->group(function () {
     Route::get   ('/profile', [ProfileController::class, 'edit'])   ->name('profile.edit');
     Route::patch ('/profile', [ProfileController::class, 'update']) ->name('profile.update');
+    Route::post  ('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 

@@ -25,7 +25,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
      * `User::create($request->all())` or `$user->update($request->all())` from
      * silently granting platform-wide privilege.
      */
-    protected $fillable = ['name', 'email', 'password', 'locale'];
+    protected $fillable = ['name', 'email', 'password', 'locale', 'avatar_url'];
 
     protected $hidden = ['password', 'remember_token'];
 

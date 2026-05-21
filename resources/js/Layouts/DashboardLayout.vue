@@ -115,6 +115,9 @@ const adminNav = computed(() => {
         { label: 'Subscriptions', href: '/admin/subscriptions', icon: 'card',     match: /^\/admin\/subscriptions/ },
         { label: 'Payments',      href: '/admin/payments',      icon: 'card',     match: /^\/admin\/payments/,
           badge: pendingPaymentsCount.value > 0 ? pendingPaymentsCount.value : null },
+        { label: 'Integrations',  href: '/admin/integrations',  icon: 'plug',     match: /^\/admin\/integrations/ },
+        { label: 'Content',       href: '/admin/content',       icon: 'content',  match: /^\/admin\/content/ },
+        { label: 'Advanced',      href: '/admin/advanced',      icon: 'cog',      match: /^\/admin\/advanced/ },
         { label: 'Plans',         href: '/admin/plans',         icon: 'cog',      match: /^\/admin\/plans/ },
         { label: 'Audit log',     href: '/admin/audit',         icon: 'audit',    match: /^\/admin\/audit/ },
     ];
@@ -199,6 +202,8 @@ const logout = () => router.post(route('logout'));
                                     <svg v-else-if="item.icon==='card'"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4.5 w-4.5"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg>
                                     <svg v-else-if="item.icon==='chart'"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4.5 w-4.5"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
                                     <svg v-else-if="item.icon==='shield'"   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4.5 w-4.5"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/></svg>
+                                    <svg v-else-if="item.icon==='plug'"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4.5 w-4.5"><path d="M12 22v-5M9 8V3M15 8V3M6 8h12v4a6 6 0 01-12 0V8z"/></svg>
+                                    <svg v-else-if="item.icon==='content'"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4.5 w-4.5"><path d="M4 5h16M4 12h10M4 19h16"/><path d="M18 10v4M16 12h4"/></svg>
                                     <svg v-else-if="item.icon==='audit'"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4.5 w-4.5"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
                                 </span>
                                 <span class="flex-1 truncate">{{ t(item.label) }}</span>
@@ -243,7 +248,8 @@ const logout = () => router.post(route('logout'));
                     <div class="relative">
                         <button class="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-white/60"
                                 @click="userMenuOpen = !userMenuOpen">
-                            <div class="h-8 w-8 rounded-full bg-gradient-to-br from-cyan-200 to-indigo-300 grid place-items-center font-mono text-[11px] font-bold text-indigo-700">
+                            <img v-if="user?.avatar_url" :src="user.avatar_url" :alt="user.name" class="h-8 w-8 rounded-full border border-white/80 object-cover shadow-sm" />
+                            <div v-else class="h-8 w-8 rounded-full bg-gradient-to-br from-cyan-200 to-indigo-300 grid place-items-center font-mono text-[11px] font-bold text-indigo-700">
                                 {{ user?.name?.[0]?.toUpperCase() }}
                             </div>
                             <div class="hidden md:block text-left leading-tight">
