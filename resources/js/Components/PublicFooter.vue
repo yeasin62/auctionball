@@ -13,7 +13,7 @@ const footerCols = computed(() => [
         { label: t('landing.footer.product_l3'), href: '/live-demo' },
         { label: t('landing.footer.product_l4'), href: '/changelog' },
         { label: t('landing.footer.product_l5'), href: '/roadmap' },
-        { label: 'Blog', href: '/blog' },
+        { label: t('landing.footer.product_l6'), href: '/blog' },
     ] },
     { title: t('landing.footer.docs'), links: [
         { label: t('landing.footer.docs_l1'), href: '/getting-started' },
