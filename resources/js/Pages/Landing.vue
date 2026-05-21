@@ -34,6 +34,7 @@ const navLinks = [
     { key: 'nav.features',           href: '#features' },
     { key: 'nav.big_screen_preview', href: '#big-screen' },
     { key: 'nav.pricing',            href: '#pricing' },
+    { key: 'nav.blog',               href: '/blog' },
     { key: 'nav.faq',                href: '#faq' },
 ];
 

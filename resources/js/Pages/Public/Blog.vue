@@ -31,11 +31,15 @@ const user = computed(() => usePage().props.auth?.user);
                 <nav class="hidden md:flex items-center gap-5 ml-8 text-[13px] text-ink-600">
                     <Link href="/features" class="hover:text-ink-900">Features</Link>
                     <Link href="/pricing" class="hover:text-ink-900">Pricing</Link>
+                    <Link href="/blog" class="font-semibold text-ink-900">Blog</Link>
                     <Link href="/help" class="hover:text-ink-900">Help</Link>
                 </nav>
                 <div class="ml-auto flex items-center gap-2">
                     <LanguageToggle />
-                    <Link v-if="user" href="/dashboard" class="btn-primary text-[13px] py-2 px-3">Dashboard</Link>
+                    <template v-if="user">
+                        <Link href="/logout" method="post" as="button" type="button" class="hidden sm:inline-flex btn-ghost text-[13px] py-2 px-3">Log out</Link>
+                        <Link href="/dashboard" class="btn-primary text-[13px] py-2 px-3">Dashboard</Link>
+                    </template>
                     <template v-else>
                         <Link href="/login" class="hidden sm:inline-flex btn-ghost text-[13px] py-2 px-3">Log in</Link>
                         <Link href="/register" class="btn-primary text-[13px] py-2 px-3">Start free</Link>

@@ -11,6 +11,7 @@ const props = defineProps({
 
 const page = usePage();
 const appLogo = computed(() => page.props.appLogo);
+const user = computed(() => page.props.auth?.user);
 const flash = computed(() => page.props.flash || {});
 
 const form = useForm({
@@ -54,8 +55,14 @@ const submit = () => {
                 </nav>
                 <div class="ml-auto flex items-center gap-2">
                     <LanguageToggle />
-                    <Link href="/login" class="hidden sm:inline-flex btn-ghost text-[13px] py-2 px-3">Log in</Link>
-                    <Link href="/register" class="btn-primary text-[13px] py-2 px-3">Start free</Link>
+                    <template v-if="user">
+                        <Link href="/logout" method="post" as="button" type="button" class="hidden sm:inline-flex btn-ghost text-[13px] py-2 px-3">Log out</Link>
+                        <Link href="/dashboard" class="btn-primary text-[13px] py-2 px-3">Dashboard</Link>
+                    </template>
+                    <template v-else>
+                        <Link href="/login" class="hidden sm:inline-flex btn-ghost text-[13px] py-2 px-3">Log in</Link>
+                        <Link href="/register" class="btn-primary text-[13px] py-2 px-3">Start free</Link>
+                    </template>
                 </div>
             </div>
         </header>
