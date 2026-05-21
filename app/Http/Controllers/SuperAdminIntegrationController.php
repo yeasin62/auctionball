@@ -18,12 +18,12 @@ class SuperAdminIntegrationController extends Controller
         return Inertia::render('SuperAdmin/Integrations', [
             'integrations' => [
                 'openai' => [
-                    'model' => $settings->openai_model ?: config('services.openai.model', 'gpt-5.5'),
+                    'model' => $this->normalizeModel('openai', $settings->openai_model ?: config('services.openai.model', 'gpt-5.5')),
                     'has_database_key' => filled($settings->openai_api_key),
                     'has_env_key' => filled(config('services.openai.key')),
                 ],
                 'anthropic' => [
-                    'model' => $settings->anthropic_model ?: config('services.anthropic.model', 'claude-opus-4-7'),
+                    'model' => $this->normalizeModel('anthropic', $settings->anthropic_model ?: config('services.anthropic.model', 'claude-opus-4-1-20250805')),
                     'has_database_key' => filled($settings->anthropic_api_key),
                     'has_env_key' => filled(config('services.anthropic.key')),
                 ],
@@ -72,5 +72,19 @@ class SuperAdminIntegrationController extends Controller
         ]);
 
         return back()->with('success', 'Integration settings updated.');
+    }
+
+    private function normalizeModel(string $provider, ?string $model): string
+    {
+        $model = trim((string) $model);
+        $bad = [
+            'anthropic' => ['claude-opus-4-7', 'claude-sonnet-4-6', 'claude-haiku-4-5', 'claude-haiku-4-5-20251001'],
+        ];
+
+        if ($provider === 'openai') {
+            return $model === '' ? 'gpt-5.5' : $model;
+        }
+
+        return $model === '' || in_array($model, $bad['anthropic'], true) ? 'claude-opus-4-1-20250805' : $model;
     }
 }

@@ -10,11 +10,13 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class SuperAdminContentController extends Controller
 {
@@ -173,7 +175,7 @@ class SuperAdminContentController extends Controller
 
         $aiResponse = $provider['name'] === 'anthropic'
             ? $this->generateWithAnthropic($provider, $prompt, (int) $data['word_count'])
-            : $this->generateWithOpenAi($provider, $prompt);
+            : $this->generateWithOpenAi($provider, $prompt, (int) $data['word_count']);
 
         if (! $aiResponse['ok']) {
             return response()->json(['message' => $aiResponse['message']], 422);
@@ -274,12 +276,12 @@ class SuperAdminContentController extends Controller
         $openAi = [
             'name' => 'openai',
             'key' => $settings->openai_api_key ?: config('services.openai.key'),
-            'model' => $settings->openai_model ?: config('services.openai.model', 'gpt-5.5'),
+            'model' => $this->normalizeAiModel('openai', $settings->openai_model ?: config('services.openai.model', 'gpt-5.5')),
         ];
         $anthropic = [
             'name' => 'anthropic',
             'key' => $settings->anthropic_api_key ?: config('services.anthropic.key'),
-            'model' => $settings->anthropic_model ?: config('services.anthropic.model', 'claude-opus-4-7'),
+            'model' => $this->normalizeAiModel('anthropic', $settings->anthropic_model ?: config('services.anthropic.model', 'claude-opus-4-1-20250805')),
         ];
 
         $preferred = $settings->ai_provider ?: 'auto';
@@ -293,26 +295,63 @@ class SuperAdminContentController extends Controller
         return filled($openAi['key']) ? $openAi : (filled($anthropic['key']) ? $anthropic : null);
     }
 
+    private function normalizeAiModel(string $provider, ?string $model): string
+    {
+        $model = trim((string) $model);
+
+        $knownBadModels = [
+            'anthropic' => [
+                'claude-opus-4-7',
+                'claude-sonnet-4-6',
+                'claude-haiku-4-5',
+                'claude-haiku-4-5-20251001',
+            ],
+        ];
+
+        if ($provider === 'openai') {
+            return $model === '' ? 'gpt-5.5' : $model;
+        }
+
+        return $model === '' || in_array($model, $knownBadModels['anthropic'], true)
+            ? 'claude-opus-4-1-20250805'
+            : $model;
+    }
+
     private function aiInstructions(): string
     {
         return 'You are a senior content editor for a SaaS product called AuctionBall. You write helpful, human-readable, SEO-aware blog drafts. Output valid JSON only. body_html must contain clean HTML using p, h2, h3, ul, ol, li, strong, em, blockquote, and a tags only.';
     }
 
-    private function generateWithOpenAi(array $provider, string $prompt): array
+    private function generateWithOpenAi(array $provider, string $prompt, int $wordCount): array
     {
-        $response = Http::withToken($provider['key'])
-            ->acceptJson()
-            ->timeout(90)
-            ->post('https://api.openai.com/v1/responses', [
-                'model' => $provider['model'],
-                'instructions' => $this->aiInstructions(),
-                'input' => $prompt,
-            ]);
+        try {
+            $response = Http::withToken($provider['key'])
+                ->acceptJson()
+                ->timeout(120)
+                ->post('https://api.openai.com/v1/responses', [
+                    'model' => $provider['model'],
+                    'instructions' => $this->aiInstructions(),
+                    'input' => $prompt,
+                    'max_output_tokens' => min(8000, max(1400, $wordCount * 4)),
+                    'text' => [
+                        'format' => [
+                            'type' => 'json_schema',
+                            'name' => 'auctionball_blog_post',
+                            'strict' => true,
+                            'schema' => $this->aiPostSchema(),
+                        ],
+                    ],
+                ]);
+        } catch (Throwable $e) {
+            return $this->aiRequestException('OpenAI', $provider, $e);
+        }
 
         if ($response->failed()) {
+            $this->logAiFailure('OpenAI', $provider, $response->status(), $response->body());
+
             return [
                 'ok' => false,
-                'message' => $response->json('error.message') ?: 'OpenAI post generation failed.',
+                'message' => $response->json('error.message') ?: 'OpenAI post generation failed. Check the API key, selected model, and account billing/limits.',
                 'text' => '',
             ];
         }
@@ -326,25 +365,31 @@ class SuperAdminContentController extends Controller
 
     private function generateWithAnthropic(array $provider, string $prompt, int $wordCount): array
     {
-        $response = Http::withHeaders([
-                'x-api-key' => $provider['key'],
-                'anthropic-version' => '2023-06-01',
-            ])
-            ->acceptJson()
-            ->timeout(90)
-            ->post('https://api.anthropic.com/v1/messages', [
-                'model' => $provider['model'],
-                'max_tokens' => min(6000, max(1200, $wordCount * 3)),
-                'system' => $this->aiInstructions(),
-                'messages' => [
-                    ['role' => 'user', 'content' => $prompt],
-                ],
-            ]);
+        try {
+            $response = Http::withHeaders([
+                    'x-api-key' => $provider['key'],
+                    'anthropic-version' => '2023-06-01',
+                ])
+                ->acceptJson()
+                ->timeout(120)
+                ->post('https://api.anthropic.com/v1/messages', [
+                    'model' => $provider['model'],
+                    'max_tokens' => min(8000, max(1400, $wordCount * 4)),
+                    'system' => $this->aiInstructions(),
+                    'messages' => [
+                        ['role' => 'user', 'content' => $prompt],
+                    ],
+                ]);
+        } catch (Throwable $e) {
+            return $this->aiRequestException('Claude', $provider, $e);
+        }
 
         if ($response->failed()) {
+            $this->logAiFailure('Claude', $provider, $response->status(), $response->body());
+
             return [
                 'ok' => false,
-                'message' => $response->json('error.message') ?: 'Claude post generation failed.',
+                'message' => $response->json('error.message') ?: 'Claude post generation failed. Check the API key, selected model, and account billing/limits.',
                 'text' => '',
             ];
         }
@@ -353,6 +398,59 @@ class SuperAdminContentController extends Controller
             'ok' => true,
             'message' => null,
             'text' => $this->anthropicText($response->json()),
+        ];
+    }
+
+    private function aiRequestException(string $providerName, array $provider, Throwable $e): array
+    {
+        Log::warning('AI blog generation request failed', [
+            'provider' => $providerName,
+            'model' => $provider['model'] ?? null,
+            'error' => $e->getMessage(),
+        ]);
+
+        return [
+            'ok' => false,
+            'message' => "{$providerName} request failed before a response was received. Check server internet access, API key, and selected model.",
+            'text' => '',
+        ];
+    }
+
+    private function logAiFailure(string $providerName, array $provider, int $status, string $body): void
+    {
+        Log::warning('AI blog generation provider rejected request', [
+            'provider' => $providerName,
+            'model' => $provider['model'] ?? null,
+            'status' => $status,
+            'body' => Str::limit($body, 1000),
+        ]);
+    }
+
+    private function aiPostSchema(): array
+    {
+        return [
+            'type' => 'object',
+            'additionalProperties' => false,
+            'properties' => [
+                'title' => ['type' => 'string'],
+                'slug' => ['type' => 'string'],
+                'excerpt' => ['type' => 'string'],
+                'body_html' => ['type' => 'string'],
+                'meta_title' => ['type' => 'string'],
+                'meta_description' => ['type' => 'string'],
+                'read_time' => ['type' => 'string'],
+                'schema_json' => ['type' => 'string'],
+            ],
+            'required' => [
+                'title',
+                'slug',
+                'excerpt',
+                'body_html',
+                'meta_title',
+                'meta_description',
+                'read_time',
+                'schema_json',
+            ],
         ];
     }
 

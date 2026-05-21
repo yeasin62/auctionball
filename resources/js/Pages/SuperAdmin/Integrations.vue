@@ -14,7 +14,7 @@ const props = defineProps({
                 has_env_key: false,
             },
             anthropic: {
-                model: 'claude-opus-4-7',
+                model: 'claude-opus-4-1-20250805',
                 has_database_key: false,
                 has_env_key: false,
             },
@@ -29,18 +29,20 @@ const form = useForm({
     openai_model: props.integrations.openai?.model || 'gpt-5.5',
     clear_openai_api_key: false,
     anthropic_api_key: '',
-    anthropic_model: props.integrations.anthropic?.model || 'claude-opus-4-7',
+    anthropic_model: props.integrations.anthropic?.model || 'claude-opus-4-1-20250805',
     clear_anthropic_api_key: false,
 });
 
 const openAiModels = [
-    { value: 'gpt-5.5', label: 'GPT-5.5' },
-    { value: 'gpt-5.5-2026-04-23', label: 'GPT-5.5 Snapshot (2026-04-23)' },
+    { value: 'gpt-5.5', label: 'GPT-5.5 (Latest)' },
+    { value: 'gpt-5.5-pro', label: 'GPT-5.5 Pro' },
     { value: 'gpt-5.4', label: 'GPT-5.4' },
     { value: 'gpt-5.4-mini', label: 'GPT-5.4 Mini' },
+    { value: 'gpt-5.4-nano', label: 'GPT-5.4 Nano' },
     { value: 'gpt-5.2', label: 'GPT-5.2' },
     { value: 'gpt-5.2-pro', label: 'GPT-5.2 Pro' },
     { value: 'gpt-5.1', label: 'GPT-5.1' },
+    { value: 'gpt-5', label: 'GPT-5' },
     { value: 'gpt-5-mini', label: 'GPT-5 Mini' },
     { value: 'gpt-5-nano', label: 'GPT-5 Nano' },
     { value: 'gpt-4.1', label: 'GPT-4.1' },
@@ -48,15 +50,16 @@ const openAiModels = [
 ];
 
 const anthropicModels = [
-    { value: 'claude-opus-4-7', label: 'Claude Opus 4.7' },
-    { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
-    { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5' },
-    { value: 'claude-haiku-4-5', label: 'Claude Haiku 4.5 Alias' },
-    { value: 'claude-opus-4-1-20250805', label: 'Claude Opus 4.1' },
+    { value: 'claude-opus-4-1-20250805', label: 'Claude Opus 4.1 (Latest official)' },
+    { value: 'claude-opus-4-1', label: 'Claude Opus 4.1 Alias' },
     { value: 'claude-opus-4-20250514', label: 'Claude Opus 4' },
+    { value: 'claude-opus-4-0', label: 'Claude Opus 4 Alias' },
     { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
+    { value: 'claude-sonnet-4-0', label: 'Claude Sonnet 4 Alias' },
     { value: 'claude-3-7-sonnet-20250219', label: 'Claude Sonnet 3.7' },
+    { value: 'claude-3-7-sonnet-latest', label: 'Claude Sonnet 3.7 Latest Alias' },
     { value: 'claude-3-5-haiku-20241022', label: 'Claude Haiku 3.5' },
+    { value: 'claude-3-5-haiku-latest', label: 'Claude Haiku 3.5 Latest Alias' },
 ];
 
 const save = () => {
@@ -132,6 +135,7 @@ const save = () => {
                                         {{ model.label }}
                                     </option>
                                 </select>
+                                <TextField v-model="form.openai_model" class="mt-3" placeholder="Or paste a custom OpenAI model ID" />
                             </Field>
                         </div>
 
@@ -175,6 +179,7 @@ const save = () => {
                                         {{ model.label }}
                                     </option>
                                 </select>
+                                <TextField v-model="form.anthropic_model" class="mt-3" placeholder="Or paste a custom Claude model ID" />
                             </Field>
                         </div>
 
