@@ -22,11 +22,13 @@ class BlogPost extends Model
         'meta_description',
         'schema_json',
         'read_time',
+        'show_date',
         'is_published',
         'published_at',
     ];
 
     protected $casts = [
+        'show_date' => 'boolean',
         'is_published' => 'boolean',
         'published_at' => 'datetime',
     ];

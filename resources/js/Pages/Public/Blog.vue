@@ -13,8 +13,8 @@ const user = computed(() => usePage().props.auth?.user);
 </script>
 
 <template>
-    <Head title="Blog | AuctionBall">
-        <meta name="description" content="AuctionBall guides for cricket auction organizers, live bidding, team budgets, big-screen setup, and tournament operations." head-key="description" />
+    <Head title="AuctionBall Blog | Auction Tips, Tournament Guides & Product Updates">
+        <meta name="description" content="Read AuctionBall guides, tournament auction tips, product updates, and practical playbooks for running cricket, football, and live player auctions." head-key="description" />
         <meta name="robots" content="index,follow" head-key="robots" />
     </Head>
 
@@ -47,9 +47,9 @@ const user = computed(() => usePage().props.auth?.user);
         <main class="mx-auto max-w-6xl px-4 sm:px-6 py-14">
             <section class="max-w-3xl">
                 <div class="font-mono text-[11px] tracking-widest text-brand-indigo uppercase mb-4">Blog</div>
-                <h1 class="text-[34px] sm:text-[48px] leading-tight font-extrabold tracking-tight">Auction operations notes</h1>
+                <h1 class="text-[34px] sm:text-[48px] leading-tight font-extrabold tracking-tight">AuctionBall Blog</h1>
                 <p class="mt-5 text-[17px] sm:text-[19px] leading-8 text-ink-600">
-                    Practical guides for organizers running cricket, football, and custom player auctions with AuctionBall.
+                    Guides, product updates, and practical auction playbooks for organizers running cricket, football, and live player auctions.
                 </p>
             </section>
 
@@ -68,7 +68,9 @@ const user = computed(() => usePage().props.auth?.user);
                         </h2>
                         <p class="mt-3 text-[14.5px] leading-7 text-ink-600">{{ post.excerpt }}</p>
                         <div class="mt-6 flex items-center justify-between gap-3">
-                            <div class="text-[12px] font-mono text-ink-500">{{ post.date }}</div>
+                            <div class="text-[12px] font-mono text-ink-500">
+                                <span v-if="post.show_date !== false">{{ post.date }}</span>
+                            </div>
                             <Link :href="post.url" class="text-[13px] font-semibold text-brand-indigo hover:text-brand-violet">Read</Link>
                         </div>
                     </div>

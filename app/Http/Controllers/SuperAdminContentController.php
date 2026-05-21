@@ -251,6 +251,7 @@ class SuperAdminContentController extends Controller
             'meta_description' => ['nullable', 'string', 'max:500'],
             'schema_json' => ['nullable', 'json', 'max:50000'],
             'read_time' => ['nullable', 'string', 'max:40'],
+            'show_date' => ['boolean'],
             'is_published' => ['boolean'],
             'published_at' => ['nullable', 'date'],
         ]);
@@ -465,6 +466,7 @@ class SuperAdminContentController extends Controller
             'meta_description' => $post->meta_description,
             'schema_json' => $post->schema_json,
             'read_time' => $post->read_time,
+            'show_date' => $post->show_date,
             'is_published' => $post->is_published,
             'published_at' => $post->published_at?->format('Y-m-d\TH:i'),
             'published_date' => $post->formattedDate(),

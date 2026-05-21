@@ -69,7 +69,7 @@ const bodyHtml = computed(() => {
             <Link href="/blog" class="font-mono text-[12px] text-ink-500 hover:text-ink-900">Back to blog</Link>
             <div class="mt-6 flex flex-wrap items-center gap-3 text-[12px] font-mono text-ink-500">
                 <span v-if="post.category" class="text-brand-indigo">{{ post.category }}</span>
-                <span v-if="post.date">{{ post.date }}</span>
+                <span v-if="post.show_date !== false && post.date">{{ post.date }}</span>
                 <span v-if="post.read_time">{{ post.read_time }}</span>
             </div>
             <h1 class="mt-4 text-[34px] sm:text-[48px] leading-tight font-extrabold tracking-tight">{{ post.title }}</h1>

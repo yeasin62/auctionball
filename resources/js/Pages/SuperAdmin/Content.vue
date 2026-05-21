@@ -31,6 +31,7 @@ const blankPost = () => ({
     meta_description: '',
     schema_json: '',
     read_time: '',
+    show_date: true,
     is_published: false,
     published_at: '',
 });
@@ -590,10 +591,16 @@ const deleteCategory = (category) => {
                     </Field>
 
                     <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
-                        <label class="inline-flex items-center gap-2 rounded-lg border border-ink-200/70 bg-white/70 px-3 py-2 cursor-pointer">
-                            <input v-model="postForm.is_published" type="checkbox" class="h-4 w-4" />
-                            <span class="text-[13px] font-medium">Publish</span>
-                        </label>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <label class="inline-flex items-center gap-2 rounded-lg border border-ink-200/70 bg-white/70 px-3 py-2 cursor-pointer">
+                                <input v-model="postForm.is_published" type="checkbox" class="h-4 w-4" />
+                                <span class="text-[13px] font-medium">Publish</span>
+                            </label>
+                            <label class="inline-flex items-center gap-2 rounded-lg border border-ink-200/70 bg-white/70 px-3 py-2 cursor-pointer">
+                                <input v-model="postForm.show_date" type="checkbox" class="h-4 w-4" />
+                                <span class="text-[13px] font-medium">Show date</span>
+                            </label>
+                        </div>
                         <button type="submit" class="btn-primary py-2.5 px-5 text-[13px]" :disabled="postForm.processing">
                             {{ postForm.processing ? 'Saving...' : (isEditing ? 'Update post' : 'Create post') }}
                         </button>

@@ -511,6 +511,7 @@ class PublicPageController extends Controller
             'meta_description' => $post->meta_description,
             'schema_json' => $includeBody ? $post->schema_json : null,
             'read_time' => $post->read_time,
+            'show_date' => $post->show_date,
             'date' => $post->formattedDate(),
         ], fn ($value) => $value !== null);
     }
