@@ -227,6 +227,7 @@ Route::middleware(['auth', 'super-admin'])->prefix('admin')->name('admin.')->gro
     Route::delete('/platform-settings/logo',         [SuperAdminController::class, 'deletePlatformLogo'])    ->name('platform-settings.logo.delete');
 
     Route::get   ('/content',                        [SuperAdminContentController::class, 'index'])         ->name('content.index');
+    Route::get   ('/content/blog-posts',             [SuperAdminContentController::class, 'blogPosts'])     ->name('content.blog-posts.index');
     Route::get   ('/advanced',                       [SuperAdminContentController::class, 'advanced'])      ->name('advanced.index');
     Route::get   ('/integrations',                   [SuperAdminIntegrationController::class, 'index'])     ->name('integrations.index');
     Route::patch ('/integrations',                   [SuperAdminIntegrationController::class, 'update'])    ->name('integrations.update');

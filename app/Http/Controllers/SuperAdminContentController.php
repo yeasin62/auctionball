@@ -29,6 +29,18 @@ class SuperAdminContentController extends Controller
                 ->orderBy('name')
                 ->get()
                 ->map(fn (BlogCategory $category) => $this->categoryPayload($category)),
+        ]);
+    }
+
+    public function blogPosts(): Response
+    {
+        return Inertia::render('SuperAdmin/BlogPosts', [
+            'categories' => BlogCategory::query()
+                ->withCount('posts')
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get()
+                ->map(fn (BlogCategory $category) => $this->categoryPayload($category)),
             'posts' => BlogPost::query()
                 ->with('blogCategory')
                 ->latest('updated_at')
