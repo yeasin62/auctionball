@@ -1439,5 +1439,12 @@
         "practice_body": "AuctionBall is built for real event-day pressure: fast setup, clear roles, reliable live updates, and enough structure that organizers can recover quickly when a room gets busy.",
         "contact_support": "Contact support",
         "checklist": "Checklist"
+    },
+    "whatsapp_chat": {
+        "label": "Chat on WhatsApp",
+        "sub_label": "Direct support",
+        "title": "Chat with AuctionBall on WhatsApp",
+        "aria": "Chat with AuctionBall on WhatsApp",
+        "message": "Hi, I need help with AuctionBall."
     }
 }

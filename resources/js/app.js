@@ -7,6 +7,7 @@ import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { makeI18n } from './i18n';
 import ConfirmProvider from './Components/ConfirmProvider.vue';
+import WhatsAppChatButton from './Components/WhatsAppChatButton.vue';
 
 const appName = import.meta.env.VITE_APP_NAME || 'AuctionBall';
 
@@ -24,7 +25,7 @@ createInertiaApp({
 
         // Wrap App with ConfirmProvider so useConfirm/useAlert/usePrompt work
         // on every page (auth, public, team-device) — not just DashboardLayout.
-        const app = createApp({ render: () => h('div', [h(App, props), h(ConfirmProvider)]) })
+        const app = createApp({ render: () => h('div', [h(App, props), h(ConfirmProvider), h(WhatsAppChatButton)]) })
             .use(plugin)
             .use(ZiggyVue)
             .use(i18n);

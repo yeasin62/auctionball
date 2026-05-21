@@ -1439,5 +1439,12 @@
         "practice_body": "AuctionBall বাস্তব ইভেন্ট-ডে চাপের জন্য বানানো: দ্রুত সেটআপ, পরিষ্কার রোল, নির্ভরযোগ্য লাইভ আপডেট, এবং ব্যস্ত রুমেও দ্রুত সামলে নেওয়ার মতো কাঠামো।",
         "contact_support": "সাপোর্টে যোগাযোগ",
         "checklist": "চেকলিস্ট"
+    },
+    "whatsapp_chat": {
+        "label": "WhatsApp চ্যাট",
+        "sub_label": "ডিরেক্ট সাপোর্ট",
+        "title": "WhatsApp-এ AuctionBall-এর সাথে চ্যাট করুন",
+        "aria": "WhatsApp-এ AuctionBall-এর সাথে চ্যাট করুন",
+        "message": "হ্যালো, AuctionBall নিয়ে আমার সাহায্য দরকার।"
     }
 }
