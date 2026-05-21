@@ -81,7 +81,9 @@ class PublicPageController extends Controller
                 ->subject('New AuctionBall contact message');
         });
 
-        return back()->with('success', 'Thanks, your message has been sent.');
+        return back()->with('success', app()->getLocale() === 'bn'
+            ? 'ধন্যবাদ, আপনার মেসেজ পাঠানো হয়েছে।'
+            : 'Thanks, your message has been sent.');
     }
 
     public function blog(): Response
@@ -110,6 +112,10 @@ class PublicPageController extends Controller
 
     private function pages(): array
     {
+        if (app()->getLocale() === 'bn') {
+            return $this->pagesBn();
+        }
+
         return [
             'features' => $this->page(
                 'Features',
@@ -489,6 +495,110 @@ class PublicPageController extends Controller
                 ],
                 ['Use private links carefully', 'Remove abusive users', 'Report suspicious activity']
             ),
+        ];
+    }
+
+    private function pagesBn(): array
+    {
+        return [
+            'features' => $this->page(
+                'ফিচার',
+                'প্রোডাক্ট',
+                'একটি hosted workspace থেকে লাইভ প্লেয়ার অকশন চালানোর জন্য যা দরকার সবকিছু।',
+                [
+                    ['লাইভ অকশন কন্ট্রোল', 'অকশন শুরু, pause, extend, sold বা unsold করুন এবং Reverb realtime update দিয়ে সব স্ক্রিন sync রাখুন।'],
+                    ['প্লেয়ার ও টিম ম্যানেজমেন্ট', 'CSV দিয়ে player import, public registration approve, team budget manage এবং season summary export করুন।'],
+                    ['ভেন্যু-রেডি ডিসপ্লে', 'Big-screen ও roster board projector, TV এবং captain device এর জন্য তৈরি।'],
+                ],
+                ['অর্গানাইজেশন তৈরি করুন', 'Season, team ও player যোগ করুন', 'Auction control panel খুলুন', 'Team bidding link শেয়ার করুন']
+            ),
+            'pricing' => $this->page(
+                'প্রাইসিং',
+                'প্ল্যান',
+                'Free দিয়ে শুরু করুন, tournament বড় হলে upgrade করুন।',
+                [
+                    ['Free', 'আসল event এর আগে ছোট auction workflow test করার জন্য ভালো।'],
+                    ['Starter', 'Real tournament season, team এবং player list চালানোর জন্য practical capacity।'],
+                    ['Pro ও Enterprise', 'বড় league, export, advanced branding এবং high operating limit এর জন্য।'],
+                ],
+                ['Monthly billing', 'যেকোনো সময় cancel', 'PayPal ও manual bKash support', 'Completed payment এর invoice']
+            ),
+            'live-demo' => $this->page(
+                'লাইভ ডেমো',
+                'প্রিভিউ',
+                'Auctioneer screen, big screen এবং team bidding experience এর guided preview।',
+                [
+                    ['Auctioneer view', 'এক dashboard থেকে current lot, bid, timer এবং final result control করুন।'],
+                    ['Captain view', 'Team admin tools না দেখে mobile-friendly private link থেকে bid করতে পারবে।'],
+                    ['Public display', 'Projector এ current player, leading bid, budget এবং result animation দেখান।'],
+                ],
+                ['Free organization তৈরি করুন', 'Demo player ব্যবহার করুন', 'Dashboard, big screen ও team device আলাদা tab এ খুলুন']
+            ),
+            'changelog' => $this->page(
+                'চেঞ্জলগ',
+                'প্রোডাক্ট আপডেট',
+                'AuctionBall-এ সাম্প্রতিক improvement।',
+                [
+                    ['Realtime stability', 'Production এর জন্য Reverb config, websocket routing এবং build cache workflow উন্নত করা হয়েছে।'],
+                    ['PayPal checkout', 'PayPal order checkout, callback verification এবং successful plan activation support আছে।'],
+                    ['Player operations', 'CSV import, public registration, image storage এবং approval flow শক্ত করা হয়েছে।'],
+                ],
+                ['Realtime auction update', 'Persistent sold ও unsold result', 'Safer dashboard permission', 'Webhook verification']
+            ),
+            'roadmap' => $this->page(
+                'রোডম্যাপ',
+                'Upcoming',
+                'AuctionBall-এর কাছের সময়ের direction।',
+                [
+                    ['Tournament templates', 'Cricket, football এবং custom auction format এর reusable setup template।'],
+                    ['Better reporting', 'Sponsor-ready export, financial summary এবং post-auction analytics।'],
+                    ['Organizer workflow', 'Role, invitation এবং event-day recovery নিয়ে আরও guardrail।'],
+                ],
+                ['Multi-sport preset', 'আরও payment option', 'Advanced branding', 'Email deliverability tooling']
+            ),
+            'getting-started' => $this->page(
+                'শুরু করার গাইড',
+                'ডকুমেন্টেশন',
+                'AuctionBall setup, tournament preparation, live auction running এবং event শেষে management করার complete guide।',
+                [
+                    ['Workspace plan করুন', 'Real player data যোগ করার আগে organization, season, team ও user role ঠিক করুন।'],
+                    ['Auction room প্রস্তুত করুন', 'Budget, bid increment, category, big screen, team device এবং registration link configure করুন।'],
+                    ['Cleanly run ও close করুন', 'Lot, bid, timer, sold/unsold result, export, payment এবং post-event record dashboard থেকে manage করুন।'],
+                ],
+                ['Account তৈরি', 'Organization configure', 'Season তৈরি', 'Team যোগ', 'Player add/import', 'Big screen test', 'Auction run', 'Result export'],
+                [
+                    'practice_title' => 'এই গাইড কীভাবে ব্যবহার করবেন',
+                    'practice_body' => 'প্রথমবার step by step follow করুন। Test auction হয়ে গেলে players, teams, auction control, billing, exports, settings বা troubleshooting অংশে সরাসরি যেতে পারবেন।',
+                    'doc_sections' => [
+                        ['title' => '1. AuctionBall account তৈরি করুন', 'body' => 'Registration page থেকে tournament-এর প্রথম admin account তৈরি করুন। Email access আছে এমন address ব্যবহার করুন, কারণ verification, password reset, billing এবং support message সেখানে যেতে পারে।', 'items' => ['Name, email, password এবং organization details দিন।', 'Organization slug সাবধানে দিন, এটি workspace identity হিসেবে ব্যবহার হবে।', 'Email verification চালু থাকলে verify করে dashboard এ login করুন।', 'প্রথম account-টি main organization admin হিসেবে রাখুন।']],
+                        ['title' => '2. Main dashboard বুঝে নিন', 'body' => 'Dashboard auction workflow অনুযায়ী সাজানো। Setup event এর আগে, auction control ও big screen live event চলাকালীন, আর export/audit event শেষে কাজে লাগে।', 'items' => ['Dashboard Home active season ও quick metrics দেখায়।', 'Seasons থেকে sport, budget, increment, category, registration form এবং active season manage হয়।', 'Players থেকে add, import, approve, edit, delete ও export হয়।', 'Teams থেকে budget, device link, approval ও export manage হয়।', 'Auction section-এ Control, Big Screen এবং Rosters আছে।']],
+                        ['title' => '3. Organization settings configure করুন', 'body' => 'Final auction data দেওয়ার আগে Settings থেকে currency, branding এবং public URL related option ঠিক করুন।', 'items' => ['Display currency BDT বা USD set করুন।', 'USD display হলে BDT per USD conversion rate দিন।', 'Plan support করলে custom domain ও DNS verification complete করুন।', 'Organization name ও logo consistent রাখুন।']],
+                        ['title' => '4. Season তৈরি ও active করুন', 'body' => 'Season হলো একটি auction campaign বা tournament। Event preparation বা live auction করার সময় সাধারণত একটি active season রাখুন।', 'items' => ['Cricket বা football sport নির্বাচন করুন।', 'Team তৈরি করার আগে per-team budget set করুন।', 'BDT/USD bid increment set করুন।', 'Player category যেমন A, B, Icon, Local, Overseas ইত্যাদি যোগ করুন।', 'যে season চালাবেন সেটি active করুন।']],
+                        ['title' => '5. Player registration form তৈরি করুন', 'body' => 'Public registration দিলে player নিজের details submit করতে পারে। Tournament অনুযায়ী custom field যোগ করতে পারবেন।', 'items' => ['Active season-এ public player registration enable করুন।', 'District, shirt size, role, phone number ইত্যাদি extra field যোগ করুন।', 'Registration link share করুন।', 'Players page থেকে submitted player approve/reject করুন।']],
+                        ['title' => '6. Manual player add করুন', 'body' => 'ছোট list, late addition বা correction এর জন্য Add Player ব্যবহার করুন।', 'items' => ['Name, category, base price, position এবং sport-specific details দিন।', 'Clear photo upload করলে big screen ভালো দেখায়।', 'Category rule অনুযায়ী base price রাখুন।', 'Draft ও final player আলাদা রাখতে approve status ব্যবহার করুন।']],
+                        ['title' => '7. CSV দিয়ে player import করুন', 'body' => 'বড় tournament এর জন্য CSV import দ্রুততম পদ্ধতি। Template download করে carefully fill করুন।', 'items' => ['Players import page থেকে template নিন।', 'Required column যেমন name ঠিক রাখুন।', 'Preview দেখে missing column বা invalid price ধরুন।', 'Confirm করার পর কয়েকটি player spot-check করুন।']],
+                        ['title' => '8. Team ও budget তৈরি করুন', 'body' => 'Team হলো auction buyer। Budget ঠিক না হলে bid validation ও spending ভুল হতে পারে।', 'items' => ['প্রতিটি team name ও short code দিন।', 'Initial ও remaining budget check করুন।', 'Team registration দরকার হলে enable করুন।', 'Auction শুরুর আগে budget review করুন।']],
+                        ['title' => '9. User invite ও role assign করুন', 'body' => 'সবাইকে full admin access দেওয়া দরকার নেই। কাজ অনুযায়ী role দিন।', 'items' => ['Organization admin settings, billing, user, season, player, team manage করে।', 'Auctioneer live auction control চালায়।', 'Viewer report ও screen monitor করতে পারে।', 'Event day এর আগে সবাইকে login test করতে বলুন।']],
+                        ['title' => '10. Team device link প্রস্তুত করুন', 'body' => 'Captain-রা private team device link থেকে bid করবে। প্রতিটি link private access key এর মতো ব্যবহার করুন।', 'items' => ['Teams page থেকে device link generate/copy করুন।', 'প্রতিটি team-কে শুধু নিজের link দিন।', 'Auction এর আগে captain-দের link খুলে test করতে বলুন।', 'Backup admin bidder রাখুন।']],
+                        ['title' => '11. Big screen setup করুন', 'body' => 'Big screen projector বা TV এর জন্য। এখানে player, bid, timer, leading team, budgets এবং result animation দেখা যায়।', 'items' => ['Dashboard > Auction > Big Screen খুলুন।', 'Browser fullscreen mode ব্যবহার করুন।', 'Auction control থেকে test bid দিয়ে websocket update check করুন।', 'Display laptop sleep mode off রাখুন।']],
+                        ['title' => '12. Full test auction চালান', 'body' => 'Real event এর আগে দুই team ও দুই player দিয়ে test করলে বেশিরভাগ issue আগে ধরা পড়ে।', 'items' => ['Auction Control এ player select করে timer start করুন।', 'Control ও team device থেকে test bid দিন।', 'একজন SOLD এবং একজন UNSOLD mark করুন।', 'Rosters এ result check করুন।']],
+                        ['title' => '13. Live auction চালান', 'body' => 'Event চলাকালে একজন Auction Control চালাবে এবং একজন big screen/room monitor করবে।', 'items' => ['Room ready হলে next player select করুন।', 'Timer start, pause, resume বা extend করুন।', 'SOLD করার আগে leading team confirm করুন।', 'No sale হলে UNSOLD দিন।', 'Active bid চলাকালীন unnecessary refresh এড়িয়ে চলুন।']],
+                        ['title' => '14. Roster ও export review করুন', 'body' => 'Auction শেষে final team, spending, unsold player এবং sponsor/captain record review করুন।', 'items' => ['Rosters থেকে final team list দেখুন।', 'Plan অনুযায়ী CSV/PDF export করুন।', 'Export social media, announcement বা dispute resolution এ ব্যবহার করুন।', 'Important change review করতে audit log রাখুন।']],
+                        ['title' => '15. Billing, plan ও payment activation', 'body' => 'Billing plan limit এবং renewal state control করে। Free testing এর জন্য, paid plan production capacity unlock করে।', 'items' => ['Billing থেকে current plan, limit ও payment history দেখুন।', 'PayPal checkout successful হলে package auto activate হবে।', 'Manual bKash হলে transaction ID submit করুন।', 'Support এর জন্য payment reference রাখুন।']],
+                        ['title' => '16. Troubleshooting checklist', 'body' => 'Event-day issue সাধারণত cache, internet, permission, missing data বা display setup থেকে হয়।', 'items' => ['Deploy এর পর old page দেখালে browser/Laravel/Vite cache clear করুন।', 'Realtime না এলে websocket console error ও Reverb service check করুন।', 'Image break হলে storage disk ও public URL check করুন।', 'Import fail হলে CSV template header check করুন।', 'Email junk এ গেলে SPF, DKIM, DMARC verify করুন।']],
+                    ],
+                ]
+            ),
+            'auction-guide' => $this->page('অকশন গাইড', 'ডকস', 'প্রথম lot থেকে final export পর্যন্ত clean live auction চালানোর নিয়ম।', [['ইভেন্টের আগে', 'Team, budget, player category এবং big-screen URL verify করুন।'], ['Bidding চলাকালীন', 'Fixed increment ব্যবহার করুন, দরকার হলে timer extend করুন, এবং প্রতিটি player sold বা unsold mark করুন।'], ['ইভেন্ট শেষে', 'Roster review, report export এবং dispute এর জন্য audit history রাখুন।']], ['Auctioneer assign করুন', 'Websocket update test করুন', 'Backup laptop রাখুন', 'শেষে result export করুন']),
+            'big-screen-setup' => $this->page('Big-screen Setup', 'ডকস', 'Auction room এর projector বা TV display setup করুন।', [['Display URL খুলুন', 'Venue display connected laptop-এ dashboard Big Screen link খুলুন।'], ['Stable network ব্যবহার করুন', 'Display device ও auctioneer device reliable internet এ রাখুন।'], ['Display visible রাখুন', 'Browser fullscreen ও 100 percent zoom সাধারণত ভালো কাজ করে।']], ['Captains আসার আগে test করুন', 'Sleep mode off করুন', 'Charger connected রাখুন', 'Deploy update হলে refresh করুন']),
+            'team-device-guide' => $this->page('Team-device Guide', 'ডকস', 'Scoped team link দিয়ে captain-দের phone থেকে bid করতে দিন।', [['Correct link share করুন', 'প্রতিটি team শুধু নিজের device link বা assigned account পাবে।'], ['Budget check করুন', 'Bid ও sold result এর পর remaining budget update হয়।'], ['Captains focused রাখুন', 'Team device current player, timer ও valid bid button দেখায়।']], ['Link private পাঠান', 'Captains-কে আগে login test করতে বলুন', 'Backup admin bidder রাখুন']),
+            'community' => $this->page('কমিউনিটি', 'সাপোর্ট', 'Organizer-দের workflow, request এবং tournament lesson share করার জায়গা।', [['Organizer feedback', 'Real auction room থেকে পাওয়া request roadmap shape করে।'], ['Template ও example', 'Reusable player CSV ও setup checklist নতুন organizer-কে দ্রুত শুরু করতে সাহায্য করে।'], ['Support-first culture', 'Live event bug-কে practical workflow problem হিসেবে দেখা হয়।']], ['Feature request পাঠান', 'Workflow issue report করুন', 'Tournament case study পাঠান']),
+            'status' => $this->page('সিস্টেম স্ট্যাটাস', 'সাপোর্ট', 'Hosted AuctionBall platform-এর current operating note।', [['Application', 'Primary AuctionBall domain ও configured custom domain থেকে web app চলে।'], ['Realtime', 'Live auction screen websocket connection ব্যবহার করে।'], ['Email ও payments', 'Transactional email ও payment provider verified third-party credential এর উপর নির্ভর করে।']], ['Websocket console error check করুন', 'Queue worker running রাখুন', 'Credential বদলালে webhook verify করুন']),
+            'contact' => $this->page('যোগাযোগ', 'সাপোর্ট', 'Setup help, billing বা event-day question এর জন্য AuctionBall team-এর সাথে যোগাযোগ করুন।', [['Support email', 'Account ও setup question support@auctionball.com এ পাঠান।'], ['Sales ও enterprise', 'বড় league হলে expected teams, players, event date এবং branding need লিখুন।'], ['Event-day help', 'Issue report করলে screenshot, organization slug এবং exact page URL দিন।']], ['support@auctionball.com', 'Dhaka, Bangladesh', 'Organization slug include করুন']),
+            'terms' => $this->page('সেবার শর্তাবলি', 'লিগ্যাল', 'AuctionBall ব্যবহার করে organization, team, player, auction, payment এবং tournament workflow manage করার নিয়ম।', [['1. শর্ত গ্রহণ', 'Account তৈরি বা AuctionBall auction page ব্যবহার করলে আপনি এই শর্ত এবং প্রযোজ্য আইন মেনে চলতে সম্মত হন।'], ['2. Account ও organization', 'Account information, invited users, assigned roles এবং organization activity এর দায়িত্ব আপনার। Password ও team link secure রাখুন।'], ['3. Auction ও participant data', 'যে player, team বা tournament data upload করবেন সেটি collect ও use করার permission থাকতে হবে।'], ['4. Payment ও subscription', 'Paid plan, PayPal/manual payment, billing limit এবং subscription access selected plan অনুযায়ী চলবে।'], ['5. Service availability', 'Live event internet, third-party provider, hosting, email, payment processor ও venue network এর উপর নির্ভর করতে পারে।'], ['6. Misuse', 'Abuse, spam, unauthorized access, illegal activity, payment fraud বা অন্য users-কে ক্ষতি করলে access restricted হতে পারে।'], ['7. পরিবর্তন', 'Product evolve করার সাথে feature, limit, pricing বা terms update হতে পারে।']], ['Accurate account information ব্যবহার করুন', 'Admin credential secure রাখুন', 'Event এর আগে setup test করুন', 'Billing/account concern হলে support এ যোগাযোগ করুন'], ['updated_at' => 'সর্বশেষ আপডেট: ২০ মে, ২০২৬', 'practice_title' => 'সহজ ভাষায় সারাংশ', 'practice_body' => 'AuctionBall সৎভাবে ব্যবহার করুন, participant data protect করুন, plan অনুযায়ী payment করুন এবং event day এর আগে live auction setup test করুন।']),
+            'privacy' => $this->page('প্রাইভেসি পলিসি', 'লিগ্যাল', 'AuctionBall কোন তথ্য process করে, কেন ব্যবহার করে এবং organizer কীভাবে data manage করবে তা এখানে ব্যাখ্যা করা হয়েছে।', [['1. যে তথ্য collect করি', 'Name, email, phone, organization details, player profile, team record, photo, bid history, payment reference, support message, device info এবং operational log process হতে পারে।'], ['2. তথ্যের ব্যবহার', 'Account তৈরি, live auction sync, roster manage, payment process, email send, support, abuse prevention এবং reliability improve করতে data use হয়।'], ['3. Organizer-controlled data', 'Team, player, season, image, budget এবং auction outcome organization admin manage করে।'], ['4. Third-party services', 'Hosting, email, payment, storage, analytics এবং realtime provider limited data process করতে পারে।'], ['5. Security', 'Reasonable safeguard ব্যবহার করা হয়, কিন্তু কোনো online system perfect নয়। Strong password ও limited access ব্যবহার করুন।'], ['6. Retention ও deletion', 'Organization active থাকলে support, billing, audit, legal বা operational reason এ data retained হতে পারে।'], ['7. Contact', 'Privacy question বা data request থাকলে contact page দিয়ে যোগাযোগ করুন।']], ['Unnecessary sensitive data upload করবেন না', 'Admin access সীমিত রাখুন', 'Old test data remove করুন', 'Verified email ব্যবহার করুন'], ['updated_at' => 'সর্বশেষ আপডেট: ২০ মে, ২০২৬', 'practice_title' => 'আপনার privacy control', 'practice_body' => 'বেশিরভাগ auction record organization admin manage করে। যে data দরকার শুধু সেটাই রাখুন এবং dashboard access নিয়মিত review করুন।']),
+            'refunds' => $this->page('রিফান্ড পলিসি', 'লিগ্যাল', 'Paid plan, failed activation, duplicate payment এবং event-related issue এর refund request কীভাবে review হয়।', [['1. General approach', 'Billing error, duplicate charge, failed activation বা paid service ব্যবহার বাধাগ্রস্ত করা technical issue হলে case by case refund review হয়।'], ['2. Monthly subscription', 'Monthly payment সাধারণত current billing period এর জন্য। Next cycle না চাইলে renewal এর আগে cancel/contact করুন।'], ['3. Duplicate বা failed payment', 'Double charge বা plan activation না হলে payment reference ও organization slug পাঠান।'], ['4. Event-day responsibility', 'Live auction venue internet, device, display setup এবং third-party service এর উপর নির্ভর করে।'], ['5. Non-refundable cases', 'Completed event, misuse, terms violation, late request বা local venue/network issue এর জন্য refund deny হতে পারে।'], ['6. Processing time', 'Approved refund original method দিয়ে return করার চেষ্টা করা হয়; provider/bank timing প্রভাব ফেলতে পারে।'], ['7. Request পদ্ধতি', 'Account email, organization slug, payment reference, plan name, charge date এবং issue explanation পাঠান।']], ['Payment reference পাঠান', 'Organization slug include করুন', 'Charge date লিখুন', 'Issue clear করে লিখুন'], ['updated_at' => 'সর্বশেষ আপডেট: ২০ মে, ২০২৬', 'practice_title' => 'Refund request করার আগে', 'practice_body' => 'PayPal বা manual payment reference, organization slug এবং activation fail হলে screenshot সংগ্রহ করুন। Clear detail দ্রুত review করতে সাহায্য করে।']),
+            'acceptable-use' => $this->page('Acceptable Use', 'লিগ্যাল', 'সব organizer-এর জন্য AuctionBall reliable রাখতে কিছু নিয়ম।', [['Abuse নয়', 'Registration spam, websocket attack, private data scrape বা harmful file upload করবেন না।'], ['Participant respect করুন', 'Tournament এর জন্য অনুমোদিত player data-ই collect করুন।'], ['Operational safety', 'Live auction, payment flow বা email system overload করার চেষ্টা করবেন না।']], ['Private link সাবধানে ব্যবহার করুন', 'Abusive user remove করুন', 'Suspicious activity report করুন']),
         ];
     }
 

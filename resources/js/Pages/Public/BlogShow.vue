@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import PublicFooter from '@/Components/PublicFooter.vue';
 import PublicHeader from '@/Components/PublicHeader.vue';
 
@@ -8,8 +9,9 @@ const props = defineProps({
     post: { type: Object, required: true },
 });
 
+const { t } = useI18n();
 const metaTitle = computed(() => props.post.meta_title || `${props.post.title} | AuctionBall Blog`);
-const metaDescription = computed(() => props.post.meta_description || props.post.excerpt || 'AuctionBall blog article for auction organizers.');
+const metaDescription = computed(() => props.post.meta_description || props.post.excerpt || t('public_blog.post_fallback_description'));
 const bodyHtml = computed(() => {
     const body = String(props.post.body || '').trim();
     if (! body) return '';
@@ -40,7 +42,7 @@ const bodyHtml = computed(() => {
         <PublicHeader />
 
         <main class="mx-auto max-w-3xl px-4 sm:px-6 py-14">
-            <Link href="/blog" class="font-mono text-[12px] text-ink-500 hover:text-ink-900">Back to blog</Link>
+            <Link href="/blog" class="font-mono text-[12px] text-ink-500 hover:text-ink-900">{{ t('public_blog.back_to_blog') }}</Link>
             <div class="mt-6 flex flex-wrap items-center gap-3 text-[12px] font-mono text-ink-500">
                 <span v-if="post.category" class="text-brand-indigo">{{ post.category }}</span>
                 <span v-if="post.show_date !== false && post.date">{{ post.date }}</span>

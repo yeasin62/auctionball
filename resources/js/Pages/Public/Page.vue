@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import PublicFooter from '@/Components/PublicFooter.vue';
 import PublicHeader from '@/Components/PublicHeader.vue';
 
@@ -10,6 +11,7 @@ const props = defineProps({
 
 const seoTitle = computed(() => `${props.page.title} | AuctionBall`);
 const hasDocs = computed(() => Array.isArray(props.page.doc_sections) && props.page.doc_sections.length > 0);
+const { t } = useI18n();
 </script>
 
 <template>
@@ -45,7 +47,7 @@ const hasDocs = computed(() => Array.isArray(props.page.doc_sections) && props.p
             <section v-if="hasDocs" class="mx-auto max-w-6xl px-4 sm:px-6 py-12 lg:py-14 grid lg:grid-cols-12 gap-8">
                 <aside class="lg:col-span-3">
                     <div class="lg:sticky lg:top-24 rounded-lg border border-ink-200/70 bg-white p-5">
-                        <div class="font-mono text-[11px] tracking-widest text-ink-500 uppercase mb-4">Contents</div>
+                        <div class="font-mono text-[11px] tracking-widest text-ink-500 uppercase mb-4">{{ t('public_page.contents') }}</div>
                         <nav class="space-y-2">
                             <a v-for="section in page.doc_sections"
                                :key="section.title"
@@ -76,17 +78,17 @@ const hasDocs = computed(() => Array.isArray(props.page.doc_sections) && props.p
 
             <section class="mx-auto max-w-6xl px-4 sm:px-6 py-12 grid lg:grid-cols-12 gap-8" :class="hasDocs ? 'pt-0' : ''">
                 <div class="lg:col-span-7">
-                    <h2 class="text-[24px] font-extrabold tracking-tight">{{ page.practice_title || 'What this means in practice' }}</h2>
+                    <h2 class="text-[24px] font-extrabold tracking-tight">{{ page.practice_title || t('public_page.practice_title') }}</h2>
                     <p class="mt-4 text-[15.5px] leading-8 text-ink-600">
-                        {{ page.practice_body || 'AuctionBall is built for real event-day pressure: fast setup, clear roles, reliable live updates, and enough structure that organizers can recover quickly when a room gets busy.' }}
+                        {{ page.practice_body || t('public_page.practice_body') }}
                     </p>
                     <div class="mt-6 flex flex-wrap gap-3">
-                        <Link href="/register" class="btn-primary px-5 py-3">Start free</Link>
-                        <Link href="/contact" class="btn-ghost px-5 py-3">Contact support</Link>
+                        <Link href="/register" class="btn-primary px-5 py-3">{{ t('nav.start_free') }}</Link>
+                        <Link href="/contact" class="btn-ghost px-5 py-3">{{ t('public_page.contact_support') }}</Link>
                     </div>
                 </div>
                 <aside class="lg:col-span-5 rounded-lg border border-ink-200/70 bg-white p-6">
-                    <div class="font-mono text-[11px] tracking-widest text-ink-500 uppercase mb-4">Checklist</div>
+                    <div class="font-mono text-[11px] tracking-widest text-ink-500 uppercase mb-4">{{ t('public_page.checklist') }}</div>
                     <ul class="space-y-3">
                         <li v-for="item in page.checklist" :key="item" class="flex gap-3 text-[14px] text-ink-700">
                             <span class="mt-1 h-2 w-2 rounded-full bg-brand-indigo shrink-0"></span>

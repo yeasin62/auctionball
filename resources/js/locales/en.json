@@ -593,11 +593,11 @@
     "public_register": {
         "head_title": "Register · {org} · {season}",
         "subtitle_player": "{season} · {year} · player registration",
-        "subtitle_team":   "{season} · {year} · team registration",
+        "subtitle_team": "{season} · {year} · team registration",
         "heading_player": "Register as a player",
-        "heading_team":   "Register your team",
+        "heading_team": "Register your team",
         "intro_player": "Fill in your details. The organizer will review your registration before the auction starts.",
-        "intro_team":   "Fill in your team details. The organizer will review your registration before the auction starts.",
+        "intro_team": "Fill in your team details. The organizer will review your registration before the auction starts.",
         "section_your_details": "YOUR DETAILS",
         "section_team_details": "TEAM DETAILS",
         "section_additional": "ADDITIONAL DETAILS",
@@ -646,8 +646,8 @@
         "method_bkash": "bKash",
         "method_nagad": "Nagad",
         "method_rocket": "Rocket",
-        "method_bank":   "Bank account",
-        "method_other":  "Other"
+        "method_bank": "Bank account",
+        "method_other": "Other"
     },
     "profile": {
         "head_title": "Profile",
@@ -1386,5 +1386,57 @@
         "invite_link_copied": "Invite link copied to clipboard.",
         "col_name": "NAME",
         "col_joined": "JOINED"
+    },
+    "public_blog": {
+        "seo_title": "AuctionBall Blog | Auction Tips, Tournament Guides & Product Updates",
+        "seo_description": "Read AuctionBall guides, tournament auction tips, product updates, and practical playbooks for running cricket, football, and live player auctions.",
+        "eyebrow": "Blog",
+        "heading": "AuctionBall Blog",
+        "subtitle": "Guides, product updates, and practical auction playbooks for organizers running cricket, football, and live player auctions.",
+        "uncategorized": "Uncategorized",
+        "read": "Read",
+        "empty_title": "No posts published yet",
+        "empty_body": "New auction guides will appear here after they are published.",
+        "help_title": "Need help preparing an auction?",
+        "help_body": "Use the help center or contact support before event day.",
+        "help_center": "Help center",
+        "contact": "Contact",
+        "back_to_blog": "Back to blog",
+        "post_fallback_description": "AuctionBall blog article for auction organizers."
+    },
+    "contact_page": {
+        "seo_title": "Contact | AuctionBall",
+        "seo_description": "Contact AuctionBall for setup help, billing support, and live tournament auction questions.",
+        "eyebrow": "Contact",
+        "heading": "Let us help with your auction",
+        "subtitle": "Send your setup, billing, or event-day question. Include your organization name or tournament date when useful.",
+        "phone": "Phone",
+        "email": "Email",
+        "name": "Name",
+        "organization": "Organization",
+        "message": "Message",
+        "message_placeholder": "Tell us what you need help with...",
+        "sending": "Sending...",
+        "send_message": "Send message"
+    },
+    "error_page": {
+        "403_title": "Access not allowed",
+        "403_body": "This page is private or your account does not have permission to open it.",
+        "500_title": "Something went wrong",
+        "500_body": "The server hit a problem while loading this page. Try again in a moment.",
+        "503_title": "Temporarily unavailable",
+        "503_body": "AuctionBall is temporarily unavailable while maintenance or deployment finishes.",
+        "404_title": "Page not found",
+        "404_body": "The page may have moved, the link may be old, or the auction resource may no longer be available.",
+        "go_home": "Go home",
+        "read_blog": "Read blog",
+        "contact_support": "Contact support"
+    },
+    "public_page": {
+        "contents": "Contents",
+        "practice_title": "What this means in practice",
+        "practice_body": "AuctionBall is built for real event-day pressure: fast setup, clear roles, reliable live updates, and enough structure that organizers can recover quickly when a room gets busy.",
+        "contact_support": "Contact support",
+        "checklist": "Checklist"
     }
 }

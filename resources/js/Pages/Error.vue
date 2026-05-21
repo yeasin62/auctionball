@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import PublicFooter from '@/Components/PublicFooter.vue';
 import PublicHeader from '@/Components/PublicHeader.vue';
 
@@ -8,35 +9,36 @@ const props = defineProps({
     status: { type: Number, default: 404 },
 });
 
+const { t } = useI18n();
 const pageCopy = computed(() => {
     if (props.status === 403) {
         return {
-            title: 'Access not allowed',
+            title: t('error_page.403_title'),
             eyebrow: '403',
-            body: 'This page is private or your account does not have permission to open it.',
+            body: t('error_page.403_body'),
         };
     }
 
     if (props.status === 500) {
         return {
-            title: 'Something went wrong',
+            title: t('error_page.500_title'),
             eyebrow: '500',
-            body: 'The server hit a problem while loading this page. Try again in a moment.',
+            body: t('error_page.500_body'),
         };
     }
 
     if (props.status === 503) {
         return {
-            title: 'Temporarily unavailable',
+            title: t('error_page.503_title'),
             eyebrow: '503',
-            body: 'AuctionBall is temporarily unavailable while maintenance or deployment finishes.',
+            body: t('error_page.503_body'),
         };
     }
 
     return {
-        title: 'Page not found',
+        title: t('error_page.404_title'),
         eyebrow: '404',
-        body: 'The page may have moved, the link may be old, or the auction resource may no longer be available.',
+        body: t('error_page.404_body'),
     };
 });
 </script>
@@ -58,9 +60,9 @@ const pageCopy = computed(() => {
                 <p class="mx-auto mt-5 max-w-2xl text-[17px] leading-8 text-ink-600">{{ pageCopy.body }}</p>
 
                 <div class="mt-8 flex flex-wrap justify-center gap-3">
-                    <Link href="/" class="btn-primary px-5 py-3">Go home</Link>
-                    <Link href="/blog" class="btn-ghost px-5 py-3">Read blog</Link>
-                    <Link href="/contact" class="btn-ghost px-5 py-3">Contact support</Link>
+                    <Link href="/" class="btn-primary px-5 py-3">{{ t('error_page.go_home') }}</Link>
+                    <Link href="/blog" class="btn-ghost px-5 py-3">{{ t('error_page.read_blog') }}</Link>
+                    <Link href="/contact" class="btn-ghost px-5 py-3">{{ t('error_page.contact_support') }}</Link>
                 </div>
             </section>
         </main>
