@@ -246,6 +246,7 @@
         }
     },
     "nav": {
+        "home": "হোম",
         "log_in": "লগ ইন",
         "log_out": "লগ আউট",
         "start_free": "ফ্রি শুরু করুন",
@@ -592,11 +593,11 @@
     "public_register": {
         "head_title": "রেজিস্ট্রেশন · {org} · {season}",
         "subtitle_player": "{season} · {year} · প্লেয়ার রেজিস্ট্রেশন",
-        "subtitle_team":   "{season} · {year} · টিম রেজিস্ট্রেশন",
+        "subtitle_team": "{season} · {year} · টিম রেজিস্ট্রেশন",
         "heading_player": "প্লেয়ার হিসেবে রেজিস্ট্রেশন",
-        "heading_team":   "আপনার টিম রেজিস্ট্রেশন",
+        "heading_team": "আপনার টিম রেজিস্ট্রেশন",
         "intro_player": "আপনার তথ্য পূরণ করুন। অকশন শুরুর আগে আয়োজক রেজিস্ট্রেশন রিভিউ করবেন।",
-        "intro_team":   "আপনার টিমের তথ্য পূরণ করুন। অকশন শুরুর আগে আয়োজক রেজিস্ট্রেশন রিভিউ করবেন।",
+        "intro_team": "আপনার টিমের তথ্য পূরণ করুন। অকশন শুরুর আগে আয়োজক রেজিস্ট্রেশন রিভিউ করবেন।",
         "section_your_details": "আপনার তথ্য",
         "section_team_details": "টিমের তথ্য",
         "section_additional": "অতিরিক্ত তথ্য",
@@ -645,8 +646,8 @@
         "method_bkash": "bKash",
         "method_nagad": "Nagad",
         "method_rocket": "Rocket",
-        "method_bank":   "ব্যাংক একাউন্ট",
-        "method_other":  "অন্যান্য"
+        "method_bank": "ব্যাংক একাউন্ট",
+        "method_other": "অন্যান্য"
     },
     "profile": {
         "head_title": "প্রোফাইল",

@@ -3,6 +3,7 @@ import { Head, useForm, usePage } from '@inertiajs/vue3';
 import Field from '@/Components/Field.vue';
 import TextField from '@/Components/TextField.vue';
 import ImageCropper from '@/Components/ImageCropper.vue';
+import PublicHeader from '@/Components/PublicHeader.vue';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -127,17 +128,7 @@ const submit = () => form.post(route('public-register.store', props.season.token
 <template>
     <Head :title="t('public_register.head_title', { org: org.name, season: season.name })" />
     <div class="page-bg min-h-screen">
-        <header class="px-6 py-5 border-b border-ink-200/40 bg-white/40 backdrop-blur-md">
-            <div class="max-w-2xl mx-auto flex items-center gap-3">
-                <span class="grid place-items-center h-9 w-9 rounded-lg bg-gradient-brand shadow-cta">
-                    <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12h8M8 8h5"/></svg>
-                </span>
-                <div>
-                    <div class="text-[15px] font-bold tracking-tight">{{ org.name }}</div>
-                    <div class="font-mono text-[10.5px] text-ink-500">{{ t('public_register.subtitle_player', { season: season.name, year: season.year }) }}</div>
-                </div>
-            </div>
-        </header>
+        <PublicHeader />
 
         <main class="max-w-2xl mx-auto px-6 py-10">
             <div v-if="page.props.flash?.success" class="mb-5 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-[13.5px] text-emerald-800">
@@ -145,10 +136,12 @@ const submit = () => form.post(route('public-register.store', props.season.token
             </div>
 
             <div class="text-center mb-7">
+                <div class="mb-3 font-mono text-[11px] tracking-widest text-brand-indigo uppercase">{{ org.name }}</div>
                 <h1 class="text-[34px] font-extrabold tracking-tight">{{ t('public_register.heading_player') }}</h1>
                 <p class="mt-2 text-ink-500 max-w-md mx-auto text-[14px]">
                     {{ t('public_register.intro_player') }}
                 </p>
+                <p class="mt-2 font-mono text-[11px] text-ink-500">{{ t('public_register.subtitle_player', { season: season.name, year: season.year }) }}</p>
             </div>
 
             <div v-if="season.registration_instructions" class="mb-5 rounded-xl bg-white/70 border border-ink-200/60 px-5 py-4 text-[13.5px] text-ink-700 whitespace-pre-line">

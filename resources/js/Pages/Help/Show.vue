@@ -1,7 +1,7 @@
 <script setup>
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import LanguageToggle from '@/Components/LanguageToggle.vue';
+import PublicHeader from '@/Components/PublicHeader.vue';
 import { useI18n, I18nT } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -14,7 +14,6 @@ const props = defineProps({
 });
 
 const page = usePage();
-const appLogo   = computed(() => page.props.appLogo);
 const appDomain = computed(() => page.props.appDomain || 'auctionball.com');
 
 const search = ref('');
@@ -51,26 +50,16 @@ const sidebarOpen = ref(false);
 
     <div class="page-bg min-h-screen flex flex-col">
         <!-- ============== TOP BAR ============== -->
-        <header class="sticky top-0 z-30 bg-white/70 backdrop-blur-md border-b border-ink-200/40">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 py-3 flex items-center gap-3">
+        <PublicHeader>
+            <template #before-brand>
                 <button class="lg:hidden p-2 -ml-2" @click="sidebarOpen = !sidebarOpen" :aria-label="t('help_page.toggle_sidebar')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
                 </button>
-                <Link href="/" class="flex items-center gap-2.5">
-                    <img v-if="appLogo" :src="appLogo" alt="AuctionBall" class="h-9 w-9 rounded-lg object-contain bg-white border border-ink-200/40" />
-                    <span v-else class="grid place-items-center h-9 w-9 rounded-lg bg-gradient-brand shadow-cta">
-                        <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12h8M8 8h5"/></svg>
-                    </span>
-                    <span class="font-semibold text-[16px] tracking-tight">AuctionBall</span>
-                    <span class="hidden sm:inline-block font-mono text-[11px] tracking-widest text-ink-500 ml-2 px-2 py-0.5 rounded-full border border-ink-200/60">{{ t('help_page.docs_badge') }}</span>
-                </Link>
-                <div class="ml-auto flex items-center gap-2">
-                    <LanguageToggle />
-                    <Link href="/login" class="hidden sm:inline-flex btn-ghost text-[13px] py-2 px-3">{{ t('help_page.log_in') }}</Link>
-                    <Link href="/register" class="btn-primary text-[13px] py-2 px-3">{{ t('help_page.get_started') }}</Link>
-                </div>
-            </div>
-        </header>
+            </template>
+            <template #after-brand>
+                <span class="hidden sm:inline-block font-mono text-[11px] tracking-widest text-ink-500 ml-2 px-2 py-0.5 rounded-full border border-ink-200/60">{{ t('help_page.docs_badge') }}</span>
+            </template>
+        </PublicHeader>
 
         <div class="flex flex-1 min-h-0 mx-auto max-w-7xl w-full">
             <!-- ============== SIDEBAR (desktop, sticky) ==============

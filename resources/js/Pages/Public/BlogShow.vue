@@ -1,15 +1,13 @@
 <script setup>
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import LanguageToggle from '@/Components/LanguageToggle.vue';
 import PublicFooter from '@/Components/PublicFooter.vue';
+import PublicHeader from '@/Components/PublicHeader.vue';
 
 const props = defineProps({
     post: { type: Object, required: true },
 });
 
-const appLogo = computed(() => usePage().props.appLogo);
-const user = computed(() => usePage().props.auth?.user);
 const metaTitle = computed(() => props.post.meta_title || `${props.post.title} | AuctionBall Blog`);
 const metaDescription = computed(() => props.post.meta_description || props.post.excerpt || 'AuctionBall blog article for auction organizers.');
 const bodyHtml = computed(() => {
@@ -39,34 +37,7 @@ const bodyHtml = computed(() => {
     </Head>
 
     <div class="page-bg min-h-screen text-ink-900">
-        <header class="sticky top-0 z-30 bg-white/75 backdrop-blur-md border-b border-ink-200/50">
-            <div class="mx-auto max-w-6xl px-4 sm:px-6 py-3 flex items-center gap-3">
-                <Link href="/" class="flex items-center gap-2.5">
-                    <img v-if="appLogo" :src="appLogo" alt="AuctionBall" class="h-9 w-9 rounded-lg object-contain bg-white border border-ink-200/40" />
-                    <span v-else class="grid place-items-center h-9 w-9 rounded-lg bg-gradient-brand shadow-cta">
-                        <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12h8"/></svg>
-                    </span>
-                    <span class="font-semibold text-[16px] tracking-tight">AuctionBall</span>
-                </Link>
-                <nav class="hidden md:flex items-center gap-5 ml-8 text-[13px] text-ink-600">
-                    <Link href="/features" class="hover:text-ink-900">Features</Link>
-                    <Link href="/pricing" class="hover:text-ink-900">Pricing</Link>
-                    <Link href="/blog" class="font-semibold text-ink-900">Blog</Link>
-                    <Link href="/help" class="hover:text-ink-900">Help</Link>
-                </nav>
-                <div class="ml-auto flex items-center gap-2">
-                    <LanguageToggle />
-                    <template v-if="user">
-                        <Link href="/logout" method="post" as="button" type="button" class="hidden sm:inline-flex btn-ghost text-[13px] py-2 px-3">Log out</Link>
-                        <Link href="/dashboard" class="btn-primary text-[13px] py-2 px-3">Dashboard</Link>
-                    </template>
-                    <template v-else>
-                        <Link href="/login" class="hidden sm:inline-flex btn-ghost text-[13px] py-2 px-3">Log in</Link>
-                        <Link href="/register" class="btn-primary text-[13px] py-2 px-3">Start free</Link>
-                    </template>
-                </div>
-            </div>
-        </header>
+        <PublicHeader />
 
         <main class="mx-auto max-w-3xl px-4 sm:px-6 py-14">
             <Link href="/blog" class="font-mono text-[12px] text-ink-500 hover:text-ink-900">Back to blog</Link>
