@@ -11,7 +11,7 @@ const props = defineProps({
     counts:     Object,
 });
 
-const { locale } = useI18n();
+const { t, locale } = useI18n();
 
 const f = ref({ ...props.filters });
 const expanded = ref(null);
