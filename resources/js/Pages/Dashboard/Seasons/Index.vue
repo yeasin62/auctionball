@@ -5,7 +5,7 @@ import TextField from '@/Components/TextField.vue';
 import CurrencyField from '@/Components/CurrencyField.vue';
 import Toggle from '@/Components/Toggle.vue';
 import { router, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useFmt } from '@/composables/useFmt';
 import { useConfirm, useAlert, usePrompt } from '@/composables/useConfirm';
@@ -223,19 +223,6 @@ const fieldTypes = [
     { value: 'image',    label: 'Image upload' },
     { value: 'payment',  label: 'Payment (bKash / bank / etc.)' },
 ];
-
-const defaultRegistrationFields = computed(() => [
-    { label: t('seasons_page.default_field_name'), type: t('seasons_page.default_type_text'), required: true },
-    { label: t('seasons_page.default_field_category'), type: t('seasons_page.default_type_dropdown'), required: true },
-    { label: t('seasons_page.default_field_position'), type: t('seasons_page.default_type_dropdown'), required: false },
-    { label: t('seasons_page.default_field_player_type'), type: t('seasons_page.default_type_dropdown'), required: false },
-    { label: t('seasons_page.default_field_jersey'), type: t('seasons_page.default_type_text'), required: false },
-    { label: t('seasons_page.default_field_profession'), type: t('seasons_page.default_type_text'), required: false },
-    { label: t('seasons_page.default_field_batting'), type: t('seasons_page.default_type_text'), required: false },
-    { label: t('seasons_page.default_field_bowling'), type: t('seasons_page.default_type_text'), required: false },
-    { label: t('seasons_page.default_field_photo'), type: t('seasons_page.default_type_image'), required: false },
-    { label: t('seasons_page.default_field_payment_ref'), type: t('seasons_page.default_type_payment'), required: false },
-]);
 
 // Types that have a list of options (radio / multi / select).
 const isOptionType = (type) => ['select', 'radio', 'multi'].includes(type);
@@ -599,14 +586,48 @@ const atLimit = props.used >= props.limits.seasons;
                                 {{ t('seasons_page.always_included') }}
                             </span>
                         </div>
-                        <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-2">
-                            <div v-for="field in defaultRegistrationFields" :key="field.label"
-                                 class="rounded-xl border border-ink-200/70 bg-ink-50/70 px-3 py-2.5">
-                                <div class="flex items-center justify-between gap-2">
-                                    <div class="font-medium text-[13px] text-ink-800 truncate">{{ field.label }}</div>
-                                    <span v-if="field.required" class="text-[10px] font-mono text-rose-600">{{ t('seasons_page.required_badge') }}</span>
+
+                        <div class="max-w-2xl rounded-2xl border border-ink-200/60 bg-white/80 p-6 space-y-5 shadow-sm">
+                            <div class="text-[15px] font-bold tracking-wider text-ink-800">{{ t('public_register.section_your_details') }}</div>
+
+                            <Field :label="t('public_register.full_name')" required>
+                                <TextField :model-value="t('public_register.full_name_placeholder')" disabled />
+                            </Field>
+
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <Field :label="t('public_register.category')" required>
+                                    <select disabled class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] text-ink-500 focus:outline-none">
+                                        <option>{{ t('seasons_page.default_preview_category') }}</option>
+                                    </select>
+                                </Field>
+                                <Field :label="t('public_register.position_cricket')">
+                                    <select disabled class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] text-ink-500 focus:outline-none">
+                                        <option>{{ t('public_register.select_placeholder') }}</option>
+                                    </select>
+                                </Field>
+                                <Field :label="t('public_register.jersey_no')">
+                                    <TextField :model-value="t('public_register.jersey_no_placeholder')" disabled />
+                                </Field>
+                                <Field :label="t('public_register.profession')">
+                                    <TextField :model-value="t('public_register.profession_placeholder')" disabled />
+                                </Field>
+                                <Field :label="t('public_register.batting_style')">
+                                    <TextField :model-value="t('public_register.batting_style_placeholder')" disabled />
+                                </Field>
+                                <Field :label="t('public_register.bowling_style')">
+                                    <TextField :model-value="t('public_register.bowling_style_placeholder')" disabled />
+                                </Field>
+                            </div>
+
+                            <div class="pt-3 border-t border-ink-200/60">
+                                <div class="text-[13px] font-medium text-ink-700 mb-2">{{ t('public_register.player_photo', { size: 300 }) }}</div>
+                                <div class="rounded-xl border-2 border-dashed border-ink-200 bg-ink-50/70 px-4 py-6 text-center text-[13px] text-ink-500">
+                                    {{ t('seasons_page.default_preview_image') }}
                                 </div>
-                                <div class="mt-1 text-[11.5px] font-mono text-ink-500">{{ field.type }}</div>
+                            </div>
+
+                            <div class="rounded-xl bg-amber-50/80 border border-amber-200 px-4 py-3 text-[13px] text-amber-800">
+                                {{ t('seasons_page.default_payment_note') }}
                             </div>
                         </div>
                     </div>
