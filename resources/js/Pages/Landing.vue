@@ -29,13 +29,10 @@ const planTeams = (slug) => {
 /* ----------------------- Data ----------------------- */
 // Decorative mockup data — names + roles render as labels in the hero/feature
 // glass cards and stay literal across locales (proper nouns, sample numbers).
-// Photos are pravatar.cc placeholders — swap in real org-uploaded photos later.
-const demoPhoto = 'https://i.pravatar.cc/200?img=33';
-
 const heroQueue = [
-    { initials: 'SR', name: 'Shakib Rahman', role: 'All-rounder · A+', live: true, photo: demoPhoto },
-    { initials: 'TI', name: 'Tanveer Islam', role: 'Batsman · A',     bid: '৳45k', photo: 'https://i.pravatar.cc/200?img=12' },
-    { initials: 'MK', name: 'Mehedi Khan',   role: 'Bowler · B+',     bid: '৳30k', photo: 'https://i.pravatar.cc/200?img=15' },
+    { initials: 'SR', name: 'Shakib Rahman', role: 'All-rounder · A+', live: true },
+    { initials: 'TI', name: 'Tanveer Islam', role: 'Batsman · A',     bid: '৳45k' },
+    { initials: 'MK', name: 'Mehedi Khan',   role: 'Bowler · B+',     bid: '৳30k' },
 ];
 const heroBudgets = [
     { name: 'Dhaka Dynamites',  value: '৳1,25,000' },
@@ -151,9 +148,9 @@ const whyItems = computed(() => [
 ]);
 
 const testimonials = computed(() => [
-    { initials: 'RH', photo: 'https://i.pravatar.cc/200?img=11', name: t('landing.testimonials.t1_name'), role: t('landing.testimonials.t1_role'), quote: t('landing.testimonials.t1_quote') },
-    { initials: 'FA', photo: 'https://i.pravatar.cc/200?img=49', name: t('landing.testimonials.t2_name'), role: t('landing.testimonials.t2_role'), quote: t('landing.testimonials.t2_quote') },
-    { initials: 'IS', photo: 'https://i.pravatar.cc/200?img=68', name: t('landing.testimonials.t3_name'), role: t('landing.testimonials.t3_role'), quote: t('landing.testimonials.t3_quote') },
+    { initials: 'RH', name: t('landing.testimonials.t1_name'), role: t('landing.testimonials.t1_role'), quote: t('landing.testimonials.t1_quote') },
+    { initials: 'FA', name: t('landing.testimonials.t2_name'), role: t('landing.testimonials.t2_role'), quote: t('landing.testimonials.t2_quote') },
+    { initials: 'IS', name: t('landing.testimonials.t3_name'), role: t('landing.testimonials.t3_role'), quote: t('landing.testimonials.t3_quote') },
 ]);
 
 const faqs = computed(() => [
@@ -597,7 +594,7 @@ const payments = computed(() =>
                             {{ t('landing.features.profiles_body') }}
                         </p>
                         <div class="rounded-xl bg-white/70 border border-white/80 px-4 py-3 flex items-center gap-4">
-                            <img :src="demoPhoto" alt="Shakib Rahman" width="48" height="48" class="h-12 w-12 rounded-full object-cover border border-blue-300/30 shrink-0" loading="lazy" decoding="async" />
+                            <div class="avatar h-12 w-12 shrink-0 text-[13px]">SR</div>
                             <div class="flex-1 min-w-0">
                                 <div class="text-[14px] font-semibold leading-tight">Shakib Rahman</div>
                                 <div class="text-[12px] text-ink-500 leading-tight">All-rounder · Mirpur · Age 26</div>
@@ -668,8 +665,7 @@ const payments = computed(() =>
                                 </div>
                             </div>
                             <div class="flex justify-center my-4">
-                                <img :src="demoPhoto" alt="Shakib Rahman" width="96" height="96" loading="lazy" decoding="async"
-                                     class="h-24 w-24 rounded-2xl object-cover border-2 border-white/60 shadow-md" />
+                                <div class="avatar h-24 w-24 rounded-2xl border-2 border-white/60 text-[24px] shadow-md">SR</div>
                             </div>
                             <div class="text-center">
                                 <div class="text-[22px] font-bold tracking-tight">{{ t('landing.bigscreen_section.player_name') }}</div>

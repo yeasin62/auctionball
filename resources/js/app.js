@@ -5,7 +5,7 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
-import { makeI18n } from './i18n';
+import { ensureLocaleMessages, makeI18n } from './i18n';
 import ConfirmProvider from './Components/ConfirmProvider.vue';
 import WhatsAppChatButton from './Components/WhatsAppChatButton.vue';
 
@@ -33,11 +33,11 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         // Initial locale comes from server (SetLocale middleware → Inertia shared prop)
         const initialLocale = props.initialPage?.props?.locale ?? 'en';
-        const i18n = makeI18n(initialLocale);
+        const mountWithI18n = async () => {
+            const i18n = await makeI18n(initialLocale);
 
-        // Wrap App with ConfirmProvider so useConfirm/useAlert/usePrompt work
-        // on every page (auth, public, team-device) — not just DashboardLayout.
-        const mountApp = () => {
+            // Wrap App with ConfirmProvider so useConfirm/useAlert/usePrompt work
+            // on every page (auth, public, team-device) — not just DashboardLayout.
             const app = createApp({ render: () => h('div', [h(App, props), h(ConfirmProvider), h(WhatsAppChatButton)]) })
                 .use(plugin)
                 .use(ZiggyVue)
@@ -48,13 +48,17 @@ createInertiaApp({
                 mounted() {
                     const next = this.$page?.props?.locale;
                     if (next && next !== i18n.global.locale.value) {
-                        i18n.global.locale.value = next;
+                        ensureLocaleMessages(i18n, next).then((locale) => {
+                            i18n.global.locale.value = locale;
+                        });
                     }
                 },
                 updated() {
                     const next = this.$page?.props?.locale;
                     if (next && next !== i18n.global.locale.value) {
-                        i18n.global.locale.value = next;
+                        ensureLocaleMessages(i18n, next).then((locale) => {
+                            i18n.global.locale.value = locale;
+                        });
                     }
                 },
             });
@@ -63,11 +67,11 @@ createInertiaApp({
         };
 
         if (needsRealtime(props.initialPage?.component)) {
-            bootRealtime().finally(mountApp);
+            bootRealtime().catch(() => {}).then(mountWithI18n);
             return;
         }
 
-        return mountApp();
+        return mountWithI18n();
     },
     progress: {
         color: '#6366f1',
