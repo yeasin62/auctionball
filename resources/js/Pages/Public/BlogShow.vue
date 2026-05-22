@@ -7,6 +7,7 @@ import PublicHeader from '@/Components/PublicHeader.vue';
 
 const props = defineProps({
     post: { type: Object, required: true },
+    recentPosts: { type: Array, default: () => [] },
 });
 
 const { t } = useI18n();
@@ -41,21 +42,43 @@ const bodyHtml = computed(() => {
     <div class="page-bg min-h-screen text-ink-900">
         <PublicHeader />
 
-        <main class="mx-auto max-w-3xl px-4 sm:px-6 py-14">
-            <Link href="/blog" class="font-mono text-[12px] text-ink-500 hover:text-ink-900">{{ t('public_blog.back_to_blog') }}</Link>
-            <div class="mt-6 flex flex-wrap items-center gap-3 text-[12px] font-mono text-ink-500">
-                <span v-if="post.category" class="text-brand-indigo">{{ post.category }}</span>
-                <span v-if="post.show_date !== false && post.date">{{ post.date }}</span>
-                <span v-if="post.read_time">{{ post.read_time }}</span>
-            </div>
-            <h1 class="mt-4 text-[34px] sm:text-[48px] leading-tight font-extrabold tracking-tight">{{ post.title }}</h1>
-            <p v-if="post.excerpt" class="mt-5 text-[17px] sm:text-[19px] leading-8 text-ink-600">{{ post.excerpt }}</p>
+        <main class="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+            <aside class="order-2 lg:order-1">
+                <div class="sticky top-24 rounded-xl border border-ink-200/70 bg-white/85 p-5 shadow-sm">
+                    <Link href="/blog" class="font-mono text-[12px] text-ink-500 hover:text-ink-900">{{ t('public_blog.back_to_blog') }}</Link>
+                    <div v-if="recentPosts.length" class="mt-6">
+                        <h2 class="text-[15px] font-extrabold tracking-tight text-ink-900">Recent posts</h2>
+                        <div class="mt-4 space-y-3">
+                            <Link v-for="recent in recentPosts" :key="recent.slug" :href="recent.url" class="block rounded-lg border border-ink-200/70 bg-white p-3 transition hover:border-brand-indigo/30 hover:shadow-sm">
+                                <img v-if="recent.featured_image_url" :src="recent.featured_image_url" alt="" class="mb-2 h-20 w-full rounded-md object-cover" />
+                                <div class="text-[13px] font-bold leading-5 text-ink-900">{{ recent.title }}</div>
+                                <div class="mt-1 flex flex-wrap items-center gap-2 font-mono text-[10.5px] text-ink-400">
+                                    <span v-if="recent.category">{{ recent.category }}</span>
+                                    <span v-if="recent.show_date !== false && recent.date">{{ recent.date }}</span>
+                                </div>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </aside>
 
-            <figure v-if="post.featured_image_url" class="mt-8 overflow-hidden rounded-xl border border-ink-200/70 bg-white">
-                <img :src="post.featured_image_url" :alt="post.title" class="h-auto w-full object-cover" />
-            </figure>
+            <article class="order-1 min-w-0 lg:order-2">
+                <div class="mx-auto max-w-3xl">
+                    <div class="flex flex-wrap items-center gap-3 text-[12px] font-mono text-ink-500">
+                        <span v-if="post.category" class="text-brand-indigo">{{ post.category }}</span>
+                        <span v-if="post.show_date !== false && post.date">{{ post.date }}</span>
+                        <span v-if="post.read_time">{{ post.read_time }}</span>
+                    </div>
+                    <h1 class="mt-4 text-[34px] sm:text-[48px] leading-tight font-extrabold tracking-tight">{{ post.title }}</h1>
+                    <p v-if="post.excerpt" class="mt-5 text-[17px] sm:text-[19px] leading-8 text-ink-600">{{ post.excerpt }}</p>
 
-            <article class="blog-body mt-10 rounded-lg border border-ink-200/70 bg-white p-6 sm:p-8" v-html="bodyHtml"></article>
+                    <figure v-if="post.featured_image_url" class="mt-8 overflow-hidden rounded-xl border border-ink-200/70 bg-white">
+                        <img :src="post.featured_image_url" :alt="post.title" class="h-auto w-full object-cover" />
+                    </figure>
+
+                    <div class="blog-body mt-10 rounded-lg border border-ink-200/70 bg-white p-6 sm:p-8" v-html="bodyHtml"></div>
+                </div>
+            </article>
         </main>
 
         <PublicFooter />

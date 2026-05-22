@@ -107,6 +107,14 @@ class PublicPageController extends Controller
 
         return Inertia::render('Public/BlogShow', [
             'post' => $this->blogPostPayload($post, true),
+            'recentPosts' => BlogPost::query()
+                ->with('blogCategory')
+                ->published()
+                ->whereKeyNot($post->id)
+                ->latest('published_at')
+                ->limit(6)
+                ->get()
+                ->map(fn (BlogPost $recentPost) => $this->blogPostPayload($recentPost)),
         ]);
     }
 
