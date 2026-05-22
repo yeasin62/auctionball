@@ -576,7 +576,8 @@ const atLimit = props.used >= props.limits.seasons;
                     <!-- Field cards. Only the drag handle (⋮⋮ icon) is `draggable=true`,
                          so clicking inside inputs lets you select / delete text normally.
                          The card itself is the drop target. -->
-                    <div class="rounded-2xl border border-ink-200/70 bg-white/65 p-4">
+                    <div class="grid xl:grid-cols-[minmax(360px,0.9fr)_minmax(0,1.1fr)] gap-5 items-start">
+                    <div class="xl:sticky xl:top-24 rounded-2xl border border-ink-200/70 bg-white/65 p-4">
                         <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
                             <div>
                                 <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('seasons_page.default_fields_label') }}</div>
@@ -629,9 +630,69 @@ const atLimit = props.used >= props.limits.seasons;
                             <div class="rounded-xl bg-amber-50/80 border border-amber-200 px-4 py-3 text-[13px] text-amber-800">
                                 {{ t('seasons_page.default_payment_note') }}
                             </div>
+
+                            <div v-if="ensureBuilder(s).length" class="pt-4 border-t border-ink-200/60 space-y-4">
+                                <div class="text-[15px] font-bold tracking-wider text-ink-800">{{ t('public_register.section_additional') }}</div>
+
+                                <template v-for="field in ensureBuilder(s)" :key="`preview-${field.id}`">
+                                    <div v-if="field.type === 'heading'" class="pt-1">
+                                        <div class="font-mono text-[10.5px] tracking-widest text-ink-500">/ {{ (field.label || 'Section title').toUpperCase() }}</div>
+                                        <div class="mt-1 h-px bg-ink-200/60"></div>
+                                    </div>
+
+                                    <label v-else-if="field.type === 'checkbox'"
+                                           class="flex items-start gap-3 px-4 py-3 rounded-xl border bg-white/70 border-ink-200/60">
+                                        <input type="checkbox" disabled class="h-5 w-5 mt-0.5 shrink-0 rounded accent-brand-indigo" />
+                                        <span class="text-[14px] text-ink-800">{{ field.label || t('seasons_page.field_label_placeholder') }}<span v-if="field.required" class="text-rose-500 ml-0.5">*</span></span>
+                                    </label>
+
+                                    <Field v-else :label="field.label || t('seasons_page.field_label_placeholder')" :required="!!field.required">
+                                        <input v-if="['text','number','email','phone','url','date','time'].includes(field.type)"
+                                               :type="field.type === 'phone' ? 'tel' : field.type"
+                                               disabled
+                                               :placeholder="field.placeholder || ''"
+                                               class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] placeholder:text-ink-400 shadow-sm" />
+                                        <textarea v-else-if="field.type === 'textarea'"
+                                                  disabled rows="3" :placeholder="field.placeholder || ''"
+                                                  class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] placeholder:text-ink-400 shadow-sm"></textarea>
+                                        <select v-else-if="field.type === 'select'" disabled
+                                                class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] text-ink-500 shadow-sm">
+                                            <option>{{ field.options?.[0] || t('public_register.select_placeholder') }}</option>
+                                        </select>
+                                        <div v-else-if="field.type === 'radio'" class="space-y-1.5 pt-1">
+                                            <label v-for="opt in (field.options?.length ? field.options : ['Option 1'])" :key="opt"
+                                                   class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border bg-white/70 border-ink-200/60">
+                                                <input type="radio" disabled class="h-4 w-4 accent-brand-indigo" />
+                                                <span class="text-[13.5px] text-ink-800">{{ opt }}</span>
+                                            </label>
+                                        </div>
+                                        <div v-else-if="field.type === 'multi'" class="space-y-1.5 pt-1">
+                                            <label v-for="opt in (field.options?.length ? field.options : ['Option 1'])" :key="opt"
+                                                   class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border bg-white/70 border-ink-200/60">
+                                                <input type="checkbox" disabled class="h-4 w-4 accent-brand-indigo" />
+                                                <span class="text-[13.5px] text-ink-800">{{ opt }}</span>
+                                            </label>
+                                        </div>
+                                        <div v-else-if="field.type === 'image'"
+                                             class="rounded-xl border-2 border-dashed border-ink-200 bg-ink-50/70 px-4 py-6 text-center text-[13px] text-ink-500">
+                                            {{ field.label || t('seasons_page.default_preview_image') }} ({{ field.size || 600 }}×{{ field.size || 600 }})
+                                        </div>
+                                        <div v-else-if="field.type === 'payment'" class="space-y-3">
+                                            <div v-for="(m, mi) in (field.methods?.length ? field.methods : [{ kind: 'bkash', label: 'bKash', number: '' }])" :key="mi"
+                                                 class="rounded-xl border border-violet-200 bg-violet-50/50 px-4 py-3">
+                                                <div class="text-[13px] font-bold text-violet-700">{{ m.label || m.kind || 'Payment method' }}</div>
+                                                <div class="mt-1 font-mono text-[13px] text-ink-700">{{ m.number || m.account || '01XXX-XXXXXXX' }}</div>
+                                            </div>
+                                            <input disabled :placeholder="t('public_register.trx_id_placeholder')"
+                                                   class="w-full rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-[14px] font-mono placeholder:text-ink-400" />
+                                        </div>
+                                    </Field>
+                                </template>
+                            </div>
                         </div>
                     </div>
 
+                    <div class="space-y-3">
                     <div class="space-y-2">
                         <div v-for="(field, idx) in ensureBuilder(s)" :key="field.id"
                              @dragover.prevent
@@ -801,6 +862,8 @@ const atLimit = props.used >= props.limits.seasons;
                                 class="rounded-md bg-ink-100 hover:bg-violet-100 hover:text-violet-700 text-ink-700 px-2.5 py-1 text-[11.5px] transition-colors">
                             + {{ t.label }}
                         </button>
+                    </div>
+                    </div>
                     </div>
                 </div>
 
