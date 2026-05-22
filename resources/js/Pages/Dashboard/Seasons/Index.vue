@@ -5,7 +5,7 @@ import TextField from '@/Components/TextField.vue';
 import CurrencyField from '@/Components/CurrencyField.vue';
 import Toggle from '@/Components/Toggle.vue';
 import { router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useFmt } from '@/composables/useFmt';
 import { useConfirm, useAlert, usePrompt } from '@/composables/useConfirm';
