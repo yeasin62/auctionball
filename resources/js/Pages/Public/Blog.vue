@@ -32,7 +32,7 @@ const { t } = useI18n();
             <section class="mt-10 grid lg:grid-cols-3 gap-4">
                 <article v-for="post in posts" :key="post.slug" class="overflow-hidden rounded-lg border border-ink-200/70 bg-white">
                     <Link v-if="post.featured_image_url" :href="post.url" class="block aspect-[16/9] bg-ink-100">
-                        <img :src="post.featured_image_url" :alt="post.title" class="h-full w-full object-cover" />
+                        <img :src="post.featured_image_url" :alt="post.title" class="h-full w-full object-cover" loading="lazy" decoding="async" />
                     </Link>
                     <div class="p-6">
                         <div class="flex items-center justify-between gap-3 text-[11px] font-mono text-ink-500">

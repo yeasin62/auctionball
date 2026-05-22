@@ -54,7 +54,7 @@ const bodyHtml = computed(() => {
                     <p v-if="post.excerpt" class="mt-5 text-[17px] sm:text-[19px] leading-8 text-ink-600">{{ post.excerpt }}</p>
 
                     <figure v-if="post.featured_image_url" class="mt-8 overflow-hidden rounded-xl border border-ink-200/70 bg-white">
-                        <img :src="post.featured_image_url" :alt="post.title" class="h-auto w-full object-cover" />
+                        <img :src="post.featured_image_url" :alt="post.title" class="h-auto w-full object-cover" fetchpriority="high" decoding="async" />
                     </figure>
 
                     <div class="blog-body mt-10 rounded-lg border border-ink-200/70 bg-white p-6 sm:p-8" v-html="bodyHtml"></div>
@@ -68,7 +68,7 @@ const bodyHtml = computed(() => {
                         <h2 class="text-[15px] font-extrabold tracking-tight text-ink-900">Recent posts</h2>
                         <div class="mt-4 space-y-3">
                             <Link v-for="recent in recentPosts" :key="recent.slug" :href="recent.url" class="block rounded-lg border border-ink-200/70 bg-white p-3 transition hover:border-brand-indigo/30 hover:shadow-sm">
-                                <img v-if="recent.featured_image_url" :src="recent.featured_image_url" alt="" class="mb-2 h-20 w-full rounded-md object-cover" />
+                                <img v-if="recent.featured_image_url" :src="recent.featured_image_url" alt="" class="mb-2 h-20 w-full rounded-md object-cover" loading="lazy" decoding="async" />
                                 <div class="text-[13px] font-bold leading-5 text-ink-900">{{ recent.title }}</div>
                                 <div class="mt-1 flex flex-wrap items-center gap-2 font-mono text-[10.5px] text-ink-400">
                                     <span v-if="recent.category">{{ recent.category }}</span>

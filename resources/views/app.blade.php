@@ -42,8 +42,16 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link
             href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@100..800&family=Mona+Sans:ital,wght@0,200..900;1,200..900&family=JetBrains+Mono:wght@400;500&display=swap"
-            rel="stylesheet"
+            rel="preload"
+            as="style"
+            onload="this.onload=null;this.rel='stylesheet'"
         />
+        <noscript>
+            <link
+                href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@100..800&family=Mona+Sans:ital,wght@0,200..900;1,200..900&family=JetBrains+Mono:wght@400;500&display=swap"
+                rel="stylesheet"
+            />
+        </noscript>
 
         @routes
         @vite('resources/js/app.js')

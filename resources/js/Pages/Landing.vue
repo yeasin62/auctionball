@@ -417,7 +417,7 @@ const payments = computed(() =>
                                 <div class="font-mono text-[10.5px] tracking-widest text-ink-400 mb-3">{{ t('landing.mockup.player_queue') }}</div>
                                 <div class="space-y-3">
                                     <div v-for="p in heroQueue" :key="p.initials" class="flex items-start gap-3">
-                                        <img v-if="p.photo" :src="p.photo" :alt="p.name" class="h-9 w-9 rounded-full object-cover border border-blue-300/30 shrink-0" />
+                                        <img v-if="p.photo" :src="p.photo" :alt="p.name" width="36" height="36" class="h-9 w-9 rounded-full object-cover border border-blue-300/30 shrink-0" decoding="async" />
                                         <div v-else class="avatar shrink-0">{{ p.initials }}</div>
                                         <div class="flex-1 min-w-0">
                                             <div class="text-[13px] font-semibold leading-tight">{{ p.name }}</div>
@@ -597,7 +597,7 @@ const payments = computed(() =>
                             {{ t('landing.features.profiles_body') }}
                         </p>
                         <div class="rounded-xl bg-white/70 border border-white/80 px-4 py-3 flex items-center gap-4">
-                            <img :src="demoPhoto" alt="Shakib Rahman" class="h-12 w-12 rounded-full object-cover border border-blue-300/30 shrink-0" />
+                            <img :src="demoPhoto" alt="Shakib Rahman" width="48" height="48" class="h-12 w-12 rounded-full object-cover border border-blue-300/30 shrink-0" loading="lazy" decoding="async" />
                             <div class="flex-1 min-w-0">
                                 <div class="text-[14px] font-semibold leading-tight">Shakib Rahman</div>
                                 <div class="text-[12px] text-ink-500 leading-tight">All-rounder · Mirpur · Age 26</div>
@@ -668,7 +668,7 @@ const payments = computed(() =>
                                 </div>
                             </div>
                             <div class="flex justify-center my-4">
-                                <img :src="demoPhoto" alt="Shakib Rahman"
+                                <img :src="demoPhoto" alt="Shakib Rahman" width="96" height="96" loading="lazy" decoding="async"
                                      class="h-24 w-24 rounded-2xl object-cover border-2 border-white/60 shadow-md" />
                             </div>
                             <div class="text-center">
@@ -835,7 +835,7 @@ const payments = computed(() =>
                     <figure v-for="t in testimonials" :key="t.initials" class="glass rounded-2xl p-6 flex flex-col">
                         <blockquote class="text-[14.5px] text-ink-700 leading-relaxed flex-1">&ldquo;{{ t.quote }}&rdquo;</blockquote>
                         <figcaption class="mt-6 flex items-center gap-3">
-                            <img v-if="t.photo" :src="t.photo" :alt="t.name" class="h-10 w-10 rounded-full object-cover border border-blue-300/30 shrink-0" />
+                            <img v-if="t.photo" :src="t.photo" :alt="t.name" width="40" height="40" class="h-10 w-10 rounded-full object-cover border border-blue-300/30 shrink-0" loading="lazy" decoding="async" />
                             <div v-else class="avatar shrink-0">{{ t.initials }}</div>
                             <div>
                                 <div class="text-[13.5px] font-semibold leading-tight">{{ t.name }}</div>

@@ -30,7 +30,7 @@ const navLinks = computed(() => [
             <div class="flex min-w-0 items-center gap-2.5">
                 <slot name="before-brand" />
                 <Link href="/" class="flex min-w-0 items-center gap-2.5">
-                    <img v-if="appLogo" :src="appLogo" alt="AuctionBall" class="h-9 w-9 rounded-lg object-contain bg-white border border-ink-200/40" />
+                    <img v-if="appLogo" :src="appLogo" alt="AuctionBall" width="36" height="36" class="h-9 w-9 rounded-lg object-contain bg-white border border-ink-200/40" decoding="async" />
                     <span v-else class="grid place-items-center h-9 w-9 rounded-lg bg-gradient-brand shadow-cta">
                         <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
                             <rect x="4" y="4" width="16" height="16" rx="3"/>

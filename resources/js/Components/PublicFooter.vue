@@ -42,7 +42,7 @@ const footerCols = computed(() => [
             <div class="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.6fr_repeat(4,1fr)]">
                 <div>
                     <div class="flex items-center gap-2.5">
-                        <img v-if="appLogo" :src="appLogo" alt="AuctionBall" class="h-9 w-9 rounded-lg object-contain bg-white border border-ink-200/40" />
+                        <img v-if="appLogo" :src="appLogo" alt="AuctionBall" width="36" height="36" class="h-9 w-9 rounded-lg object-contain bg-white border border-ink-200/40" loading="lazy" decoding="async" />
                         <span v-else class="grid place-items-center h-9 w-9 rounded-lg bg-gradient-brand shadow-cta">
                             <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
                                 <rect x="4" y="4" width="16" height="16" rx="3"/>
