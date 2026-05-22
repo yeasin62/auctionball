@@ -224,6 +224,19 @@ const fieldTypes = [
     { value: 'payment',  label: 'Payment (bKash / bank / etc.)' },
 ];
 
+const defaultRegistrationFields = computed(() => [
+    { label: t('seasons_page.default_field_name'), type: t('seasons_page.default_type_text'), required: true },
+    { label: t('seasons_page.default_field_category'), type: t('seasons_page.default_type_dropdown'), required: true },
+    { label: t('seasons_page.default_field_position'), type: t('seasons_page.default_type_dropdown'), required: false },
+    { label: t('seasons_page.default_field_player_type'), type: t('seasons_page.default_type_dropdown'), required: false },
+    { label: t('seasons_page.default_field_jersey'), type: t('seasons_page.default_type_text'), required: false },
+    { label: t('seasons_page.default_field_profession'), type: t('seasons_page.default_type_text'), required: false },
+    { label: t('seasons_page.default_field_batting'), type: t('seasons_page.default_type_text'), required: false },
+    { label: t('seasons_page.default_field_bowling'), type: t('seasons_page.default_type_text'), required: false },
+    { label: t('seasons_page.default_field_photo'), type: t('seasons_page.default_type_image'), required: false },
+    { label: t('seasons_page.default_field_payment_ref'), type: t('seasons_page.default_type_payment'), required: false },
+]);
+
 // Types that have a list of options (radio / multi / select).
 const isOptionType = (type) => ['select', 'radio', 'multi'].includes(type);
 
@@ -576,6 +589,28 @@ const atLimit = props.used >= props.limits.seasons;
                     <!-- Field cards. Only the drag handle (⋮⋮ icon) is `draggable=true`,
                          so clicking inside inputs lets you select / delete text normally.
                          The card itself is the drop target. -->
+                    <div class="rounded-2xl border border-ink-200/70 bg-white/65 p-4">
+                        <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+                            <div>
+                                <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('seasons_page.default_fields_label') }}</div>
+                                <p class="mt-1 text-[12.5px] text-ink-600">{{ t('seasons_page.default_fields_help') }}</p>
+                            </div>
+                            <span class="rounded-full bg-emerald-50 border border-emerald-100 px-2.5 py-1 text-[10.5px] font-mono text-emerald-700">
+                                {{ t('seasons_page.always_included') }}
+                            </span>
+                        </div>
+                        <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                            <div v-for="field in defaultRegistrationFields" :key="field.label"
+                                 class="rounded-xl border border-ink-200/70 bg-ink-50/70 px-3 py-2.5">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="font-medium text-[13px] text-ink-800 truncate">{{ field.label }}</div>
+                                    <span v-if="field.required" class="text-[10px] font-mono text-rose-600">{{ t('seasons_page.required_badge') }}</span>
+                                </div>
+                                <div class="mt-1 text-[11.5px] font-mono text-ink-500">{{ field.type }}</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="space-y-2">
                         <div v-for="(field, idx) in ensureBuilder(s)" :key="field.id"
                              @dragover.prevent
