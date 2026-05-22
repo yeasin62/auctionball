@@ -18,6 +18,7 @@ const props = defineProps({
     players: Array,
     teams:   Array,
     state:   Object,
+    public_bigscreen_url: String,
 });
 
 const { state: liveState, player: livePlayer, bids: liveBids, remainingSec, timerDisplay, lastReason }
@@ -81,6 +82,11 @@ const setAutoFinalize = (v) => {
     });
 };
 
+const copyPublicBigscreenUrl = async () => {
+    if (! props.public_bigscreen_url || ! navigator?.clipboard) return;
+    await navigator.clipboard.writeText(props.public_bigscreen_url);
+};
+
 // Guard: only fire the finalize POST once per timer-expiry. Reset whenever a
 // fresh state with a future timer arrives (new lot, anti-snipe extension, etc).
 const finalizeFired = ref(false);
@@ -134,7 +140,23 @@ const statusBadge = computed(() => ({
             <p class="text-ink-500 text-[16px]">{{ t('auction.no_active_season') }} <Link href="/dashboard/seasons" class="text-ink-900 underline">{{ t('auction.create_or_activate_one') }}</Link>.</p>
         </div>
 
-        <div v-else class="grid xl:grid-cols-12 gap-5">
+        <div v-else class="space-y-5">
+            <div class="glass rounded-2xl p-4 flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-5">
+                <div class="flex-1 min-w-0">
+                    <div class="font-mono text-[12.5px] tracking-widest text-ink-500">{{ t('auction_page.public_bigscreen_label') }}</div>
+                    <div class="mt-1 font-mono text-[13.5px] text-ink-700 truncate">{{ public_bigscreen_url }}</div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <a :href="public_bigscreen_url" target="_blank" rel="noopener" class="btn-primary px-4 py-2.5 text-[13.5px]">
+                        {{ t('auction_page.public_bigscreen_open') }}
+                    </a>
+                    <button type="button" @click="copyPublicBigscreenUrl" class="btn-ghost px-4 py-2.5 text-[13.5px]">
+                        {{ t('auction_page.public_bigscreen_copy') }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid xl:grid-cols-12 gap-5">
             <!-- LEFT: Player queue -->
             <aside class="xl:col-span-3 glass rounded-2xl p-4 max-h-[82vh] flex flex-col">
                 <div class="flex items-center justify-between mb-3">
@@ -399,6 +421,7 @@ const statusBadge = computed(() => ({
                     Click a team → tap an increment to place a bid as that team.
                 </div>
             </aside>
+            </div>
         </div>
     </DashboardLayout>
 </template>

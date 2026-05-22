@@ -25,6 +25,7 @@ const stopImpersonating = () => router.post(route('admin.stop-impersonating'));
 // team_owner role gets a minimal sidebar (only "Place bids") so the dashboard
 // doesn't surface admin tooling they can't use.
 const isTeamOwner = computed(() => role.value === 'team_owner');
+const bigScreenHref = computed(() => currentOrg.value?.slug ? `/live/${currentOrg.value.slug}` : '/dashboard/bigscreen');
 
 const navGroups = computed(() => {
     if (isTeamOwner.value) {
@@ -61,7 +62,7 @@ const navGroups = computed(() => {
                 { label: 'sidebar.players',       href: '/dashboard/players',   icon: 'user',     match: /^\/dashboard\/players/ },
                 { label: 'sidebar.teams',         href: '/dashboard/teams',     icon: 'users',    match: /^\/dashboard\/teams/ },
                 { label: 'sidebar.live_auction',  href: '/dashboard/auction',   icon: 'play',     match: /^\/dashboard\/auction/, accent: true },
-                { label: 'sidebar.big_screen',    href: '/dashboard/bigscreen', icon: 'monitor',  match: /^\/dashboard\/bigscreen/ },
+                { label: 'sidebar.big_screen',    href: bigScreenHref.value,     icon: 'monitor',  match: /^\/(?:dashboard\/bigscreen|live(?:\/|$))/ },
                 { label: 'sidebar.rosters',       href: '/dashboard/rosters',   icon: 'team',     match: /^\/dashboard\/rosters/ },
                 { label: 'sidebar.analytics',     href: '/dashboard/analytics', icon: 'chart',    match: /^\/dashboard\/analytics/ },
                 { label: 'sidebar.audit_log',     href: '/dashboard/audit',     icon: 'audit',    match: /^\/dashboard\/audit/ },

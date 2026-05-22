@@ -24,7 +24,7 @@ class AuctionController extends Controller
         $org    = $request->attributes->get('current_organization');
         $season = $org->activeSeason();
 
-        $payload = ['season' => null, 'players' => [], 'teams' => [], 'state' => null, 'reverb' => $this->reverbConfig()];
+        $payload = ['season' => null, 'players' => [], 'teams' => [], 'state' => null, 'public_bigscreen_url' => null, 'reverb' => $this->reverbConfig()];
 
         if ($season) {
             $state = $this->svc->stateFor($season);
@@ -39,6 +39,10 @@ class AuctionController extends Controller
             $payload['teams'] = $season->teams()->orderBy('name')
                 ->get(['id','name','short_code','remaining_budget','initial_budget']);
             $payload['state'] = $this->serializeState($state);
+            $payload['public_bigscreen_url'] = route('public.live', [
+                'organization' => $org->slug,
+                'season' => $season->id,
+            ]);
         }
 
         return Inertia::render('Dashboard/Auction/Control', $payload);
