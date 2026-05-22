@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Organization;
 use App\Models\Player;
+use App\Models\Season;
 use App\Models\Team;
 use App\Services\AuctionService;
 use Illuminate\Http\JsonResponse;
@@ -49,8 +50,52 @@ class AuctionController extends Controller
         $org    = $request->attributes->get('current_organization');
         $season = $org->activeSeason();
 
+        return Inertia::render('Dashboard/Auction/Bigscreen', $this->bigscreenPayload($org, $season));
+    }
+
+    public function publicBigscreen(Request $request, Organization $organization, ?Season $season = null): Response
+    {
+        if ($season) {
+            abort_unless((int) $season->organization_id === (int) $organization->id, 404);
+        } else {
+            $season = $organization->activeSeason();
+        }
+
+        return $this->renderPublicBigscreen($request, $organization, $season);
+    }
+
+    public function publicBigscreenForDomain(Request $request): Response
+    {
+        $organization = $request->attributes->get('current_organization');
+        abort_unless($organization instanceof Organization, 404);
+
+        return $this->renderPublicBigscreen($request, $organization, $organization->activeSeason());
+    }
+
+    private function renderPublicBigscreen(Request $request, Organization $organization, ?Season $season): Response
+    {
+        if ($season) {
+            $request->session()->put('public_bigscreen_org_id', $organization->id);
+            $request->session()->put('public_bigscreen_season_id', $season->id);
+        } else {
+            $request->session()->forget(['public_bigscreen_org_id', 'public_bigscreen_season_id']);
+        }
+
+        $request->attributes->set('current_organization', $organization);
+
+        return Inertia::render('Dashboard/Auction/Bigscreen', $this->bigscreenPayload($organization, $season));
+    }
+
+    private function bigscreenPayload(Organization $org, ?Season $season): array
+    {
         $payload = [
-            'org'    => ['name' => $org->name, 'slug' => $org->slug, 'plan' => $org->plan],
+            'org'    => [
+                'name' => $org->name,
+                'slug' => $org->slug,
+                'plan' => $org->plan,
+                'logo_url' => $org->logo_url,
+                'is_white_label' => $org->isWhiteLabel(),
+            ],
             'season' => null, 'state' => null, 'teams' => [], 'reverb' => $this->reverbConfig(),
         ];
 
@@ -62,7 +107,7 @@ class AuctionController extends Controller
                 ->get(['id','name','short_code','remaining_budget','initial_budget']);
         }
 
-        return Inertia::render('Dashboard/Auction/Bigscreen', $payload);
+        return $payload;
     }
 
     /**

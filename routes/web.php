@@ -54,6 +54,14 @@ Route::post('/contact', [PublicPageController::class, 'submitContact'])
 Route::get('/blog', [PublicPageController::class, 'blog'])->name('public.blog');
 Route::get('/blog/{post:slug}', [PublicPageController::class, 'blogPost'])->name('public.blog.show');
 
+// Public big-screen broadcast. Scoped by organization slug and optionally a
+// specific season id, so multiple organizations can run live auctions at once.
+Route::get('/live', [AuctionController::class, 'publicBigscreenForDomain'])
+    ->name('public.live-domain');
+Route::get('/live/{organization:slug}/{season?}', [AuctionController::class, 'publicBigscreen'])
+    ->whereNumber('season')
+    ->name('public.live');
+
 // Language switcher (works for guests via cookie, signed-in users via DB)
 Route::post('/lang/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
 

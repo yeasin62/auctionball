@@ -55,10 +55,10 @@
             "h1_grad_b": "not weekends.",
             "body": "AuctionBall is a hosted platform for tournament organizers — cricket, football and beyond. Sign up, pick a subdomain, add your players and teams, and run a fully real-time auction — control center, big-screen display, team-device bidding — without installing anything.",
             "stat_realtime": "Real-time",
-            "stat_realtime_after": "WebSocket",
+            "stat_realtime_after": "",
             "stat_seasons_after": "seasons & tournaments",
             "stat_bigscreen": "Big-screen",
-            "stat_bigscreen_after": "+ mobile ready"
+            "stat_bigscreen_after": "live broadcast"
         },
         "mockup": {
             "player_queue": "PLAYER QUEUE · BPL 2026",

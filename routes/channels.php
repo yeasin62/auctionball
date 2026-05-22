@@ -25,6 +25,12 @@ Broadcast::channel('super-admin', function ($user) {
 });
 
 Broadcast::channel('auction.{orgId}.{seasonId}', function ($user, $orgId, $seasonId) {
+    // Public big-screen visitors are scoped by the /live/{org}/{season?} route.
+    if ((int) session('public_bigscreen_org_id') === (int) $orgId
+        && (int) session('public_bigscreen_season_id') === (int) $seasonId) {
+        return ['id' => 'public-bigscreen', 'name' => 'Public big screen', 'kind' => 'public'];
+    }
+
     // Path A: logged-in org member
     if ($user) {
         $belongs = $user->organizations()->where('organizations.id', $orgId)->exists();

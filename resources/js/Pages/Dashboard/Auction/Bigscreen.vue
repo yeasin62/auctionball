@@ -24,7 +24,7 @@ const { state, player, bids, remainingSec, timerDisplay, lastReason }
 const _fmt = useFmt();
 const fmt  = _fmt.money;
 const ld   = _fmt.localizeDigits;
-const isWhiteLabel = computed(() => usePage().props.currentOrg?.is_white_label);
+const isWhiteLabel = computed(() => props.org?.is_white_label ?? usePage().props.currentOrg?.is_white_label);
 
 const showSold = ref(false);
 const soldData = ref(null);

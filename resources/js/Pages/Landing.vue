@@ -391,7 +391,7 @@ const payments = computed(() =>
                     </div>
 
                     <p class="mt-9 text-[13px] text-ink-500 font-mono">
-                        <span class="text-ink-900 font-semibold">{{ t('landing.hero.stat_realtime') }}</span> {{ t('landing.hero.stat_realtime_after') }}
+                        <span class="text-ink-900 font-semibold">{{ t('landing.hero.stat_realtime') }}</span><span v-if="t('landing.hero.stat_realtime_after')"> {{ t('landing.hero.stat_realtime_after') }}</span>
                         <span class="px-2">·</span>
                         <span class="text-ink-900 font-semibold">∞</span> {{ t('landing.hero.stat_seasons_after') }}
                         <span class="px-2">·</span>
