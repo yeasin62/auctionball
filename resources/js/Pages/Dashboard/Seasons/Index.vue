@@ -226,6 +226,7 @@ const fieldTypes = [
 
 // Types that have a list of options (radio / multi / select).
 const isOptionType = (type) => ['select', 'radio', 'multi'].includes(type);
+const hasPaymentField = (season) => ensureBuilder(season).some((field) => field.type === 'payment');
 
 const methodKinds = [
     { value: 'bkash',  label: 'bKash' },
@@ -627,7 +628,7 @@ const atLimit = props.used >= props.limits.seasons;
                                 </div>
                             </div>
 
-                            <div class="rounded-xl bg-amber-50/80 border border-amber-200 px-4 py-3 text-[13px] text-amber-800">
+                            <div v-if="!Number(s.registration_fee)" class="rounded-xl bg-amber-50/80 border border-amber-200 px-4 py-3 text-[13px] text-amber-800">
                                 {{ t('seasons_page.default_payment_note') }}
                             </div>
 
@@ -688,6 +689,22 @@ const atLimit = props.used >= props.limits.seasons;
                                         </div>
                                     </Field>
                                 </template>
+                            </div>
+
+                            <div v-if="Number(s.registration_fee) > 0 && !hasPaymentField(s)" class="pt-4 border-t border-ink-200/60 space-y-4">
+                                <div class="rounded-xl bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-200 px-5 py-3 flex items-center gap-3">
+                                    <span class="grid place-items-center h-9 w-9 rounded-lg bg-amber-200/70 shrink-0">
+                                        <svg class="h-4 w-4 text-amber-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3 1.34 3 3-1.34 3-3 3m0-12V6m0 12v2"/></svg>
+                                    </span>
+                                    <div class="flex-1">
+                                        <div class="font-mono text-[10.5px] tracking-widest text-amber-700">{{ t('public_register.fee_label') }}</div>
+                                        <div class="text-[20px] font-extrabold tracking-tight text-amber-900 leading-none">{{ fmt(s.registration_fee) }}</div>
+                                    </div>
+                                </div>
+                                <div class="text-[15px] font-bold tracking-wider text-ink-800">{{ t('public_register.section_payment') }}</div>
+                                <Field :label="t('public_register.trx_id_field_label', { fee: fmt(s.registration_fee) })" required>
+                                    <TextField :model-value="t('public_register.trx_id_field_placeholder')" disabled />
+                                </Field>
                             </div>
                         </div>
                     </div>
