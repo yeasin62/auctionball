@@ -702,9 +702,14 @@ const atLimit = props.used >= props.limits.seasons;
                                     </div>
                                 </div>
                                 <div class="text-[15px] font-bold tracking-wider text-ink-800">{{ t('public_register.section_payment') }}</div>
-                                <Field :label="t('public_register.trx_id_field_label', { fee: fmt(s.registration_fee) })" required>
-                                    <TextField :model-value="t('public_register.trx_id_field_placeholder')" disabled />
-                                </Field>
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <Field :label="t('public_register.trx_id_field_label', { fee: fmt(s.registration_fee) })" required>
+                                        <TextField :model-value="t('public_register.trx_id_field_placeholder')" disabled />
+                                    </Field>
+                                    <Field :label="t('public_register.sender_number_field_label')" required>
+                                        <TextField :model-value="t('public_register.sender_number_field_placeholder')" disabled />
+                                    </Field>
+                                </div>
                             </div>
                         </div>
                     </div>

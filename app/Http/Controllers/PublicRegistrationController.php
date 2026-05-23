@@ -70,6 +70,9 @@ class PublicRegistrationController extends Controller
             'registration_txn_id' => ($season->registration_fee > 0 && ! $hasPaymentField)
                 ? 'required|string|max:100'
                 : 'nullable|string|max:100',
+            'registration_sender_number' => ($season->registration_fee > 0 && ! $hasPaymentField)
+                ? 'required|string|max:32|regex:/^[0-9+\-\s()]+$/'
+                : 'nullable|string|max:32|regex:/^[0-9+\-\s()]+$/',
         ];
 
         // Dynamic rules from the org's custom-fields schema.
@@ -187,9 +190,10 @@ class PublicRegistrationController extends Controller
             'batting_style'       => $data['batting_style'] ?? null,
             'bowling_style'       => $data['bowling_style'] ?? null,
             'profession'          => $data['profession']    ?? null,
-            'registration_txn_id' => $data['registration_txn_id'] ?? null,
-            'registration_data'   => $registrationData ?: null,
-            'registered_at'       => now(),
+            'registration_txn_id'        => $data['registration_txn_id'] ?? null,
+            'registration_sender_number' => $data['registration_sender_number'] ?? null,
+            'registration_data'          => $registrationData ?: null,
+            'registered_at'              => now(),
         ]);
 
         return redirect()

@@ -18,7 +18,7 @@ class Player extends Model
         'base_price', 'is_old_player',
         'auction_status', 'sold_price', 'team_id',
         'jersey_no', 'batting_style', 'bowling_style',
-        'profession', 'registration_txn_id', 'registered_at',
+        'profession', 'registration_txn_id', 'registration_sender_number', 'registered_at',
         'registration_data',
     ];
 

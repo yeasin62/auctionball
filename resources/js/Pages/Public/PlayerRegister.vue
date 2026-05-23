@@ -75,6 +75,7 @@ const form = useForm({
     profession: '',
     photo: null,
     registration_txn_id: '',
+    registration_sender_number: '',
     custom: customSeed,
 });
 
@@ -374,9 +375,14 @@ const submit = () => form.post(route('public-register.store', props.season.token
                         </div>
                     </div>
                     <div class="text-[15px] font-bold tracking-wider text-ink-800">{{ t('public_register.section_payment') }}</div>
-                    <Field :label="t('public_register.trx_id_field_label', { fee: fmt(fee) })" :error="form.errors.registration_txn_id" required>
-                        <TextField v-model="form.registration_txn_id" :placeholder="t('public_register.trx_id_field_placeholder')" />
-                    </Field>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <Field :label="t('public_register.trx_id_field_label', { fee: fmt(fee) })" :error="form.errors.registration_txn_id" required>
+                            <TextField v-model="form.registration_txn_id" :placeholder="t('public_register.trx_id_field_placeholder')" />
+                        </Field>
+                        <Field :label="t('public_register.sender_number_field_label')" :error="form.errors.registration_sender_number" required>
+                            <TextField v-model="form.registration_sender_number" type="tel" autocomplete="tel" :placeholder="t('public_register.sender_number_field_placeholder')" />
+                        </Field>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-primary w-full py-3"

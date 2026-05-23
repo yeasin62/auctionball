@@ -633,7 +633,7 @@ const atLimit = props.season && props.used >= props.limits.players;
                     <div class="px-6 sm:px-8 py-6 space-y-5">
 
                         <!-- Built-in details -->
-                        <div v-if="detailsPlayer.profession || (isCricket && (detailsPlayer.batting_style || detailsPlayer.bowling_style)) || detailsPlayer.registration_txn_id">
+                        <div v-if="detailsPlayer.profession || (isCricket && (detailsPlayer.batting_style || detailsPlayer.bowling_style)) || detailsPlayer.registration_txn_id || detailsPlayer.registration_sender_number">
                             <div class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-2">/ PLAYER PROFILE</div>
                             <dl class="rounded-2xl bg-ink-50/60 border border-ink-200/60 px-5 py-4 space-y-2 text-[13.5px]">
                                 <div v-if="detailsPlayer.profession" class="flex justify-between gap-3">
@@ -651,6 +651,10 @@ const atLimit = props.season && props.used >= props.limits.players;
                                 <div v-if="detailsPlayer.registration_txn_id" class="flex justify-between gap-3 pt-1 border-t border-ink-200/60">
                                     <dt class="text-ink-500">{{ t('players_page.label_reg_trxid') }}</dt>
                                     <dd class="font-mono text-[12.5px] text-ink-700 truncate text-right">{{ detailsPlayer.registration_txn_id }}</dd>
+                                </div>
+                                <div v-if="detailsPlayer.registration_sender_number" class="flex justify-between gap-3" :class="{ 'pt-1 border-t border-ink-200/60': !detailsPlayer.registration_txn_id }">
+                                    <dt class="text-ink-500">{{ t('players_page.label_sender_number') }}</dt>
+                                    <dd class="font-mono text-[12.5px] text-ink-700 truncate text-right">{{ detailsPlayer.registration_sender_number }}</dd>
                                 </div>
                             </dl>
                         </div>
