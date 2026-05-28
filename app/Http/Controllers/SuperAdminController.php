@@ -1016,11 +1016,21 @@ class SuperAdminController extends Controller
     private function estimateMrr(): int
     {
         $prices = PlanPricing::priceMap();
-        $sum = 0;
-        foreach (Organization::groupBy('plan')->selectRaw('plan, count(*) as c')->pluck('c', 'plan') as $plan => $count) {
-            $sum += ($prices[$plan] ?? 0) * (int) $count;
-        }
-        return $sum;
+
+        return Subscription::query()
+            ->whereIn('status', ['active', 'past_due'])
+            ->orderBy('organization_id')
+            ->orderByDesc('id')
+            ->get(['id', 'organization_id', 'plan', 'amount', 'billing_cycle'])
+            ->unique('organization_id')
+            ->filter(fn (Subscription $sub) => (int) $sub->amount > 0)
+            ->sum(function (Subscription $sub) use ($prices) {
+                $monthlyPrice = (int) ($prices[$sub->plan] ?? 0);
+
+                return $sub->billing_cycle === 'yearly'
+                    ? (int) round($monthlyPrice / 12)
+                    : $monthlyPrice;
+            });
     }
 
     /**
