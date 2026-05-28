@@ -12,6 +12,9 @@ const props = defineProps({
 const seoTitle = computed(() => `${props.page.title} | AuctionBall`);
 const hasDocs = computed(() => Array.isArray(props.page.doc_sections) && props.page.doc_sections.length > 0);
 const { t } = useI18n();
+const videoEmbedUrl = computed(() => props.page.video?.youtube_id
+    ? `https://www.youtube.com/embed/${props.page.video.youtube_id}`
+    : null);
 </script>
 
 <template>
@@ -32,6 +35,24 @@ const { t } = useI18n();
                     </div>
                     <h1 class="text-[34px] sm:text-[48px] leading-tight font-extrabold tracking-tight">{{ page.title }}</h1>
                     <p class="mt-5 text-[17px] sm:text-[19px] leading-8 text-ink-600">{{ page.description }}</p>
+                </div>
+            </section>
+
+            <section v-if="videoEmbedUrl" class="mx-auto max-w-6xl px-4 sm:px-6 pb-12">
+                <div class="rounded-lg border border-ink-200/70 bg-white p-4 sm:p-5 shadow-sm">
+                    <div v-if="page.video.title || page.video.description" class="mb-4">
+                        <h2 v-if="page.video.title" class="text-[22px] sm:text-[28px] font-extrabold tracking-tight">{{ page.video.title }}</h2>
+                        <p v-if="page.video.description" class="mt-2 text-[14.5px] sm:text-[15.5px] leading-7 text-ink-600">{{ page.video.description }}</p>
+                    </div>
+                    <div class="aspect-video overflow-hidden rounded-lg bg-ink-950">
+                        <iframe
+                            class="h-full w-full"
+                            :src="videoEmbedUrl"
+                            :title="page.video.title || page.title"
+                            loading="lazy"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen></iframe>
+                    </div>
                 </div>
             </section>
 

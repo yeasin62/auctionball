@@ -38,8 +38,22 @@ class PublicPageController extends Controller
             return $this->contact();
         }
 
+        $page = $this->pages()[$slug];
+
+        if ($slug === 'auction-guide') {
+            $page['video'] = [
+                'youtube_id' => '5EwNzbnOyo8',
+                'title' => app()->getLocale() === 'bn'
+                    ? 'AuctionBall instruction video'
+                    : 'AuctionBall instruction video',
+                'description' => app()->getLocale() === 'bn'
+                    ? 'First live auction চালানোর আগে এই walkthrough দেখুন।'
+                    : 'Watch the walkthrough before running your first live auction.',
+            ];
+        }
+
         return Inertia::render('Public/Page', [
-            'page' => $this->pages()[$slug],
+            'page' => $page,
         ]);
     }
 
