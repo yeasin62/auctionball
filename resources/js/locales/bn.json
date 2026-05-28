@@ -1429,6 +1429,9 @@
         "organization": "অর্গানাইজেশন",
         "message": "মেসেজ",
         "message_placeholder": "কী সাহায্য দরকার লিখুন...",
+        "captcha_label": "স্প্যাম চেক",
+        "captcha_help": "মেসেজ পাঠানোর আগে ছোট অংকটির উত্তর দিন।",
+        "captcha_placeholder": "আপনার উত্তর",
         "sending": "পাঠানো হচ্ছে...",
         "send_message": "মেসেজ পাঠান"
     },

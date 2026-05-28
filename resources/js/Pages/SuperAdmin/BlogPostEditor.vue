@@ -87,13 +87,13 @@ const seoChecks = computed(() => [
     {
         label: 'SEO title length',
         detail: 'Keep it around 40-60 characters.',
-        passed: postForm.meta_title.length >= 40 && postForm.meta_title.length <= 60,
+        passed: String(postForm.meta_title || '').length >= 40 && String(postForm.meta_title || '').length <= 60,
         points: 15,
     },
     {
         label: 'Meta description length',
         detail: 'Best range is 120-160 characters.',
-        passed: postForm.meta_description.length >= 120 && postForm.meta_description.length <= 160,
+        passed: String(postForm.meta_description || '').length >= 120 && String(postForm.meta_description || '').length <= 160,
         points: 15,
     },
     {
@@ -111,7 +111,7 @@ const seoChecks = computed(() => [
     {
         label: 'Excerpt',
         detail: 'Write a short summary for cards and readers.',
-        passed: postForm.excerpt.length >= 60 && postForm.excerpt.length <= 220,
+        passed: String(postForm.excerpt || '').length >= 60 && String(postForm.excerpt || '').length <= 220,
         points: 10,
     },
     {
@@ -417,7 +417,24 @@ const editPost = (post) => {
     editing.value = post;
     editorMode.value = 'visual';
     slugManuallyEdited.value = true;
-    const payload = { ...blankPost(), ...post, blog_category_id: post.blog_category_id || '' };
+    const payload = {
+        ...blankPost(),
+        ...post,
+        title: String(post.title || ''),
+        slug: String(post.slug || ''),
+        category: String(post.category || ''),
+        featured_image_url: String(post.featured_image_url || ''),
+        excerpt: String(post.excerpt || ''),
+        body: String(post.body || ''),
+        meta_title: String(post.meta_title || ''),
+        meta_description: String(post.meta_description || ''),
+        schema_json: String(post.schema_json || ''),
+        read_time: String(post.read_time || ''),
+        blog_category_id: post.blog_category_id || '',
+        show_date: Boolean(post.show_date),
+        is_published: Boolean(post.is_published),
+        published_at: String(post.published_at || ''),
+    };
     postForm.defaults(payload);
     postForm.reset();
     Object.assign(postForm, payload);

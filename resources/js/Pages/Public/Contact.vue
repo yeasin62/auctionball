@@ -8,6 +8,7 @@ import PublicHeader from '@/Components/PublicHeader.vue';
 const props = defineProps({
     phone: { type: String, required: true },
     email: { type: String, required: true },
+    captcha: { type: Object, required: true },
 });
 
 const page = usePage();
@@ -21,6 +22,7 @@ const form = useForm({
     organization: '',
     message: '',
     website: '',
+    captcha_answer: '',
 });
 
 const submit = () => {
@@ -99,6 +101,18 @@ const submit = () => {
                             <span class="font-mono text-[10.5px] tracking-widest text-ink-500 uppercase">{{ t('contact_page.message') }}</span>
                             <textarea v-model="form.message" rows="7" class="mt-2 w-full rounded-lg border border-ink-200 bg-white px-4 py-3 text-[14px] leading-7 focus:outline-none focus:ring-2 focus:ring-brand-indigo/25" :placeholder="t('contact_page.message_placeholder')"></textarea>
                             <span v-if="form.errors.message" class="mt-1 block text-[12px] text-rose-500">{{ form.errors.message }}</span>
+                        </label>
+
+                        <label class="block rounded-lg border border-ink-200 bg-ink-50/70 px-4 py-3">
+                            <span class="font-mono text-[10.5px] tracking-widest text-ink-500 uppercase">{{ t('contact_page.captcha_label') }}</span>
+                            <span class="mt-1 block text-[13px] text-ink-600">{{ t('contact_page.captcha_help') }}</span>
+                            <div class="mt-3 grid sm:grid-cols-[160px_1fr] gap-3 items-center">
+                                <div class="rounded-lg border border-ink-200 bg-white px-4 py-3 font-mono text-[16px] font-bold text-ink-900 text-center">
+                                    {{ captcha.question }}
+                                </div>
+                                <input v-model="form.captcha_answer" type="number" inputmode="numeric" autocomplete="off" class="w-full rounded-lg border border-ink-200 bg-white px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/25" :placeholder="t('contact_page.captcha_placeholder')" />
+                            </div>
+                            <span v-if="form.errors.captcha_answer" class="mt-1 block text-[12px] text-rose-500">{{ form.errors.captcha_answer }}</span>
                         </label>
 
                         <button type="submit" class="btn-primary w-full sm:w-auto px-6 py-3" :disabled="form.processing" :class="{ 'opacity-60 pointer-events-none': form.processing }">

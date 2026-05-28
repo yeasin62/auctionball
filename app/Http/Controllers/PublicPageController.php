@@ -6,6 +6,7 @@ use App\Models\BlogPost;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -59,9 +60,14 @@ class PublicPageController extends Controller
 
     public function contact(): Response
     {
+        $captcha = $this->contactCaptcha();
+
         return Inertia::render('Public/Contact', [
             'phone' => '+8801770001090',
             'email' => 'gazi.yeasin@yahoo.com',
+            'captcha' => [
+                'question' => $captcha['question'],
+            ],
         ]);
     }
 
@@ -74,7 +80,18 @@ class PublicPageController extends Controller
             'organization' => ['nullable', 'string', 'max:160'],
             'message' => ['required', 'string', 'min:10', 'max:3000'],
             'website' => ['nullable', 'string', 'max:0'],
+            'captcha_answer' => ['required', 'integer'],
         ]);
+
+        if ((int) $data['captcha_answer'] !== (int) $request->session()->get('contact_captcha_answer')) {
+            throw ValidationException::withMessages([
+                'captcha_answer' => app()->getLocale() === 'bn'
+                    ? 'ক্যাপচা উত্তরটি ঠিক নয়। আবার চেষ্টা করুন।'
+                    : 'The captcha answer is incorrect. Please try again.',
+            ]);
+        }
+
+        $request->session()->forget('contact_captcha_answer');
 
         $body = implode("\n", [
             'New AuctionBall contact message',
@@ -98,6 +115,18 @@ class PublicPageController extends Controller
         return back()->with('success', app()->getLocale() === 'bn'
             ? 'ধন্যবাদ, আপনার মেসেজ পাঠানো হয়েছে।'
             : 'Thanks, your message has been sent.');
+    }
+
+    private function contactCaptcha(): array
+    {
+        $a = random_int(2, 9);
+        $b = random_int(1, 9);
+
+        session(['contact_captcha_answer' => $a + $b]);
+
+        return [
+            'question' => "{$a} + {$b} = ?",
+        ];
     }
 
     public function blog(): Response

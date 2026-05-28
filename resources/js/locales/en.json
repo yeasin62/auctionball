@@ -1429,6 +1429,9 @@
         "organization": "Organization",
         "message": "Message",
         "message_placeholder": "Tell us what you need help with...",
+        "captcha_label": "Spam check",
+        "captcha_help": "Answer this quick math question before sending.",
+        "captcha_placeholder": "Your answer",
         "sending": "Sending...",
         "send_message": "Send message"
     },
