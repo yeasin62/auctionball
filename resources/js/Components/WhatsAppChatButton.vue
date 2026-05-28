@@ -1,16 +1,20 @@
 <script setup>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { usePage } from '@inertiajs/vue3';
 
 const { t } = useI18n();
+const page = usePage();
 
 const phone = '8801912578522';
 const message = computed(() => encodeURIComponent(t('whatsapp_chat.message')));
 const href = computed(() => `https://wa.me/${phone}?text=${message.value}`);
+const showButton = computed(() => ! String(page.component || '').startsWith('SuperAdmin/'));
 </script>
 
 <template>
     <a
+        v-if="showButton"
         :href="href"
         target="_blank"
         rel="noopener noreferrer"
