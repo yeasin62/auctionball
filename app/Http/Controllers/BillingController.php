@@ -82,7 +82,6 @@ class BillingController extends Controller
                 'trx_id'      => $pendingBkash->provider_txn_id,
                 'submitted_at'=> $pendingBkash->created_at?->format('Y-m-d H:i'),
             ] : null,
-            'providers'       => $this->payments->availability(),
             'bkash_manual'    => [
                 'merchant_number'     => PlatformSettings::current()->bkash_merchant_number,
                 'account_type'        => PlatformSettings::current()->bkash_account_type,

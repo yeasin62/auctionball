@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AuctionController;
-use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportController;
@@ -182,9 +181,6 @@ Route::middleware(['auth', 'org'])->prefix('dashboard')->name('dashboard.')->gro
 
     // Analytics
     Route::get('/analytics', [AnalyticsController::class, 'index'])->middleware('org-role:org_admin,auctioneer,viewer')->name('analytics.index');
-
-    // Audit log
-    Route::get('/audit',     [AuditLogController::class, 'index'])->middleware('org-role:org_admin,auctioneer,viewer')->name('audit.index');
 
     // Org pages
     Route::get ('/users',             [OrgPagesController::class, 'users'])         ->middleware('org-role:org_admin')->name('users.index');

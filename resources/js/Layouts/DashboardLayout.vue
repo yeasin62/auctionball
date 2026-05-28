@@ -65,7 +65,6 @@ const navGroups = computed(() => {
                 { label: 'sidebar.big_screen',    href: bigScreenHref.value,     icon: 'monitor',  match: /^\/(?:dashboard\/bigscreen|live(?:\/|$))/ },
                 { label: 'sidebar.rosters',       href: '/dashboard/rosters',   icon: 'team',     match: /^\/dashboard\/rosters/ },
                 { label: 'sidebar.analytics',     href: '/dashboard/analytics', icon: 'chart',    match: /^\/dashboard\/analytics/ },
-                { label: 'sidebar.audit_log',     href: '/dashboard/audit',     icon: 'audit',    match: /^\/dashboard\/audit/ },
             ],
         },
         {

@@ -37,7 +37,6 @@ const props = defineProps({
     plans:         Array,
     subscription:  Object,
     transactions:  Array,
-    providers:     Object,   // { paypal: bool, bkash: bool }  — true = real keys configured
     bkash_manual:  { type: Object, default: () => ({}) },
     pending_bkash: { type: Object, default: () => null },
 });
@@ -118,8 +117,8 @@ const org = props.org;
         </div>
 
         <!-- Current plan + usage -->
-        <div class="grid lg:grid-cols-3 gap-5 mb-5">
-            <div class="lg:col-span-2 glass rounded-2xl p-6">
+        <div class="mb-5">
+            <div class="glass rounded-2xl p-6">
                 <div class="flex items-start justify-between mb-5 gap-4 flex-wrap">
                     <div>
                         <div class="font-mono text-[10.5px] tracking-widest text-ink-500">{{ t('billing.current_plan') }}</div>
@@ -182,28 +181,6 @@ const org = props.org;
                 </div>
             </div>
 
-            <div class="glass rounded-2xl p-6">
-                <div class="font-mono text-[10.5px] tracking-widest text-ink-500 mb-3">{{ t('billing.providers_label') }}</div>
-                <ul class="space-y-3 text-[13px]">
-                    <li class="flex items-center gap-3">
-                        <span class="h-2 w-2 rounded-full" :class="providers.paypal ? 'bg-emerald-500' : 'bg-ink-300'"></span>
-                        <span class="flex-1">PayPal</span>
-                        <span class="font-mono text-[11px]" :class="providers.paypal ? 'text-emerald-700' : 'text-ink-500'">
-                            {{ providers.paypal ? t('billing.configured') : t('billing.dev_simulate') }}
-                        </span>
-                    </li>
-                    <li class="flex items-center gap-3">
-                        <span class="h-2 w-2 rounded-full" :class="providers.bkash ? 'bg-emerald-500' : 'bg-ink-300'"></span>
-                        <span class="flex-1">bKash</span>
-                        <span class="font-mono text-[11px]" :class="providers.bkash ? 'text-emerald-700' : 'text-ink-500'">
-                            {{ providers.bkash ? t('billing.configured') : t('billing.dev_simulate') }}
-                        </span>
-                    </li>
-                </ul>
-                <p v-if="!providers.paypal || !providers.bkash" class="mt-3 text-[11px] font-mono text-ink-500 leading-relaxed">
-                    {{ t('billing.providers_help') }}
-                </p>
-            </div>
         </div>
 
         <!-- Plan grid -->
