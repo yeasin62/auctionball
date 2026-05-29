@@ -12,8 +12,8 @@ const props = defineProps({
 });
 
 const editing = ref(null);
-const editorEl = ref(null);
-const editorMode = ref('visual');
+const bodyInput = ref(null);
+const editorMode = ref('write');
 const imageInput = ref(null);
 const featuredImageInput = ref(null);
 const imageUploading = ref(false);
@@ -21,7 +21,6 @@ const featuredImageUploading = ref(false);
 const slugManuallyEdited = ref(false);
 const imageUrl = ref('');
 const imageError = ref('');
-let savedEditorRange = null;
 
 const blankPost = () => ({
     title: '',
@@ -206,95 +205,105 @@ const bodyToEditorHtml = (value) => {
         .join('');
 };
 
-const syncEditor = () => {
-    if (! editorEl.value) return;
-    const text = editorEl.value.textContent?.trim() || '';
-    const hasMedia = Boolean(editorEl.value.querySelector('img, iframe, video'));
+const editorPreviewHtml = computed(() => bodyToEditorHtml(postForm.body) || '<p class="text-slate-400">Start writing your post body...</p>');
 
-    if (! text && ! hasMedia) {
-        postForm.body = '';
+const wrapSelection = (before, after = before) => {
+    const input = bodyInput.value;
+    if (! input) return;
+
+    const start = input.selectionStart ?? 0;
+    const end = input.selectionEnd ?? start;
+    const current = String(postForm.body || '');
+    const selected = current.slice(start, end);
+
+    postForm.body = `${current.slice(0, start)}${before}${selected}${after}${current.slice(end)}`;
+
+    nextTick(() => {
+        input.focus({ preventScroll: true });
+        input.setSelectionRange(start + before.length, end + before.length);
+    });
+};
+
+const prefixSelectedLines = (prefix) => {
+    const input = bodyInput.value;
+    if (! input) return;
+
+    const start = input.selectionStart ?? 0;
+    const end = input.selectionEnd ?? start;
+    const current = String(postForm.body || '');
+    const selected = current.slice(start, end) || 'List item';
+    const replacement = selected
+        .split('\n')
+        .map((line) => `${prefix}${line || 'List item'}`)
+        .join('\n');
+
+    postForm.body = `${current.slice(0, start)}${replacement}${current.slice(end)}`;
+
+    nextTick(() => {
+        input.focus({ preventScroll: true });
+        input.setSelectionRange(start, start + replacement.length);
+    });
+};
+
+const insertAtCursor = (markup) => {
+    const input = bodyInput.value;
+    const current = String(postForm.body || '');
+
+    if (! input) {
+        postForm.body = `${current}${current ? '\n\n' : ''}${markup}`;
         return;
     }
 
-    postForm.body = editorEl.value.innerHTML.trim();
-};
+    const start = input.selectionStart ?? current.length;
+    const end = input.selectionEnd ?? start;
+    const needsBeforeBreak = start > 0 && ! current.slice(0, start).endsWith('\n');
+    const needsAfterBreak = end < current.length && ! current.slice(end).startsWith('\n');
+    const replacement = `${needsBeforeBreak ? '\n\n' : ''}${markup}${needsAfterBreak ? '\n\n' : ''}`;
 
-const saveEditorSelection = () => {
-    if (! editorEl.value || editorMode.value !== 'visual') return;
+    postForm.body = `${current.slice(0, start)}${replacement}${current.slice(end)}`;
 
-    const selection = window.getSelection();
-    if (! selection || selection.rangeCount === 0) return;
-
-    const range = selection.getRangeAt(0);
-    if (editorEl.value.contains(range.commonAncestorContainer)) {
-        savedEditorRange = range.cloneRange();
-    }
-};
-
-const restoreEditorSelection = () => {
-    if (! savedEditorRange || editorMode.value !== 'visual') return false;
-
-    const selection = window.getSelection();
-    if (! selection) return false;
-
-    selection.removeAllRanges();
-    selection.addRange(savedEditorRange);
-    return true;
-};
-
-const placeCaretAtEnd = (element) => {
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    range.collapse(false);
-
-    const selection = window.getSelection();
-    if (! selection) return;
-
-    selection.removeAllRanges();
-    selection.addRange(range);
-    saveEditorSelection();
-};
-
-const ensureEditorCanType = () => {
-    if (! editorEl.value || editorMode.value !== 'visual') return;
-
-    const text = editorEl.value.textContent?.trim() || '';
-    const hasMedia = Boolean(editorEl.value.querySelector('img, iframe, video'));
-
-    if (! text && ! hasMedia) {
-        editorEl.value.innerHTML = '<p><br></p>';
-        editorEl.value.focus({ preventScroll: true });
-        placeCaretAtEnd(editorEl.value);
-    }
-};
-
-const setEditorHtml = async (value) => {
-    await nextTick();
-    if (editorEl.value) {
-        savedEditorRange = null;
-        editorEl.value.innerHTML = bodyToEditorHtml(value) || '<p><br></p>';
-        syncEditor();
-    }
+    nextTick(() => {
+        const cursor = start + replacement.length;
+        input.focus({ preventScroll: true });
+        input.setSelectionRange(cursor, cursor);
+    });
 };
 
 const runCommand = (command, value = null) => {
-    restoreEditorSelection();
-    editorEl.value?.focus();
-    document.execCommand(command, false, value);
-    syncEditor();
-    saveEditorSelection();
+    const commands = {
+        bold: () => wrapSelection('<strong>', '</strong>'),
+        italic: () => wrapSelection('<em>', '</em>'),
+        underline: () => wrapSelection('<u>', '</u>'),
+        insertUnorderedList: () => prefixSelectedLines('- '),
+        insertOrderedList: () => prefixSelectedLines('1. '),
+        undo: () => document.execCommand('undo'),
+        redo: () => document.execCommand('redo'),
+    };
+
+    if (command === 'createLink') {
+        wrapSelection(`<a href="${value || '#'}">`, '</a>');
+        return;
+    }
+
+    commands[command]?.();
 };
 
-const setBlock = (tag) => runCommand('formatBlock', tag);
+const setBlock = (tag) => {
+    if (tag === 'p') {
+        wrapSelection('<p>', '</p>');
+        return;
+    }
+
+    wrapSelection(`<${tag}>`, `</${tag}>`);
+};
 
 const switchEditorMode = async (mode) => {
     if (editorMode.value === mode) return;
-    if (editorMode.value === 'visual') syncEditor();
-
     editorMode.value = mode;
 
-    if (mode === 'visual') {
-        await setEditorHtml(postForm.body);
+    if (mode === 'write') {
+        await nextTick();
+        bodyInput.value?.focus({ preventScroll: true });
     }
 };
 
@@ -317,28 +326,14 @@ const insertImageUrl = async (url) => {
     const scrollY = window.scrollY;
     const markup = imageMarkup(cleanUrl);
 
-    if (editorMode.value === 'html') {
-        postForm.body = `${postForm.body || ''}\n\n${markup}`.trim();
-        imageUrl.value = '';
-        return;
-    }
-
     await nextTick();
-    if (restoreEditorSelection()) {
-        document.execCommand('insertHTML', false, markup);
-    } else {
-        editorEl.value?.insertAdjacentHTML('beforeend', markup);
-    }
-
-    syncEditor();
-    saveEditorSelection();
+    insertAtCursor(markup);
     imageUrl.value = '';
     window.requestAnimationFrame(() => window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' }));
 };
 
 const chooseImage = (event = null) => {
     event?.preventDefault?.();
-    saveEditorSelection();
     imageInput.value?.click();
 };
 
@@ -364,12 +359,10 @@ const uploadImage = async (event) => {
 };
 
 const addImageByUrl = () => {
-    saveEditorSelection();
     insertImageUrl(imageUrl.value);
 };
 
 const uploadDroppedImage = async (event) => {
-    saveEditorSelection();
     const file = Array.from(event.dataTransfer?.files || []).find((item) => item.type.startsWith('image/'));
     if (! file) return;
 
@@ -413,7 +406,7 @@ const removeFeaturedImage = () => {
 
 const editPost = (post) => {
     editing.value = post;
-    editorMode.value = 'visual';
+    editorMode.value = 'write';
     slugManuallyEdited.value = true;
     const payload = {
         ...blankPost(),
@@ -436,21 +429,17 @@ const editPost = (post) => {
     postForm.defaults(payload);
     postForm.reset();
     Object.assign(postForm, payload);
-    setEditorHtml(post.body);
 };
 
 const resetPostForm = () => {
     editing.value = null;
-    editorMode.value = 'visual';
+    editorMode.value = 'write';
     slugManuallyEdited.value = false;
     postForm.defaults(blankPost());
     postForm.reset();
-    setEditorHtml('');
 };
 
 const savePost = () => {
-    if (editorMode.value === 'visual') syncEditor();
-
     const options = {
         preserveScroll: true,
         onSuccess: resetPostForm,
@@ -500,7 +489,7 @@ const generateAiPost = async () => {
 
         const generated = response.data;
         editing.value = null;
-        editorMode.value = 'visual';
+        editorMode.value = 'write';
         slugManuallyEdited.value = true;
         const payload = {
             ...blankPost(),
@@ -513,7 +502,8 @@ const generateAiPost = async () => {
         postForm.defaults(payload);
         postForm.reset();
         Object.assign(postForm, payload);
-        await setEditorHtml(generated.body || '');
+        await nextTick();
+        bodyInput.value?.focus({ preventScroll: true });
     } catch (error) {
         aiError.value = generationErrorMessage(error);
     } finally {
@@ -666,32 +656,32 @@ onMounted(() => {
                         <textarea v-model="postForm.excerpt" rows="3" class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                     </Field>
 
-                    <Field label="Body" hint="Use visual mode, or switch to HTML to paste/edit source code" :error="postForm.errors.body" required>
+                    <Field label="Body" hint="Write or paste HTML directly. Use Preview to see how it will render." :error="postForm.errors.body" required>
                         <div class="rounded-xl border border-ink-200/70 bg-white/80 overflow-hidden shadow-sm">
                             <div class="flex flex-wrap items-center gap-1 border-b border-ink-200/70 bg-ink-50/80 px-2 py-2">
                                 <div class="mr-2 inline-flex rounded-lg border border-ink-200 bg-white p-0.5">
-                                    <button type="button" @click="switchEditorMode('visual')" class="mode-btn" :class="{ 'mode-btn-active': editorMode === 'visual' }">Visual</button>
-                                    <button type="button" @click="switchEditorMode('html')" class="mode-btn" :class="{ 'mode-btn-active': editorMode === 'html' }">HTML</button>
+                                    <button type="button" @click="switchEditorMode('write')" class="mode-btn" :class="{ 'mode-btn-active': editorMode === 'write' }">Write</button>
+                                    <button type="button" @click="switchEditorMode('preview')" class="mode-btn" :class="{ 'mode-btn-active': editorMode === 'preview' }">Preview</button>
                                 </div>
-                                <template v-if="editorMode === 'visual'">
-                                    <button type="button" @mousedown.prevent @click="setBlock('p')" class="editor-btn">P</button>
-                                    <button type="button" @mousedown.prevent @click="setBlock('h2')" class="editor-btn">H2</button>
-                                    <button type="button" @mousedown.prevent @click="setBlock('h3')" class="editor-btn">H3</button>
+                                <template v-if="editorMode === 'write'">
+                                    <button type="button" @click="setBlock('p')" class="editor-btn">P</button>
+                                    <button type="button" @click="setBlock('h2')" class="editor-btn">H2</button>
+                                    <button type="button" @click="setBlock('h3')" class="editor-btn">H3</button>
                                     <span class="mx-1 h-5 w-px bg-ink-200"></span>
-                                    <button type="button" @mousedown.prevent @click="runCommand('bold')" class="editor-btn font-bold">B</button>
-                                    <button type="button" @mousedown.prevent @click="runCommand('italic')" class="editor-btn italic">I</button>
-                                    <button type="button" @mousedown.prevent @click="runCommand('underline')" class="editor-btn underline">U</button>
+                                    <button type="button" @click="runCommand('bold')" class="editor-btn font-bold">B</button>
+                                    <button type="button" @click="runCommand('italic')" class="editor-btn italic">I</button>
+                                    <button type="button" @click="runCommand('underline')" class="editor-btn underline">U</button>
                                     <span class="mx-1 h-5 w-px bg-ink-200"></span>
-                                    <button type="button" @mousedown.prevent @click="runCommand('insertUnorderedList')" class="editor-btn">Bullets</button>
-                                    <button type="button" @mousedown.prevent @click="runCommand('insertOrderedList')" class="editor-btn">1. List</button>
-                                    <button type="button" @mousedown.prevent @click="setBlock('blockquote')" class="editor-btn">Quote</button>
-                                    <button type="button" @mousedown.prevent @click="addLink" class="editor-btn">Link</button>
+                                    <button type="button" @click="runCommand('insertUnorderedList')" class="editor-btn">Bullets</button>
+                                    <button type="button" @click="runCommand('insertOrderedList')" class="editor-btn">1. List</button>
+                                    <button type="button" @click="setBlock('blockquote')" class="editor-btn">Quote</button>
+                                    <button type="button" @click="addLink" class="editor-btn">Link</button>
                                     <span class="mx-1 h-5 w-px bg-ink-200"></span>
-                                    <button type="button" @mousedown.prevent @click="runCommand('undo')" class="editor-btn">Undo</button>
-                                    <button type="button" @mousedown.prevent @click="runCommand('redo')" class="editor-btn">Redo</button>
+                                    <button type="button" @click="runCommand('undo')" class="editor-btn">Undo</button>
+                                    <button type="button" @click="runCommand('redo')" class="editor-btn">Redo</button>
                                 </template>
                             </div>
-                            <div class="border-b border-ink-200/70 bg-white/70 px-3 py-3">
+                            <div v-if="editorMode === 'write'" class="border-b border-ink-200/70 bg-white/70 px-3 py-3">
                                 <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
                                     <div class="flex min-w-0 items-center gap-2">
                                         <input v-model="imageUrl" type="url" class="min-w-0 flex-1 rounded-lg border border-ink-200/70 bg-white px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" placeholder="Paste image URL, then Insert image" />
@@ -699,31 +689,20 @@ onMounted(() => {
                                     </div>
                                     <label class="inline-flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-brand-indigo/35 bg-brand-indigo/5 px-4 py-2 text-[13px] font-bold text-brand-indigo transition hover:bg-brand-indigo/10">
                                         {{ imageUploading ? 'Uploading...' : 'Upload image' }}
-                                        <input ref="imageInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" :disabled="imageUploading" @click="saveEditorSelection" @change="uploadImage" />
+                                        <input ref="imageInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" :disabled="imageUploading" @change="uploadImage" />
                                     </label>
                                 </div>
                                 <p v-if="imageError" class="mt-2 text-[12px] font-semibold text-rose-600">{{ imageError }}</p>
                             </div>
-                            <div v-if="editorMode === 'visual'"
-                                 ref="editorEl"
-                                 contenteditable="true"
-                                 role="textbox"
-                                 aria-multiline="true"
-                                 tabindex="0"
-                                 class="blog-editor min-h-[320px] px-5 py-4 text-[15px] leading-8 text-ink-800 focus:outline-none"
-                                 @dragover.prevent
-                                 @drop.prevent="uploadDroppedImage"
-                                 @focus="ensureEditorCanType"
-                                 @click="saveEditorSelection"
-                                 @keyup="saveEditorSelection"
-                                 @mouseup="saveEditorSelection"
-                                 @input="syncEditor(); saveEditorSelection()"
-                                 @blur="saveEditorSelection"></div>
-                            <textarea v-else
+                            <textarea v-if="editorMode === 'write'"
+                                      ref="bodyInput"
                                       v-model="postForm.body"
-                                      rows="16"
-                                      class="font-mono min-h-[320px] w-full resize-y border-0 bg-white px-5 py-4 text-[13px] leading-6 text-ink-800 focus:outline-none"
-                                      placeholder="<h2>Section title</h2>&#10;<p>Write HTML here...</p>"></textarea>
+                                      rows="18"
+                                      class="font-mono min-h-[420px] w-full resize-y border-0 bg-white px-5 py-4 text-[13px] leading-6 text-ink-800 focus:outline-none"
+                                      placeholder="<h2>Section title</h2>&#10;<p>Write HTML here...</p>"
+                                      @dragover.prevent
+                                      @drop.prevent="uploadDroppedImage"></textarea>
+                            <div v-else class="blog-editor min-h-[420px] bg-white px-5 py-4 text-[15px] leading-8 text-ink-800" v-html="editorPreviewHtml"></div>
                         </div>
                     </Field>
 
