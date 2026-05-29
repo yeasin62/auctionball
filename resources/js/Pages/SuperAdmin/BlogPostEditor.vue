@@ -263,10 +263,7 @@ const ensureEditorCanType = () => {
 
     if (! text && ! hasMedia) {
         editorEl.value.innerHTML = '<p><br></p>';
-    }
-
-    editorEl.value.focus({ preventScroll: true });
-    if (! savedEditorRange) {
+        editorEl.value.focus({ preventScroll: true });
         placeCaretAtEnd(editorEl.value);
     }
 };
@@ -274,6 +271,7 @@ const ensureEditorCanType = () => {
 const setEditorHtml = async (value) => {
     await nextTick();
     if (editorEl.value) {
+        savedEditorRange = null;
         editorEl.value.innerHTML = bodyToEditorHtml(value) || '<p><br></p>';
         syncEditor();
     }
@@ -716,7 +714,7 @@ onMounted(() => {
                                  @dragover.prevent
                                  @drop.prevent="uploadDroppedImage"
                                  @focus="ensureEditorCanType"
-                                 @click="ensureEditorCanType"
+                                 @click="saveEditorSelection"
                                  @keyup="saveEditorSelection"
                                  @mouseup="saveEditorSelection"
                                  @input="syncEditor(); saveEditorSelection()"
