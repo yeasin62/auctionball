@@ -110,8 +110,8 @@ const seoChecks = computed(() => [
     },
     {
         label: 'Excerpt',
-        detail: 'Write a short summary for cards and readers.',
-        passed: String(postForm.excerpt || '').length >= 60 && String(postForm.excerpt || '').length <= 220,
+        detail: 'Write a short summary for cards and readers. 60-220 characters is ideal.',
+        passed: String(postForm.excerpt || '').trim().length > 0,
         points: 10,
     },
     {
