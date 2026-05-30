@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use App\Models\PlanPricing;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -22,7 +23,17 @@ class RegisteredUserController extends Controller
     public function create(): Response
     {
         return Inertia::render('Auth/Register', [
-            'plans' => array_keys(Organization::PLAN_LIMITS),
+            'plans' => PlanPricing::orderBy('sort_order')
+                ->get(['slug', 'price_bdt', 'seasons_limit', 'players_limit', 'teams_limit'])
+                ->map(fn (PlanPricing $plan) => [
+                    'slug' => $plan->slug,
+                    'price_bdt' => (int) $plan->price_bdt,
+                    'seasons_limit' => (int) $plan->seasons_limit,
+                    'players_limit' => (int) $plan->players_limit,
+                    'teams_limit' => (int) $plan->teams_limit,
+                ])
+                ->values(),
+            'unlimited' => PlanPricing::UNLIMITED,
         ]);
     }
 
@@ -44,7 +55,7 @@ class RegisteredUserController extends Controller
             // billing flow (PayPal callback or super-admin-approved bKash) so we
             // never grant an unpaid Pro/Enterprise. Bypassing this was a CRITICAL
             // self-upgrade vulnerability in earlier versions.
-            'plan'        => ['nullable', Rule::in(array_keys(Organization::PLAN_LIMITS))],
+            'plan'        => ['nullable', Rule::in($this->planSlugs())],
         ], [
             'org_slug.regex' => 'Slug must be lowercase letters, numbers and dashes only (no leading/trailing dash).',
         ]);
@@ -86,5 +97,12 @@ class RegisteredUserController extends Controller
         }
 
         return redirect(route('dashboard', absolute: false));
+    }
+
+    private function planSlugs(): array
+    {
+        $slugs = PlanPricing::query()->pluck('slug')->all();
+
+        return $slugs ?: array_keys(Organization::PLAN_LIMITS);
     }
 }
