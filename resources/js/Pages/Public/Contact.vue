@@ -13,6 +13,8 @@ const props = defineProps({
 
 const page = usePage();
 const flash = computed(() => page.props.flash || {});
+const appDomain = computed(() => page.props.appDomain || 'auctionball.com');
+const canonicalUrl = computed(() => `https://${appDomain.value}/contact`);
 const { t } = useI18n();
 
 const form = useForm({
@@ -37,6 +39,10 @@ const submit = () => {
     <Head :title="t('contact_page.seo_title')">
         <meta name="description" :content="t('contact_page.seo_description')" head-key="description" />
         <meta name="robots" content="index,follow" head-key="robots" />
+        <link rel="canonical" :href="canonicalUrl" head-key="canonical" />
+        <link rel="alternate" hreflang="en" :href="canonicalUrl + '?lang=en'" />
+        <link rel="alternate" hreflang="bn" :href="canonicalUrl + '?lang=bn'" />
+        <link rel="alternate" hreflang="x-default" :href="canonicalUrl" />
     </Head>
 
     <div class="page-bg min-h-screen text-ink-900">

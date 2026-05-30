@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PublicFooter from '@/Components/PublicFooter.vue';
@@ -11,8 +11,11 @@ const props = defineProps({
 });
 
 const { t } = useI18n();
+const page = usePage();
+const appDomain = computed(() => page.props.appDomain || 'auctionball.com');
 const metaTitle = computed(() => props.post.meta_title || `${props.post.title} | AuctionBall Blog`);
 const metaDescription = computed(() => props.post.meta_description || props.post.excerpt || t('public_blog.post_fallback_description'));
+const canonicalUrl = computed(() => `https://${appDomain.value}/blog/${props.post.slug}`);
 const bodyHtml = computed(() => {
     const body = String(props.post.body || '').trim();
     if (! body) return '';
@@ -36,6 +39,10 @@ const bodyHtml = computed(() => {
     <Head :title="metaTitle">
         <meta name="description" :content="metaDescription" head-key="description" />
         <meta name="robots" content="index,follow" head-key="robots" />
+        <link rel="canonical" :href="canonicalUrl" head-key="canonical" />
+        <link rel="alternate" hreflang="en" :href="canonicalUrl + '?lang=en'" />
+        <link rel="alternate" hreflang="bn" :href="canonicalUrl + '?lang=bn'" />
+        <link rel="alternate" hreflang="x-default" :href="canonicalUrl" />
         <component :is="'script'" v-if="post.schema_json" type="application/ld+json" head-key="blog-schema" v-text="post.schema_json" />
     </Head>
 

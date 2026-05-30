@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PublicFooter from '@/Components/PublicFooter.vue';
@@ -11,6 +11,9 @@ const props = defineProps({
 
 const seoTitle = computed(() => `${props.page.title} | AuctionBall`);
 const hasDocs = computed(() => Array.isArray(props.page.doc_sections) && props.page.doc_sections.length > 0);
+const inertiaPage = usePage();
+const appDomain = computed(() => inertiaPage.props.appDomain || 'auctionball.com');
+const canonicalUrl = computed(() => `https://${appDomain.value}/${props.page.slug}`);
 const { t } = useI18n();
 const videoEmbedUrl = computed(() => props.page.video?.youtube_id
     ? `https://www.youtube.com/embed/${props.page.video.youtube_id}`
@@ -21,6 +24,10 @@ const videoEmbedUrl = computed(() => props.page.video?.youtube_id
     <Head :title="seoTitle">
         <meta name="description" :content="page.description" head-key="description" />
         <meta name="robots" content="index,follow" head-key="robots" />
+        <link rel="canonical" :href="canonicalUrl" head-key="canonical" />
+        <link rel="alternate" hreflang="en" :href="canonicalUrl + '?lang=en'" />
+        <link rel="alternate" hreflang="bn" :href="canonicalUrl + '?lang=bn'" />
+        <link rel="alternate" hreflang="x-default" :href="canonicalUrl" />
     </Head>
 
     <div class="page-bg min-h-screen text-ink-900">

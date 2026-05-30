@@ -1,5 +1,6 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PublicFooter from '@/Components/PublicFooter.vue';
 import PublicHeader from '@/Components/PublicHeader.vue';
@@ -9,12 +10,19 @@ defineProps({
 });
 
 const { t } = useI18n();
+const page = usePage();
+const appDomain = computed(() => page.props.appDomain || 'auctionball.com');
+const canonicalUrl = computed(() => `https://${appDomain.value}/blog`);
 </script>
 
 <template>
     <Head :title="t('public_blog.seo_title')">
         <meta name="description" :content="t('public_blog.seo_description')" head-key="description" />
         <meta name="robots" content="index,follow" head-key="robots" />
+        <link rel="canonical" :href="canonicalUrl" head-key="canonical" />
+        <link rel="alternate" hreflang="en" :href="canonicalUrl + '?lang=en'" />
+        <link rel="alternate" hreflang="bn" :href="canonicalUrl + '?lang=bn'" />
+        <link rel="alternate" hreflang="x-default" :href="canonicalUrl" />
     </Head>
 
     <div class="page-bg min-h-screen text-ink-900">

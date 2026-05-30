@@ -40,6 +40,7 @@ class PublicPageController extends Controller
         }
 
         $page = $this->pages()[$slug];
+        $page['slug'] = $slug;
 
         if ($slug === 'auction-guide') {
             $page['video'] = [
