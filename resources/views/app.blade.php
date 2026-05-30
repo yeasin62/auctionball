@@ -24,7 +24,7 @@
             <link rel="icon" type="image/png" href="{{ $logo }}">
             <link rel="apple-touch-icon" href="{{ $logo }}">
         @else
-            <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='4' y='4' width='16' height='16' rx='3' fill='%236366f1'/%3E%3Cpath d='M8 12h8M8 8h5' stroke='white' stroke-width='2.4' fill='none'/%3E%3C/svg%3E">
+            <link rel="icon" type="image/svg+xml" href="/favicon.svg">
         @endif
 
         {{-- Open Graph defaults; per-page <Head> in Vue overrides title/description/image. --}}
