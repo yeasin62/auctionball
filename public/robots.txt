@@ -1,9 +1,8 @@
 User-agent: *
 Allow: /
 
-# Block private dashboards / admin / billing flows from indexing.
-# These pages are auth-gated anyway but explicit disallow keeps them out
-# of search results in case a crawler hits a stale public link.
+# Keep private dashboards, admin tools, auth pages, payment callbacks,
+# invitation links, and public registration token URLs out of crawler queues.
 Disallow: /dashboard
 Disallow: /admin
 Disallow: /login
@@ -19,38 +18,5 @@ Disallow: /billing
 Disallow: /bid
 Disallow: /tr/
 Disallow: /r/
-
-# Explicitly allow AI / answer-engine crawlers. Most respect "User-agent: *"
-# but several look for their own name first — calling them out keeps AEO
-# coverage consistent across providers.
-User-agent: GPTBot
-Allow: /
-
-User-agent: ChatGPT-User
-Allow: /
-
-User-agent: OAI-SearchBot
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: anthropic-ai
-Allow: /
-
-User-agent: Google-Extended
-Allow: /
-
-User-agent: CCBot
-Allow: /
-
-User-agent: Applebot-Extended
-Allow: /
-
-User-agent: Bytespider
-Allow: /
 
 Sitemap: https://auctionball.com/sitemap.xml
