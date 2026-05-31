@@ -236,6 +236,7 @@ Route::middleware(['auth', 'super-admin'])->prefix('admin')->name('admin.')->gro
     Route::get   ('/content/blog-posts/{post:slug}/edit', [SuperAdminContentController::class, 'editPost']) ->name('content.blog-posts.edit');
     Route::get   ('/advanced',                       [SuperAdminContentController::class, 'advanced'])      ->name('advanced.index');
     Route::get   ('/integrations',                   [SuperAdminIntegrationController::class, 'index'])     ->name('integrations.index');
+    Route::get   ('/integrations/models/{provider}', [SuperAdminIntegrationController::class, 'models'])    ->name('integrations.models');
     Route::patch ('/integrations',                   [SuperAdminIntegrationController::class, 'update'])    ->name('integrations.update');
     Route::post  ('/content/categories',             [SuperAdminContentController::class, 'storeCategory']) ->name('content.categories.store');
     Route::delete('/content/categories/{category}',   [SuperAdminContentController::class, 'deleteCategory'])->name('content.categories.delete');

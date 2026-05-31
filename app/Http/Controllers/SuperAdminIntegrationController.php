@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\PlatformSettings;
 use App\Support\Audit;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -74,6 +77,41 @@ class SuperAdminIntegrationController extends Controller
         return back()->with('success', 'Integration settings updated.');
     }
 
+    public function models(string $provider): JsonResponse
+    {
+        abort_unless(in_array($provider, ['openai', 'anthropic'], true), 404);
+
+        $settings = PlatformSettings::current();
+        $key = $provider === 'openai'
+            ? ($settings->openai_api_key ?: config('services.openai.key'))
+            : ($settings->anthropic_api_key ?: config('services.anthropic.key'));
+
+        if (! filled($key)) {
+            return response()->json([
+                'models' => [],
+                'error' => 'API key is not configured.',
+            ], 422);
+        }
+
+        try {
+            $models = $provider === 'openai'
+                ? $this->openAiModels($key)
+                : $this->anthropicModels($key);
+
+            return response()->json(['models' => $models]);
+        } catch (\Throwable $e) {
+            Log::warning('AI model list fetch failed', [
+                'provider' => $provider,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'models' => [],
+                'error' => 'Could not fetch model list.',
+            ], 502);
+        }
+    }
+
     private function normalizeModel(string $provider, ?string $model): string
     {
         $model = trim((string) $model);
@@ -86,5 +124,58 @@ class SuperAdminIntegrationController extends Controller
         }
 
         return $model === '' || in_array($model, $bad['anthropic'], true) ? 'claude-opus-4-1-20250805' : $model;
+    }
+
+    private function openAiModels(string $key): array
+    {
+        return collect(Http::withToken($key)
+            ->acceptJson()
+            ->timeout(12)
+            ->get('https://api.openai.com/v1/models')
+            ->throw()
+            ->json('data', []))
+            ->pluck('id')
+            ->filter(fn ($id) => is_string($id) && $this->isOpenAiTextModel($id))
+            ->unique()
+            ->values()
+            ->map(fn (string $id) => [
+                'value' => $id,
+                'label' => $this->modelLabel($id),
+            ])
+            ->all();
+    }
+
+    private function anthropicModels(string $key): array
+    {
+        return collect(Http::withHeaders([
+                'x-api-key' => $key,
+                'anthropic-version' => '2023-06-01',
+            ])
+            ->acceptJson()
+            ->timeout(12)
+            ->get('https://api.anthropic.com/v1/models', ['limit' => 1000])
+            ->throw()
+            ->json('data', []))
+            ->map(fn (array $model) => [
+                'value' => $model['id'] ?? null,
+                'label' => $model['display_name'] ?? $this->modelLabel((string) ($model['id'] ?? '')),
+            ])
+            ->filter(fn (array $model) => filled($model['value']))
+            ->unique('value')
+            ->values()
+            ->all();
+    }
+
+    private function modelLabel(string $id): string
+    {
+        return str($id)
+            ->replace(['-', '_'], ' ')
+            ->headline()
+            ->toString();
+    }
+
+    private function isOpenAiTextModel(string $id): bool
+    {
+        return (bool) preg_match('/^(gpt-|chatgpt-|o[1-9](?:-|$))/', $id);
     }
 }

@@ -3,6 +3,7 @@ import SuperAdminLayout from '@/Layouts/SuperAdminLayout.vue';
 import Field from '@/Components/Field.vue';
 import TextField from '@/Components/TextField.vue';
 import { Head, useForm } from '@inertiajs/vue3';
+import { onMounted, ref } from 'vue';
 
 const props = defineProps({
     integrations: {
@@ -33,7 +34,7 @@ const form = useForm({
     clear_anthropic_api_key: false,
 });
 
-const openAiModels = [
+const fallbackOpenAiModels = [
     { value: 'gpt-5.5', label: 'GPT-5.5 (Latest)' },
     { value: 'gpt-5.5-pro', label: 'GPT-5.5 Pro' },
     { value: 'gpt-5.4', label: 'GPT-5.4' },
@@ -49,7 +50,9 @@ const openAiModels = [
     { value: 'gpt-4.1-mini', label: 'GPT-4.1 Mini' },
 ];
 
-const anthropicModels = [
+const fallbackAnthropicModels = [
+    { value: 'claude-opus-4-8', label: 'Claude Opus 4.8 (Latest / if enabled)' },
+    { value: 'claude-sonnet-4-8', label: 'Claude Sonnet 4.8 (if enabled)' },
     { value: 'claude-opus-4-1-20250805', label: 'Claude Opus 4.1 (Latest official)' },
     { value: 'claude-opus-4-1', label: 'Claude Opus 4.1 Alias' },
     { value: 'claude-opus-4-20250514', label: 'Claude Opus 4' },
@@ -61,6 +64,50 @@ const anthropicModels = [
     { value: 'claude-3-5-haiku-20241022', label: 'Claude Haiku 3.5' },
     { value: 'claude-3-5-haiku-latest', label: 'Claude Haiku 3.5 Latest Alias' },
 ];
+
+const openAiModels = ref([...fallbackOpenAiModels]);
+const anthropicModels = ref([...fallbackAnthropicModels]);
+const modelFetchState = ref({
+    openai: 'idle',
+    anthropic: 'idle',
+});
+
+const mergeModels = (fetched, fallback) => {
+    const seen = new Set();
+
+    return [...fetched, ...fallback].filter((model) => {
+        if (!model?.value || seen.has(model.value)) return false;
+        seen.add(model.value);
+        return true;
+    });
+};
+
+const fetchProviderModels = async (provider) => {
+    modelFetchState.value[provider] = 'loading';
+
+    try {
+        const response = await window.axios.get(route('admin.integrations.models', { provider }));
+        const fetched = (response.data?.models || []).map((model) => ({
+            value: model.value,
+            label: model.label || model.value,
+        }));
+
+        if (provider === 'openai') {
+            openAiModels.value = mergeModels(fetched, fallbackOpenAiModels);
+        } else {
+            anthropicModels.value = mergeModels(fetched, fallbackAnthropicModels);
+        }
+
+        modelFetchState.value[provider] = fetched.length ? 'loaded' : 'fallback';
+    } catch (error) {
+        modelFetchState.value[provider] = 'fallback';
+    }
+};
+
+onMounted(() => {
+    fetchProviderModels('openai');
+    fetchProviderModels('anthropic');
+});
 
 const save = () => {
     form.patch(route('admin.integrations.update'), {
@@ -135,6 +182,11 @@ const save = () => {
                                         {{ model.label }}
                                     </option>
                                 </select>
+                                <p class="mt-2 text-[12px] text-ink-500">
+                                    <span v-if="modelFetchState.openai === 'loading'">Fetching latest models...</span>
+                                    <span v-else-if="modelFetchState.openai === 'loaded'">Latest API model list loaded.</span>
+                                    <span v-else-if="modelFetchState.openai === 'fallback'">Using fallback list. You can still paste any valid model ID below.</span>
+                                </p>
                                 <TextField v-model="form.openai_model" class="mt-3" placeholder="Or paste a custom OpenAI model ID" />
                             </Field>
                         </div>
@@ -179,6 +231,11 @@ const save = () => {
                                         {{ model.label }}
                                     </option>
                                 </select>
+                                <p class="mt-2 text-[12px] text-ink-500">
+                                    <span v-if="modelFetchState.anthropic === 'loading'">Fetching latest models...</span>
+                                    <span v-else-if="modelFetchState.anthropic === 'loaded'">Latest API model list loaded.</span>
+                                    <span v-else-if="modelFetchState.anthropic === 'fallback'">Using fallback list. You can still paste any valid model ID below.</span>
+                                </p>
                                 <TextField v-model="form.anthropic_model" class="mt-3" placeholder="Or paste a custom Claude model ID" />
                             </Field>
                         </div>
