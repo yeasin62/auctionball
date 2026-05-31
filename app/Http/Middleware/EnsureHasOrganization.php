@@ -22,8 +22,7 @@ class EnsureHasOrganization
             // Super admins often have no org of their own — bounce them to the
             // platform panel instead of forcing them through /register.
             if ($user->is_super_admin) {
-                return redirect()->route('admin.index')
-                    ->with('error', 'You have no organization attached. Use the platform panel, or attach yourself to an org via /admin/users.');
+                return redirect()->route('admin.index');
             }
             return redirect()->route('register')
                 ->with('error', 'You need to create an organization first.');
