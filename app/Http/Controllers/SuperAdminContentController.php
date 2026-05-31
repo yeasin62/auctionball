@@ -179,8 +179,8 @@ class SuperAdminContentController extends Controller
         ]);
 
         $settings = PlatformSettings::current();
-        $provider = $this->resolveAiProvider($settings);
-        if (! $provider) {
+        $providers = $this->resolveAiProviders($settings);
+        if ($providers === []) {
             return response()->json([
                 'message' => 'OpenAI or Claude API key is missing. Add one in Admin > Integrations, or set OPENAI_API_KEY / ANTHROPIC_API_KEY in .env.',
             ], 422);
@@ -208,9 +208,7 @@ class SuperAdminContentController extends Controller
             'Return only JSON with these exact keys: title, slug, excerpt, body_html, meta_title, meta_description, read_time, schema_json.',
         ]);
 
-        $aiResponse = $provider['name'] === 'anthropic'
-            ? $this->generateWithAnthropic($provider, $prompt, (int) $data['word_count'])
-            : $this->generateWithOpenAi($provider, $prompt, (int) $data['word_count']);
+        [$aiResponse, $provider] = $this->generateWithAvailableProvider($providers, $prompt, (int) $data['word_count']);
 
         if (! $aiResponse['ok']) {
             return response()->json(['message' => $aiResponse['message']], 422);
@@ -510,7 +508,7 @@ class SuperAdminContentController extends Controller
         return $data;
     }
 
-    private function resolveAiProvider(PlatformSettings $settings): ?array
+    private function resolveAiProviders(PlatformSettings $settings): array
     {
         $openAi = [
             'name' => 'openai',
@@ -524,14 +522,43 @@ class SuperAdminContentController extends Controller
         ];
 
         $preferred = $settings->ai_provider ?: 'auto';
-        if ($preferred === 'openai') {
-            return filled($openAi['key']) ? $openAi : (filled($anthropic['key']) ? $anthropic : null);
-        }
-        if ($preferred === 'anthropic') {
-            return filled($anthropic['key']) ? $anthropic : (filled($openAi['key']) ? $openAi : null);
+        $ordered = match ($preferred) {
+            'anthropic' => [$anthropic, $openAi],
+            default => [$openAi, $anthropic],
+        };
+
+        return array_values(array_filter($ordered, fn (array $provider) => filled($provider['key'])));
+    }
+
+    private function generateWithAvailableProvider(array $providers, string $prompt, int $wordCount): array
+    {
+        $lastResponse = [
+            'ok' => false,
+            'message' => 'Post generation failed. Please try again.',
+            'text' => '',
+        ];
+        $lastProvider = $providers[0] ?? ['name' => 'unknown', 'model' => null];
+
+        foreach ($providers as $provider) {
+            $response = $provider['name'] === 'anthropic'
+                ? $this->generateWithAnthropic($provider, $prompt, $wordCount)
+                : $this->generateWithOpenAi($provider, $prompt, $wordCount);
+
+            if ($response['ok']) {
+                return [$response, $provider];
+            }
+
+            $lastResponse = $response;
+            $lastProvider = $provider;
+
+            Log::warning('AI blog generation provider fallback triggered', [
+                'provider' => $provider['name'],
+                'model' => $provider['model'] ?? null,
+                'message' => $response['message'] ?? null,
+            ]);
         }
 
-        return filled($openAi['key']) ? $openAi : (filled($anthropic['key']) ? $anthropic : null);
+        return [$lastResponse, $lastProvider];
     }
 
     private function normalizeAiModel(string $provider, ?string $model): string
@@ -567,7 +594,8 @@ class SuperAdminContentController extends Controller
             $response = Http::withToken($provider['key'])
                 ->acceptJson()
                 ->connectTimeout(10)
-                ->timeout(55)
+                ->timeout(85)
+                ->retry(2, 1200)
                 ->post('https://api.openai.com/v1/responses', [
                     'model' => $provider['model'],
                     'instructions' => $this->aiInstructions(),
@@ -612,7 +640,8 @@ class SuperAdminContentController extends Controller
                 ])
                 ->acceptJson()
                 ->connectTimeout(10)
-                ->timeout(55)
+                ->timeout(85)
+                ->retry(2, 1200)
                 ->post('https://api.anthropic.com/v1/messages', [
                     'model' => $provider['model'],
                     'max_tokens' => min(5500, max(1200, $wordCount * 3)),
