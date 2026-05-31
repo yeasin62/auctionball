@@ -24,6 +24,7 @@ const startEdit = (p) => {
         watermark:     p.watermark,
         export_csv:    p.export_csv,
         export_pdf:    p.export_pdf,
+        is_popular:    p.is_popular,
     });
 };
 
@@ -76,6 +77,7 @@ const fmtMoney = (v) => '৳' + new Intl.NumberFormat().format(v);
                     <div class="flex justify-between"><span class="text-ink-500">{{ t('super_admin.plans_field_watermark') }}</span><span class="font-mono">{{ p.watermark ? t('super_admin.plans_yes') : t('super_admin.plans_no') }}</span></div>
                     <div class="flex justify-between"><span class="text-ink-500">{{ t('super_admin.plans_field_csv') }}</span><span class="font-mono">{{ p.export_csv ? t('super_admin.plans_yes') : t('super_admin.plans_no') }}</span></div>
                     <div class="flex justify-between"><span class="text-ink-500">{{ t('super_admin.plans_field_pdf') }}</span><span class="font-mono">{{ p.export_pdf ? t('super_admin.plans_yes') : t('super_admin.plans_no') }}</span></div>
+                    <div class="flex justify-between"><span class="text-ink-500">{{ t('super_admin.plans_field_popular') }}</span><span class="font-mono">{{ p.is_popular ? t('super_admin.plans_yes') : t('super_admin.plans_no') }}</span></div>
 
                     <div class="pt-3">
                         <button @click="startEdit(p)" class="btn-ghost py-2 px-4 text-[13px] w-full">{{ t('super_admin.plans_edit') }}</button>
@@ -109,6 +111,7 @@ const fmtMoney = (v) => '৳' + new Intl.NumberFormat().format(v);
                             { key: 'watermark',  label: t('super_admin.plans_flag_watermark') },
                             { key: 'export_csv', label: t('super_admin.plans_flag_csv') },
                             { key: 'export_pdf', label: t('super_admin.plans_flag_pdf') },
+                            { key: 'is_popular', label: t('super_admin.plans_flag_popular') },
                         ]" :key="flag.key"
                             class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/60 border border-ink-200/60 cursor-pointer">
                             <input type="checkbox" v-model="drafts[p.slug][flag.key]" class="h-4 w-4" />

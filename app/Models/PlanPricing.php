@@ -18,6 +18,7 @@ class PlanPricing extends Model
         'slug', 'price_bdt',
         'seasons_limit', 'players_limit', 'teams_limit',
         'watermark', 'export_csv', 'export_pdf',
+        'is_popular',
         'sort_order',
     ];
 
@@ -29,6 +30,7 @@ class PlanPricing extends Model
         'watermark'     => 'boolean',
         'export_csv'    => 'boolean',
         'export_pdf'    => 'boolean',
+        'is_popular'    => 'boolean',
         'sort_order'    => 'integer',
     ];
 

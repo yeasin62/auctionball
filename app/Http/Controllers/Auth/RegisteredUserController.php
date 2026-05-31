@@ -24,13 +24,14 @@ class RegisteredUserController extends Controller
     {
         return Inertia::render('Auth/Register', [
             'plans' => PlanPricing::orderBy('sort_order')
-                ->get(['slug', 'price_bdt', 'seasons_limit', 'players_limit', 'teams_limit'])
+                ->get(['slug', 'price_bdt', 'seasons_limit', 'players_limit', 'teams_limit', 'is_popular'])
                 ->map(fn (PlanPricing $plan) => [
                     'slug' => $plan->slug,
                     'price_bdt' => (int) $plan->price_bdt,
                     'seasons_limit' => (int) $plan->seasons_limit,
                     'players_limit' => (int) $plan->players_limit,
                     'teams_limit' => (int) $plan->teams_limit,
+                    'is_popular' => (bool) $plan->is_popular,
                 ])
                 ->values(),
             'unlimited' => PlanPricing::UNLIMITED,

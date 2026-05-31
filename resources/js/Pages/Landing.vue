@@ -20,6 +20,7 @@ const planPrice = (slug) => {
     const p = props.plans.find(x => x.slug === slug);
     return p ? numFmt(p.price_bdt) : '';
 };
+const isPopularPlan = (slug) => Boolean(props.plans.find(x => x.slug === slug)?.is_popular);
 const planLimit = (slug, key, unlimitedLabel = null) => {
     const p = props.plans.find(x => x.slug === slug);
     if (! p) return '';
@@ -91,7 +92,7 @@ const plans = computed(() => [
             t('landing.pricing.free_b4'),
             t('landing.pricing.free_b5'),
         ],
-        popular: false, free: true, slug: 'free',
+        popular: isPopularPlan('free'), free: true, slug: 'free',
     },
     {
         name: t('landing.pricing.starter_name'),
@@ -107,7 +108,7 @@ const plans = computed(() => [
             t('landing.pricing.starter_b5'),
             t('landing.pricing.starter_b6'),
         ],
-        popular: true, free: false, slug: 'starter',
+        popular: isPopularPlan('starter'), free: false, slug: 'starter',
         bullets_lead_idx: 0,
     },
     {
@@ -124,7 +125,7 @@ const plans = computed(() => [
             t('landing.pricing.pro_b5'),
             t('landing.pricing.pro_b6'),
         ],
-        popular: false, free: false, slug: 'pro',
+        popular: isPopularPlan('pro'), free: false, slug: 'pro',
         bullets_lead_idx: 0,
     },
     {
@@ -140,7 +141,7 @@ const plans = computed(() => [
             t('landing.pricing.enterprise_b4'),
             t('landing.pricing.enterprise_b5'),
         ],
-        popular: false, free: false, slug: 'enterprise',
+        popular: isPopularPlan('enterprise'), free: false, slug: 'enterprise',
         bullets_lead_idx: 0,
     },
 ]);

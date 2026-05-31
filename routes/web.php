@@ -28,13 +28,14 @@ use Inertia\Inertia;
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 Route::get('/', function () {
-    $plans = \App\Models\PlanPricing::orderBy('sort_order')->get(['slug','price_bdt','seasons_limit','players_limit','teams_limit'])
+    $plans = \App\Models\PlanPricing::orderBy('sort_order')->get(['slug','price_bdt','seasons_limit','players_limit','teams_limit','is_popular'])
         ->map(fn ($p) => [
             'slug'          => $p->slug,
             'price_bdt'     => (int) $p->price_bdt,
             'seasons_limit' => (int) $p->seasons_limit,
             'players_limit' => (int) $p->players_limit,
             'teams_limit'   => (int) $p->teams_limit,
+            'is_popular'    => (bool) $p->is_popular,
         ]);
     return Inertia::render('Landing', [
         'plans'     => $plans,

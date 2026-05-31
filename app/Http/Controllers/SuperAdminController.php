@@ -1052,6 +1052,7 @@ class SuperAdminController extends Controller
                 'watermark'     => $p->watermark,
                 'export_csv'    => $p->export_csv,
                 'export_pdf'    => $p->export_pdf,
+                'is_popular'    => $p->is_popular,
                 'sort_order'    => $p->sort_order,
                 'orgs_count'    => Organization::where('plan', $p->slug)->count(),
             ]);
@@ -1331,14 +1332,23 @@ class SuperAdminController extends Controller
             'watermark'     => 'required|boolean',
             'export_csv'    => 'required|boolean',
             'export_pdf'    => 'required|boolean',
+            'is_popular'    => 'required|boolean',
         ]);
 
-        $plan->update($data);
+        DB::transaction(function () use ($plan, $data) {
+            if ($data['is_popular']) {
+                PlanPricing::query()
+                    ->whereKeyNot($plan->id)
+                    ->update(['is_popular' => false]);
+            }
+
+            $plan->update($data);
+        });
 
         Audit::log(
             'plan_pricing.updated',
             "Updated {$plan->slug}: ৳{$plan->price_bdt}/mo · {$plan->teams_limit} teams",
-            ['slug' => $plan->slug, 'price_bdt' => $plan->price_bdt, 'teams' => $plan->teams_limit],
+            ['slug' => $plan->slug, 'price_bdt' => $plan->price_bdt, 'teams' => $plan->teams_limit, 'is_popular' => (bool) $plan->is_popular],
             $plan,
         );
 
