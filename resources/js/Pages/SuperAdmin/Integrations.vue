@@ -34,6 +34,9 @@ const form = useForm({
     clear_anthropic_api_key: false,
 });
 
+const openAiKeyPlaceholder = () => props.integrations.openai?.masked_key || 'sk-...';
+const anthropicKeyPlaceholder = () => props.integrations.anthropic?.masked_key || 'sk-ant-...';
+
 const fallbackOpenAiModels = [
     { value: 'gpt-5.5', label: 'GPT-5.5 (Latest)' },
     { value: 'gpt-5.5-pro', label: 'GPT-5.5 Pro' },
@@ -171,7 +174,10 @@ const save = () => {
 
                         <div class="mt-5 grid gap-4 md:grid-cols-2">
                             <Field label="API key" hint="Paste a new key only when you want to replace the saved key." :error="form.errors.openai_api_key">
-                                <TextField v-model="form.openai_api_key" type="password" autocomplete="off" placeholder="sk-..." />
+                                <TextField v-model="form.openai_api_key" type="password" autocomplete="off" :placeholder="openAiKeyPlaceholder()" />
+                                <p v-if="integrations.openai?.masked_key" class="mt-2 font-mono text-[12px] text-ink-500">
+                                    Saved key: {{ integrations.openai.masked_key }}
+                                </p>
                             </Field>
                             <Field label="Model" :error="form.errors.openai_model">
                                 <select v-model="form.openai_model" class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
@@ -220,7 +226,10 @@ const save = () => {
 
                         <div class="mt-5 grid gap-4 md:grid-cols-2">
                             <Field label="API key" hint="Paste a new key only when you want to replace the saved key." :error="form.errors.anthropic_api_key">
-                                <TextField v-model="form.anthropic_api_key" type="password" autocomplete="off" placeholder="sk-ant-..." />
+                                <TextField v-model="form.anthropic_api_key" type="password" autocomplete="off" :placeholder="anthropicKeyPlaceholder()" />
+                                <p v-if="integrations.anthropic?.masked_key" class="mt-2 font-mono text-[12px] text-ink-500">
+                                    Saved key: {{ integrations.anthropic.masked_key }}
+                                </p>
                             </Field>
                             <Field label="Model" :error="form.errors.anthropic_model">
                                 <select v-model="form.anthropic_model" class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">

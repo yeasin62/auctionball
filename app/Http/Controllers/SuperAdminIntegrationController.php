@@ -24,11 +24,13 @@ class SuperAdminIntegrationController extends Controller
                     'model' => $this->normalizeModel('openai', $settings->openai_model ?: config('services.openai.model', 'gpt-5.5')),
                     'has_database_key' => filled($settings->openai_api_key),
                     'has_env_key' => filled(config('services.openai.key')),
+                    'masked_key' => $this->maskedKey($settings->openai_api_key, config('services.openai.key')),
                 ],
                 'anthropic' => [
                     'model' => $this->normalizeModel('anthropic', $settings->anthropic_model ?: config('services.anthropic.model', 'claude-opus-4-1-20250805')),
                     'has_database_key' => filled($settings->anthropic_api_key),
                     'has_env_key' => filled(config('services.anthropic.key')),
+                    'masked_key' => $this->maskedKey($settings->anthropic_api_key, config('services.anthropic.key')),
                 ],
                 'ai_provider' => $settings->ai_provider ?: 'auto',
             ],
@@ -177,5 +179,21 @@ class SuperAdminIntegrationController extends Controller
     private function isOpenAiTextModel(string $id): bool
     {
         return (bool) preg_match('/^(gpt-|chatgpt-|o[1-9](?:-|$))/', $id);
+    }
+
+    private function maskedKey(?string $databaseKey, ?string $envKey): ?string
+    {
+        $key = $databaseKey ?: $envKey;
+        if (! filled($key)) {
+            return null;
+        }
+
+        $key = trim($key);
+        $prefix = str($key)->before('-')->toString();
+        $suffix = str($key)->substr(-4)->toString();
+
+        return $prefix !== ''
+            ? "{$prefix}-..." . $suffix
+            : '...' . $suffix;
     }
 }
