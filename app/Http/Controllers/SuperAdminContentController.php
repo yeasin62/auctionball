@@ -205,6 +205,8 @@ class SuperAdminContentController extends Controller
             'Extra notes: ' . ($data['extra_notes'] ?: 'None.'),
             $schemaInstruction,
             'Create a complete blog draft for AuctionBall. Use natural editorial writing, specific examples, varied sentence structure, clear subheadings, and practical advice. Avoid generic filler, hype, repeated phrases, and phrases that announce automated writing.',
+            'Do not wrap the response in markdown fences. Do not add comments, labels, explanation, or prose before or after the JSON object.',
+            'All values must be JSON-safe strings. Escape quotes and line breaks correctly. body_html must be one JSON string containing clean HTML.',
             'Return only JSON with these exact keys: title, slug, excerpt, body_html, meta_title, meta_description, read_time, schema_json.',
         ]);
 
@@ -230,6 +232,7 @@ class SuperAdminContentController extends Controller
             Log::warning('AI blog generation response parse failed', [
                 'provider' => $provider['name'],
                 'model' => $provider['model'],
+                'json_error' => json_last_error_msg(),
                 'text' => Str::limit($aiResponse['text'], 1500),
             ]);
 
@@ -585,7 +588,7 @@ class SuperAdminContentController extends Controller
 
     private function aiInstructions(): string
     {
-        return 'You are a senior content editor for a SaaS product called AuctionBall. You write helpful, human-readable, SEO-aware blog drafts. Output valid JSON only. body_html must contain clean HTML using p, h2, h3, ul, ol, li, strong, em, blockquote, and a tags only.';
+        return 'You are a senior content editor for a SaaS product called AuctionBall. You write helpful, human-readable, SEO-aware blog drafts. Output one valid JSON object only. Do not use markdown fences, comments, labels, or any text outside the JSON object. body_html must be a JSON string containing clean HTML using p, h2, h3, ul, ol, li, strong, em, blockquote, and a tags only.';
     }
 
     private function generateWithOpenAi(array $provider, string $prompt, int $wordCount): array
@@ -757,16 +760,16 @@ class SuperAdminContentController extends Controller
 
     private function decodeGeneratedPost(string $text): ?array
     {
-        $text = trim((string) $text);
-        $text = preg_replace('/^```(?:json)?\s*/i', '', $text);
-        $text = preg_replace('/\s*```$/', '', $text);
+        $decoded = $this->decodeAiJson($text);
 
-        $decoded = json_decode($text, true);
-        if (! is_array($decoded)) {
-            $jsonStart = strpos($text, '{');
-            $jsonEnd = strrpos($text, '}');
-            if ($jsonStart !== false && $jsonEnd !== false && $jsonEnd > $jsonStart) {
-                $decoded = json_decode(substr($text, $jsonStart, $jsonEnd - $jsonStart + 1), true);
+        if (isset($decoded[0]) && is_array($decoded[0])) {
+            $decoded = $decoded[0];
+        }
+
+        foreach (['post', 'article', 'data', 'draft'] as $wrapperKey) {
+            if (isset($decoded[$wrapperKey]) && is_array($decoded[$wrapperKey])) {
+                $decoded = $decoded[$wrapperKey];
+                break;
             }
         }
 
@@ -774,12 +777,12 @@ class SuperAdminContentController extends Controller
             return null;
         }
 
-        $body = trim((string) ($decoded['body_html'] ?? $decoded['body'] ?? ''));
+        $body = trim((string) ($decoded['body_html'] ?? $decoded['bodyHtml'] ?? $decoded['body'] ?? $decoded['content'] ?? $decoded['html'] ?? ''));
         if ($body === '') {
             return null;
         }
 
-        $schemaValue = $decoded['schema_json'] ?? '';
+        $schemaValue = $decoded['schema_json'] ?? $decoded['schemaJson'] ?? $decoded['schema'] ?? '';
         $schema = '';
         if (is_array($schemaValue)) {
             $schema = json_encode($schemaValue, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '';
@@ -799,13 +802,121 @@ class SuperAdminContentController extends Controller
         return [
             'title' => $title,
             'slug' => Str::slug((string) ($decoded['slug'] ?? $title)),
-            'excerpt' => Str::limit(trim((string) ($decoded['excerpt'] ?? '')), 500, ''),
+            'excerpt' => Str::limit(trim((string) ($decoded['excerpt'] ?? $decoded['summary'] ?? $decoded['description'] ?? '')), 500, ''),
             'body' => $body,
-            'meta_title' => Str::limit(trim((string) ($decoded['meta_title'] ?? $title)), 180, ''),
-            'meta_description' => Str::limit(trim((string) ($decoded['meta_description'] ?? $decoded['excerpt'] ?? '')), 500, ''),
-            'read_time' => Str::limit(trim((string) ($decoded['read_time'] ?? '')), 40, ''),
+            'meta_title' => Str::limit(trim((string) ($decoded['meta_title'] ?? $decoded['metaTitle'] ?? $decoded['seo_title'] ?? $title)), 180, ''),
+            'meta_description' => Str::limit(trim((string) ($decoded['meta_description'] ?? $decoded['metaDescription'] ?? $decoded['seo_description'] ?? $decoded['excerpt'] ?? '')), 500, ''),
+            'read_time' => Str::limit(trim((string) ($decoded['read_time'] ?? $decoded['readTime'] ?? '')), 40, ''),
             'schema_json' => $schema,
         ];
+    }
+
+    private function decodeAiJson(string $text): ?array
+    {
+        foreach ($this->jsonCandidates($text) as $candidate) {
+            $decoded = json_decode($candidate, true);
+
+            if (is_string($decoded)) {
+                $decoded = json_decode($decoded, true);
+            }
+
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        return null;
+    }
+
+    private function jsonCandidates(string $text): array
+    {
+        $text = trim((string) preg_replace('/^\xEF\xBB\xBF/', '', $text));
+        if ($text === '') {
+            return [];
+        }
+
+        $candidates = [$text];
+
+        if (preg_match_all('/```(?:json)?\s*([\s\S]*?)```/i', $text, $matches)) {
+            foreach ($matches[1] as $match) {
+                $candidates[] = trim($match);
+            }
+        }
+
+        $stripped = preg_replace('/^```(?:json)?\s*/i', '', $text);
+        $stripped = preg_replace('/\s*```$/', '', (string) $stripped);
+        $candidates[] = trim((string) $stripped);
+
+        foreach ($this->balancedJsonSnippets($text, '{', '}') as $snippet) {
+            $candidates[] = $snippet;
+        }
+
+        foreach ($this->balancedJsonSnippets($text, '[', ']') as $snippet) {
+            $candidates[] = $snippet;
+        }
+
+        return array_values(array_unique(array_filter(array_map('trim', $candidates))));
+    }
+
+    /**
+     * Finds JSON-looking objects/arrays while respecting quoted strings.
+     */
+    private function balancedJsonSnippets(string $text, string $open, string $close): array
+    {
+        $snippets = [];
+        $length = strlen($text);
+
+        for ($start = 0; $start < $length; $start++) {
+            if ($text[$start] !== $open) {
+                continue;
+            }
+
+            $depth = 0;
+            $inString = false;
+            $escape = false;
+
+            for ($index = $start; $index < $length; $index++) {
+                $char = $text[$index];
+
+                if ($inString) {
+                    if ($escape) {
+                        $escape = false;
+                        continue;
+                    }
+
+                    if ($char === '\\') {
+                        $escape = true;
+                        continue;
+                    }
+
+                    if ($char === '"') {
+                        $inString = false;
+                    }
+
+                    continue;
+                }
+
+                if ($char === '"') {
+                    $inString = true;
+                    continue;
+                }
+
+                if ($char === $open) {
+                    $depth++;
+                }
+
+                if ($char === $close) {
+                    $depth--;
+                }
+
+                if ($depth === 0) {
+                    $snippets[] = substr($text, $start, $index - $start + 1);
+                    break;
+                }
+            }
+        }
+
+        return $snippets;
     }
 
     private function categoryPayload(BlogCategory $category): array
