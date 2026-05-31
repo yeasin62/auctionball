@@ -1,18 +1,57 @@
 <script setup>
-import { Head, Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PublicFooter from '@/Components/PublicFooter.vue';
 import PublicHeader from '@/Components/PublicHeader.vue';
 
-defineProps({
-    posts: { type: Array, default: () => [] },
+const props = defineProps({
+    posts: { type: Object, default: () => ({ data: [], current_page: 1, last_page: 1 }) },
 });
 
 const { t } = useI18n();
 const page = usePage();
 const appDomain = computed(() => page.props.appDomain || 'auctionball.com');
 const canonicalUrl = computed(() => `https://${appDomain.value}/blog`);
+const visiblePosts = ref([...(props.posts?.data || [])]);
+const isLoadingMore = ref(false);
+const hasMorePosts = computed(() => (props.posts?.current_page || 1) < (props.posts?.last_page || 1));
+const nextPage = computed(() => (props.posts?.current_page || 1) + 1);
+
+watch(
+    () => props.posts,
+    (posts) => {
+        const incoming = posts?.data || [];
+
+        if ((posts?.current_page || 1) <= 1) {
+            visiblePosts.value = [...incoming];
+            return;
+        }
+
+        const seen = new Set(visiblePosts.value.map((post) => post.slug));
+        visiblePosts.value = [
+            ...visiblePosts.value,
+            ...incoming.filter((post) => !seen.has(post.slug)),
+        ];
+    },
+    { deep: true },
+);
+
+const loadMore = () => {
+    if (!hasMorePosts.value || isLoadingMore.value) return;
+
+    router.get('/blog', { page: nextPage.value }, {
+        only: ['posts'],
+        preserveScroll: true,
+        preserveState: true,
+        onStart: () => {
+            isLoadingMore.value = true;
+        },
+        onFinish: () => {
+            isLoadingMore.value = false;
+        },
+    });
+};
 </script>
 
 <template>
@@ -38,7 +77,7 @@ const canonicalUrl = computed(() => `https://${appDomain.value}/blog`);
             </section>
 
             <section class="mt-10 grid lg:grid-cols-3 gap-4">
-                <article v-for="post in posts" :key="post.slug" class="overflow-hidden rounded-lg border border-ink-200/70 bg-white">
+                <article v-for="post in visiblePosts" :key="post.slug" class="overflow-hidden rounded-lg border border-ink-200/70 bg-white">
                     <Link v-if="post.featured_image_url" :href="post.url" class="block aspect-[16/9] bg-ink-100">
                         <img :src="post.featured_image_url" :alt="post.title" class="h-full w-full object-cover" loading="lazy" decoding="async" />
                     </Link>
@@ -59,11 +98,22 @@ const canonicalUrl = computed(() => `https://${appDomain.value}/blog`);
                         </div>
                     </div>
                 </article>
-                <div v-if="!posts.length" class="lg:col-span-3 rounded-lg border border-ink-200/70 bg-white p-8 text-center">
+                <div v-if="!visiblePosts.length" class="lg:col-span-3 rounded-lg border border-ink-200/70 bg-white p-8 text-center">
                     <h2 class="text-[22px] font-extrabold tracking-tight">{{ t('public_blog.empty_title') }}</h2>
                     <p class="mt-2 text-[14.5px] text-ink-600">{{ t('public_blog.empty_body') }}</p>
                 </div>
             </section>
+
+            <div v-if="hasMorePosts" class="mt-8 flex justify-center">
+                <button
+                    type="button"
+                    class="btn-ghost px-6 py-3 disabled:cursor-not-allowed disabled:opacity-60"
+                    :disabled="isLoadingMore"
+                    @click="loadMore"
+                >
+                    {{ isLoadingMore ? t('public_blog.loading_more') : t('public_blog.load_more') }}
+                </button>
+            </div>
 
             <section class="mt-12 rounded-lg border border-ink-200/70 bg-white p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center gap-5 justify-between">
                 <div>

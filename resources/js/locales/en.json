@@ -1408,6 +1408,8 @@
         "subtitle": "Guides, product updates, and practical auction playbooks for organizers running cricket, football, and live player auctions.",
         "uncategorized": "Uncategorized",
         "read": "Read",
+        "load_more": "Load more posts",
+        "loading_more": "Loading posts...",
         "empty_title": "No posts published yet",
         "empty_body": "New auction guides will appear here after they are published.",
         "help_title": "Need help preparing an auction?",

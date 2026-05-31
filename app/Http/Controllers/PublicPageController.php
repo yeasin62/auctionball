@@ -132,13 +132,15 @@ class PublicPageController extends Controller
 
     public function blog(): Response
     {
+        $posts = BlogPost::query()
+            ->with('blogCategory')
+            ->published()
+            ->latest('published_at')
+            ->paginate(9)
+            ->through(fn (BlogPost $post) => $this->blogPostPayload($post));
+
         return Inertia::render('Public/Blog', [
-            'posts' => BlogPost::query()
-                ->with('blogCategory')
-                ->published()
-                ->latest('published_at')
-                ->get()
-                ->map(fn (BlogPost $post) => $this->blogPostPayload($post)),
+            'posts' => $posts,
         ]);
     }
 
