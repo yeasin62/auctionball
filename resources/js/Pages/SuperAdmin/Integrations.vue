@@ -175,9 +175,16 @@ const save = () => {
                         <div class="mt-5 grid gap-4 md:grid-cols-2">
                             <Field label="API key" hint="Paste a new key only when you want to replace the saved key." :error="form.errors.openai_api_key">
                                 <TextField v-model="form.openai_api_key" type="password" autocomplete="off" :placeholder="openAiKeyPlaceholder()" />
-                                <p v-if="integrations.openai?.masked_key" class="mt-2 font-mono text-[12px] text-ink-500">
-                                    Saved key: {{ integrations.openai.masked_key }}
-                                </p>
+                                <div v-if="integrations.openai?.masked_key" class="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/70 px-3 py-2.5">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <span class="text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-700">Active credential</span>
+                                        <span class="rounded-full bg-white/80 px-2.5 py-1 font-mono text-[10px] font-bold text-emerald-700">
+                                            {{ integrations.openai?.has_database_key ? 'Encrypted DB key' : 'Server ENV key' }}
+                                        </span>
+                                    </div>
+                                    <div class="mt-2 font-mono text-[13px] font-semibold text-ink-800">{{ integrations.openai.masked_key }}</div>
+                                    <p class="mt-1 text-[11.5px] leading-5 text-ink-500">Paste a new key above only if you want to replace this credential.</p>
+                                </div>
                             </Field>
                             <Field label="Model" :error="form.errors.openai_model">
                                 <select v-model="form.openai_model" class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
@@ -227,9 +234,16 @@ const save = () => {
                         <div class="mt-5 grid gap-4 md:grid-cols-2">
                             <Field label="API key" hint="Paste a new key only when you want to replace the saved key." :error="form.errors.anthropic_api_key">
                                 <TextField v-model="form.anthropic_api_key" type="password" autocomplete="off" :placeholder="anthropicKeyPlaceholder()" />
-                                <p v-if="integrations.anthropic?.masked_key" class="mt-2 font-mono text-[12px] text-ink-500">
-                                    Saved key: {{ integrations.anthropic.masked_key }}
-                                </p>
+                                <div v-if="integrations.anthropic?.masked_key" class="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/70 px-3 py-2.5">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <span class="text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-700">Active credential</span>
+                                        <span class="rounded-full bg-white/80 px-2.5 py-1 font-mono text-[10px] font-bold text-emerald-700">
+                                            {{ integrations.anthropic?.has_database_key ? 'Encrypted DB key' : 'Server ENV key' }}
+                                        </span>
+                                    </div>
+                                    <div class="mt-2 font-mono text-[13px] font-semibold text-ink-800">{{ integrations.anthropic.masked_key }}</div>
+                                    <p class="mt-1 text-[11.5px] leading-5 text-ink-500">Paste a new key above only if you want to replace this credential.</p>
+                                </div>
                             </Field>
                             <Field label="Model" :error="form.errors.anthropic_model">
                                 <select v-model="form.anthropic_model" class="w-full rounded-xl border border-ink-200/70 bg-white/80 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30">
