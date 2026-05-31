@@ -37,7 +37,8 @@ class SuperAdminContentController extends Controller
         return Inertia::render('SuperAdmin/BlogPosts', [
             'posts' => BlogPost::query()
                 ->with('blogCategory')
-                ->latest('updated_at')
+                ->orderByRaw('COALESCE(published_at, created_at) DESC')
+                ->orderByDesc('id')
                 ->get()
                 ->map(fn (BlogPost $post) => $this->postPayload($post)),
         ]);
@@ -242,7 +243,13 @@ class SuperAdminContentController extends Controller
         $generated['blog_category_id'] = $category?->id;
         $generated['is_published'] = false;
         $generated['published_at'] = '';
-        $generated['featured_image_url'] = '';
+        $generated['featured_image_url'] = $this->generateFeaturedImageUrl(
+            $settings,
+            $generated,
+            $data['keyword'],
+            $language,
+            $category?->name
+        );
 
         return response()->json($generated);
     }
@@ -265,16 +272,10 @@ class SuperAdminContentController extends Controller
     public function uploadImage(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120'],
+            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:10240'],
         ]);
 
-        $disk = config('filesystems.default') === 's3' ? 's3' : 'public';
-        $path = $data['image']->store('blog', $disk);
-        $url = Storage::disk($disk)->url($path);
-
-        if (config("filesystems.disks.{$disk}.driver") === 'local') {
-            $url = '/storage/' . ltrim($path, '/');
-        }
+        [$disk, $path, $url] = $this->storeBlogImage($data['image']);
 
         Audit::log('blog.image_uploaded', 'Blog image uploaded', [
             'disk' => $disk,
@@ -282,6 +283,193 @@ class SuperAdminContentController extends Controller
         ]);
 
         return response()->json(['url' => $url]);
+    }
+
+    private function storeBlogImage(\Illuminate\Http\UploadedFile $image): array
+    {
+        [$bytes, $extension] = $this->optimizedImageBytes(
+            file_get_contents($image->getRealPath()) ?: '',
+            $image->getClientOriginalExtension() ?: 'jpg'
+        );
+        $preferredDisk = config('filesystems.default') === 's3' ? 's3' : 'public';
+
+        foreach (array_unique([$preferredDisk, 'public']) as $disk) {
+            try {
+                $path = 'blog/' . now()->format('Y/m') . '/' . Str::uuid() . '.' . $extension;
+                if (! Storage::disk($disk)->put($path, $bytes)) {
+                    throw new \RuntimeException("Storage disk [{$disk}] rejected optimized image.");
+                }
+
+                return [$disk, $path, $this->storedImageUrl($disk, $path)];
+            } catch (Throwable $e) {
+                Log::warning('Blog image upload disk failed', [
+                    'disk' => $disk,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        abort(500, 'Image upload failed. Please check storage configuration.');
+    }
+
+    private function storedImageUrl(string $disk, string $path): string
+    {
+        if (config("filesystems.disks.{$disk}.driver") === 'local') {
+            return '/storage/' . ltrim($path, '/');
+        }
+
+        return Storage::disk($disk)->url($path);
+    }
+
+    private function generateFeaturedImageUrl(
+        PlatformSettings $settings,
+        array $generated,
+        string $keyword,
+        string $language,
+        ?string $category
+    ): string {
+        $key = $settings->openai_api_key ?: config('services.openai.key');
+        if (! filled($key)) {
+            Log::info('AI featured image skipped because OpenAI key is missing');
+            return '';
+        }
+
+        $prompt = implode(' ', [
+            'Create a polished editorial featured image for an AuctionBall blog post.',
+            'Subject: ' . $keyword . '.',
+            'Title: ' . ($generated['title'] ?? $keyword) . '.',
+            'Category: ' . ($category ?: 'sports auction software') . '.',
+            'Language context: ' . $language . '.',
+            'Visual direction: modern SaaS sports auction dashboard, cricket or football tournament atmosphere, live bidding energy, clean composition, realistic venue display and mobile bidding cues.',
+            'No readable text, no logos, no brand names, no watermarks, no distorted UI.',
+            'Aspect ratio 16:9, production-ready blog hero image.',
+        ]);
+
+        try {
+            $response = Http::withToken($key)
+                ->acceptJson()
+                ->connectTimeout(10)
+                ->timeout(90)
+                ->post('https://api.openai.com/v1/images/generations', [
+                    'model' => config('services.openai.image_model', 'gpt-image-1'),
+                    'prompt' => $prompt,
+                    'size' => '1536x1024',
+                    'quality' => 'medium',
+                    'n' => 1,
+                ]);
+        } catch (Throwable $e) {
+            Log::warning('AI featured image generation request failed', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return '';
+        }
+
+        if ($response->failed()) {
+            Log::warning('AI featured image generation failed', [
+                'status' => $response->status(),
+                'body' => Str::limit($response->body(), 1000),
+            ]);
+
+            return '';
+        }
+
+        $image = $response->json('data.0', []);
+        $bytes = null;
+        $extension = 'png';
+
+        if (! empty($image['b64_json'])) {
+            $bytes = base64_decode((string) $image['b64_json'], true) ?: null;
+        } elseif (! empty($image['url'])) {
+            $download = Http::timeout(30)->get($image['url']);
+            if ($download->successful()) {
+                $bytes = $download->body();
+                $extension = str_contains((string) $download->header('Content-Type'), 'jpeg') ? 'jpg' : 'png';
+            }
+        }
+
+        if (! $bytes) {
+            Log::warning('AI featured image generation returned no usable image data');
+            return '';
+        }
+
+        return $this->storeBlogImageBytes($bytes, $extension);
+    }
+
+    private function storeBlogImageBytes(string $bytes, string $extension = 'png'): string
+    {
+        [$bytes, $extension] = $this->optimizedImageBytes($bytes, $extension, forceWebp: true);
+        $preferredDisk = config('filesystems.default') === 's3' ? 's3' : 'public';
+        $extension = in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true) ? $extension : 'png';
+        $path = 'blog/' . now()->format('Y/m') . '/' . Str::uuid() . '.' . $extension;
+
+        foreach (array_unique([$preferredDisk, 'public']) as $disk) {
+            try {
+                if (! Storage::disk($disk)->put($path, $bytes)) {
+                    throw new \RuntimeException("Storage disk [{$disk}] rejected generated image.");
+                }
+
+                return $this->storedImageUrl($disk, $path);
+            } catch (Throwable $e) {
+                Log::warning('Generated blog image storage disk failed', [
+                    'disk' => $disk,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return '';
+    }
+
+    private function optimizedImageBytes(string $bytes, string $extension, bool $forceWebp = false): array
+    {
+        if ($bytes === '' || ! function_exists('imagecreatefromstring')) {
+            return [$bytes, $this->safeImageExtension($extension)];
+        }
+
+        $source = @imagecreatefromstring($bytes);
+        if (! $source) {
+            return [$bytes, $this->safeImageExtension($extension)];
+        }
+
+        $width = imagesx($source);
+        $height = imagesy($source);
+        $maxWidth = 1600;
+        $targetWidth = $width > $maxWidth ? $maxWidth : $width;
+        $targetHeight = $width > $maxWidth ? (int) round($height * ($maxWidth / $width)) : $height;
+        $target = imagecreatetruecolor($targetWidth, $targetHeight);
+
+        imagealphablending($target, false);
+        imagesavealpha($target, true);
+        imagecopyresampled($target, $source, 0, 0, 0, 0, $targetWidth, $targetHeight, $width, $height);
+
+        $extension = $forceWebp && function_exists('imagewebp') ? 'webp' : $this->safeImageExtension($extension);
+
+        ob_start();
+        $ok = match ($extension) {
+            'webp' => function_exists('imagewebp') && imagewebp($target, null, 82),
+            'jpg', 'jpeg' => imagejpeg($target, null, 84),
+            'png' => imagepng($target, null, 7),
+            default => imagejpeg($target, null, 84),
+        };
+        $optimized = $ok ? (ob_get_clean() ?: '') : '';
+
+        imagedestroy($source);
+        imagedestroy($target);
+
+        return $optimized !== ''
+            ? [$optimized, $extension === 'jpeg' ? 'jpg' : $extension]
+            : [$bytes, $this->safeImageExtension($extension)];
+    }
+
+    private function safeImageExtension(string $extension): string
+    {
+        $extension = strtolower(trim($extension, '. '));
+        if ($extension === 'jpeg') {
+            return 'jpg';
+        }
+
+        return in_array($extension, ['jpg', 'png', 'webp', 'gif'], true) ? $extension : 'jpg';
     }
 
     private function validatePost(Request $request, ?BlogPost $post = null): array

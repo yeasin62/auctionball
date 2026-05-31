@@ -38,6 +38,7 @@ return [
     'openai' => [
         'key' => env('OPENAI_API_KEY'),
         'model' => env('OPENAI_MODEL', 'gpt-5.5'),
+        'image_model' => env('OPENAI_IMAGE_MODEL', 'gpt-image-1'),
     ],
 
     'anthropic' => [
