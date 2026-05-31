@@ -6,7 +6,7 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-const props = defineProps({ logs: Object, filters: Object, event_counts: Object, orgs: Array });
+const props = defineProps({ logs: Object, filters: Object, event_counts: Object, event_labels: Object, orgs: Array });
 
 const f = ref({ ...props.filters });
 const expanded = ref(null);
@@ -30,7 +30,10 @@ const eventColor = (key) => ({
     'domain.set':           'bg-blue-50 text-blue-700 border-blue-100',
     'domain.verified':      'bg-emerald-50 text-emerald-700 border-emerald-100',
     'domain.removed':       'bg-ink-100 text-ink-600 border-ink-200',
+    'plan_pricing.updated': 'bg-indigo-50 text-indigo-700 border-indigo-100',
 }[key] || 'bg-ink-100 text-ink-500 border-ink-200');
+
+const eventLabel = (key) => props.event_labels?.[key] || String(key || '').replace(/[._-]+/g, ' ');
 </script>
 
 <template>
@@ -47,7 +50,7 @@ const eventColor = (key) => ({
                     @click="f.event = (f.event === ev ? '' : ev); apply()"
                     class="px-3 py-1.5 rounded-full text-[11.5px] tracking-wide border transition"
                     :class="f.event === ev ? eventColor(ev) : 'bg-white/70 text-ink-600 border-ink-200/60'">
-                {{ ev }} <span class="ml-1 font-mono opacity-70">{{ count }}</span>
+                {{ eventLabel(ev) }} <span class="ml-1 font-mono opacity-70">{{ count }}</span>
             </button>
         </div>
 
@@ -70,7 +73,7 @@ const eventColor = (key) => ({
                 <li v-for="row in logs.data" :key="row.id" class="px-5 py-3 hover:bg-white/40">
                     <button class="w-full text-left flex items-start gap-3" @click="expanded = expanded === row.id ? null : row.id">
                         <div class="font-mono text-[10.5px] text-ink-500 w-36 shrink-0 pt-0.5">{{ row.created_at }}</div>
-                        <span class="px-2 py-0.5 rounded-full font-mono text-[10.5px] uppercase border tracking-wider shrink-0" :class="eventColor(row.event)">{{ row.event }}</span>
+                        <span class="px-2 py-0.5 rounded-full font-mono text-[10.5px] uppercase border tracking-wider shrink-0" :class="eventColor(row.event)">{{ row.event_label || eventLabel(row.event) }}</span>
                         <div class="flex-1 min-w-0">
                             <div class="text-[13px] leading-snug">{{ row.summary }}</div>
                             <div class="mt-0.5 text-[11px] font-mono text-ink-500">

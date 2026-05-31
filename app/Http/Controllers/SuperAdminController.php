@@ -993,6 +993,7 @@ class SuperAdminController extends Controller
         $logs->getCollection()->transform(fn ($r) => [
             'id'         => $r->id,
             'event'      => $r->event,
+            'event_label'=> $this->auditEventLabel($r->event),
             'summary'    => $r->summary,
             'actor_name' => $r->actor_name,
             'org'        => $r->organization?->name,
@@ -1009,8 +1010,44 @@ class SuperAdminController extends Controller
             'logs'        => $logs,
             'filters'     => $filters,
             'event_counts'=> $eventCounts,
+            'event_labels'=> $eventCounts->keys()->mapWithKeys(fn ($event) => [$event => $this->auditEventLabel($event)]),
             'orgs'        => Organization::orderBy('name')->get(['id','name','slug']),
         ]);
+    }
+
+    private function auditEventLabel(string $event): string
+    {
+        return [
+            'auction.sold' => 'Player sold',
+            'auction.unsold' => 'Player unsold',
+            'auction.reset' => 'Auction reset',
+            'plan.changed' => 'Organization plan changed',
+            'plan_pricing.updated' => 'Pricing plan updated',
+            'user.impersonated' => 'User impersonated',
+            'user.promoted' => 'User promoted',
+            'user.demoted' => 'User demoted',
+            'user.password_reset' => 'Password reset',
+            'user.deleted' => 'User deleted',
+            'payment.completed' => 'Payment completed',
+            'payment.approved' => 'Payment approved',
+            'payment.rejected' => 'Payment rejected',
+            'invitation.accepted' => 'Invitation accepted',
+            'subscription.canceled' => 'Subscription canceled',
+            'domain.set' => 'Domain added',
+            'domain.verified' => 'Domain verified',
+            'domain.removed' => 'Domain removed',
+            'integrations.updated' => 'Integrations updated',
+            'platform_settings.updated' => 'Platform settings updated',
+            'platform_settings.logo_updated' => 'Platform logo updated',
+            'platform_settings.logo_removed' => 'Platform logo removed',
+            'platform_scripts.updated' => 'Platform scripts updated',
+            'blog.created' => 'Blog post created',
+            'blog.updated' => 'Blog post updated',
+            'blog.deleted' => 'Blog post deleted',
+            'blog_category.created' => 'Blog category created',
+            'blog_category.deleted' => 'Blog category deleted',
+            'blog.image_uploaded' => 'Blog image uploaded',
+        ][$event] ?? Str::headline(str_replace('.', ' ', $event));
     }
 
     private function estimateMrr(): int
@@ -1347,7 +1384,7 @@ class SuperAdminController extends Controller
 
         Audit::log(
             'plan_pricing.updated',
-            "Updated {$plan->slug}: ৳{$plan->price_bdt}/mo · {$plan->teams_limit} teams",
+            'Pricing plan updated: ' . Str::headline($plan->slug),
             ['slug' => $plan->slug, 'price_bdt' => $plan->price_bdt, 'teams' => $plan->teams_limit, 'is_popular' => (bool) $plan->is_popular],
             $plan,
         );

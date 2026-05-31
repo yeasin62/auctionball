@@ -40,6 +40,21 @@ Schedule::command('subscriptions:send-renewal-reminders')
 
 /*
 |--------------------------------------------------------------------------
+| Audit log retention
+|--------------------------------------------------------------------------
+| Keep the audit table useful without letting it grow forever. Super-admin UI
+| shows recent operational history; rows older than 30 days are pruned daily.
+*/
+Schedule::call(function () {
+    \App\Models\AuditLog::where('created_at', '<', now()->subDays(30))->delete();
+})
+    ->name('audit-logs-prune-old')
+    ->dailyAt('00:45')
+    ->timezone('Asia/Dhaka')
+    ->onOneServer();
+
+/*
+|--------------------------------------------------------------------------
 | Daily database + storage backup
 |--------------------------------------------------------------------------
 | spatie/laravel-backup writes a zip of the DB dump + critical files to
