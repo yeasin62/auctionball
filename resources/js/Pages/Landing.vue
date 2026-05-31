@@ -20,11 +20,16 @@ const planPrice = (slug) => {
     const p = props.plans.find(x => x.slug === slug);
     return p ? numFmt(p.price_bdt) : '';
 };
-const planTeams = (slug) => {
+const planLimit = (slug, key, unlimitedLabel = null) => {
     const p = props.plans.find(x => x.slug === slug);
     if (! p) return '';
-    return p.teams_limit >= props.unlimited ? '∞' : numFmt(p.teams_limit);
+    return Number(p[key]) >= props.unlimited
+        ? (unlimitedLabel ?? t('landing.pricing.unlimited'))
+        : numFmt(Number(p[key]));
 };
+const planSeasons = (slug) => planLimit(slug, 'seasons_limit');
+const planPlayers = (slug) => planLimit(slug, 'players_limit');
+const planTeams = (slug) => planLimit(slug, 'teams_limit');
 
 /* ----------------------- Data ----------------------- */
 // Decorative mockup data — names + roles render as labels in the hero/feature
@@ -77,11 +82,11 @@ const plans = computed(() => [
         name: t('landing.pricing.free_name'),
         tagline: t('landing.pricing.free_tagline'),
         price: planPrice('free') || '0', unit: t('landing.pricing.free_unit'),
-        meta: t('landing.pricing.free_meta', { teams: planTeams('free') }),
+        meta: t('landing.pricing.free_meta', { seasons: planSeasons('free'), players: planPlayers('free'), teams: planTeams('free') }),
         cta: t('landing.pricing.free_cta'),
         bullets: [
-            t('landing.pricing.free_b1'),
-            t('landing.pricing.free_b2', { teams: planTeams('free') }),
+            t('landing.pricing.free_b1', { seasons: planSeasons('free') }),
+            t('landing.pricing.free_b2', { players: planPlayers('free'), teams: planTeams('free') }),
             t('landing.pricing.free_b3'),
             t('landing.pricing.free_b4'),
             t('landing.pricing.free_b5'),
@@ -92,12 +97,12 @@ const plans = computed(() => [
         name: t('landing.pricing.starter_name'),
         tagline: t('landing.pricing.starter_tagline'),
         price: planPrice('starter') || '1,999', unit: t('landing.pricing.monthly_unit'),
-        meta: t('landing.pricing.starter_meta', { teams: planTeams('starter') }),
+        meta: t('landing.pricing.starter_meta', { seasons: planSeasons('starter'), players: planPlayers('starter'), teams: planTeams('starter') }),
         cta: t('landing.pricing.starter_cta'),
         bullets: [
             t('landing.pricing.starter_b1'),
-            t('landing.pricing.starter_b2'),
-            t('landing.pricing.starter_b3', { teams: planTeams('starter') }),
+            t('landing.pricing.starter_b2', { seasons: planSeasons('starter') }),
+            t('landing.pricing.starter_b3', { players: planPlayers('starter'), teams: planTeams('starter') }),
             t('landing.pricing.starter_b4'),
             t('landing.pricing.starter_b5'),
             t('landing.pricing.starter_b6'),
@@ -109,11 +114,11 @@ const plans = computed(() => [
         name: t('landing.pricing.pro_name'),
         tagline: t('landing.pricing.pro_tagline'),
         price: planPrice('pro') || '4,999', unit: t('landing.pricing.monthly_unit'),
-        meta: t('landing.pricing.pro_meta', { teams: planTeams('pro') }),
+        meta: t('landing.pricing.pro_meta', { seasons: planSeasons('pro'), players: planPlayers('pro'), teams: planTeams('pro') }),
         cta: t('landing.pricing.pro_cta'),
         bullets: [
             t('landing.pricing.pro_b1'),
-            t('landing.pricing.pro_b2', { teams: planTeams('pro') }),
+            t('landing.pricing.pro_b2', { seasons: planSeasons('pro'), players: planPlayers('pro'), teams: planTeams('pro') }),
             t('landing.pricing.pro_b3'),
             t('landing.pricing.pro_b4'),
             t('landing.pricing.pro_b5'),
@@ -126,11 +131,11 @@ const plans = computed(() => [
         name: t('landing.pricing.enterprise_name'),
         tagline: t('landing.pricing.enterprise_tagline'),
         price: planPrice('enterprise') || '5,999', unit: t('landing.pricing.monthly_unit'),
-        meta: t('landing.pricing.enterprise_meta'),
+        meta: t('landing.pricing.enterprise_meta', { seasons: planSeasons('enterprise'), players: planPlayers('enterprise'), teams: planTeams('enterprise') }),
         cta: t('landing.pricing.enterprise_cta'),
         bullets: [
             t('landing.pricing.enterprise_b1'),
-            t('landing.pricing.enterprise_b2'),
+            t('landing.pricing.enterprise_b2', { seasons: planSeasons('enterprise'), players: planPlayers('enterprise'), teams: planTeams('enterprise') }),
             t('landing.pricing.enterprise_b3'),
             t('landing.pricing.enterprise_b4'),
             t('landing.pricing.enterprise_b5'),
@@ -157,7 +162,11 @@ const faqs = computed(() => [
     { q: t('landing.faq.q1'), a: t('landing.faq.a1', { domain: appDomain.value }) },
     { q: t('landing.faq.q2'), a: t('landing.faq.a2') },
     { q: t('landing.faq.q3'), a: t('landing.faq.a3') },
-    { q: t('landing.faq.q4'), a: t('landing.faq.a4') },
+    { q: t('landing.faq.q4'), a: t('landing.faq.a4', {
+        freeSeasons: planSeasons('free'),
+        starterSeasons: planSeasons('starter'),
+        proSeasons: planSeasons('pro'),
+    }) },
     { q: t('landing.faq.q5'), a: t('landing.faq.a5') },
     { q: t('landing.faq.q6'), a: t('landing.faq.a6') },
 ]);
